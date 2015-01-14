@@ -1,0 +1,580 @@
+<!doctype html>
+<html>
+<head>
+<title>Network | DataSet</title>
+
+<style type="text/css">
+html,body {
+	font: 11pt arial;
+}
+
+h1 {
+	font-size: 150%;
+	margin: 5px 0;
+}
+
+h2 {
+	font-size: 100%;
+	margin: 5px 0;
+}
+
+table.view {
+	width: 100%;
+}
+
+table td {
+	vertical-align: top;
+}
+
+table table {
+	background-color: #f5f5f5;
+	border: 1px solid #e5e5e5;
+}
+
+table table td {
+	vertical-align: middle;
+}
+
+input[type=text],pre {
+	border: 1px solid lightgray;
+}
+
+pre {
+	margin: 0;
+	padding: 5px;
+	font-size: 10pt;
+}
+
+#network {
+	width: 100%;
+	height: 400px;
+	border: 1px solid lightgray;
+}
+
+#overlay {
+	visibility: hidden;
+	position: absolute;
+	left: 0px;
+	top: 0px;
+	width: 100%;
+	height: 100%;
+	text-align: center;
+	z-index: 1000;
+}
+
+#overlay div {
+	width: 300px;
+	margin: 100px auto;
+	background-color: #fff;
+	border: 1px solid #000;
+	padding: 15px;
+	text-align: center;
+}
+
+#add-device-overlay {
+	visibility: hidden;
+	position: absolute;
+	left: 0px;
+	top: 0px;
+	width: 100%;
+	height: 100%;
+	text-align: center;
+	z-index: 1000;
+}
+
+#add-device-overlay div {
+	width: 300px;
+	margin: 100px auto;
+	background-color: #fff;
+	border: 1px solid #000;
+	padding: 15px;
+	text-align: center;
+}
+</style>
+
+<script
+	src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+<script type="text/javascript"
+	src="vis/dist/vis.js"></script>
+<link href="vis/dist/vis.css"
+	rel="stylesheet" type="text/css" />
+
+<script type="text/javascript">
+	var nodes, edges, network;
+	var tappedDevice;
+
+	// convenience method to stringify a JSON object
+	function toJSON(obj) {
+		return JSON.stringify(obj, null, 4);
+	}
+
+	function chooseinterface() {
+		var current = nodes.get(tappedDevice);
+		var currentinterfaceselection = document.getElementById("interface").value;
+		console.log("currentinterface " + currentinterfaceselection);
+		console.log(toJSON(current));
+		for (i = 0; i < current.ports.length; i++) {
+			portname = current.ports[i].portName;
+
+			if (portname == currentinterfaceselection) {
+				portipaddress = current.ports[i].portIpAddress;
+				portsubnetmask = current.ports[i].portSubnetMask;
+				console.log("portIP: " + portipaddress);
+				console.log("portSubnet: " + portsubnetmask);
+				if (portipaddress != null) {
+					document.forms["ipconfig"]["ipaddress"].value = portipaddress;
+				} else {
+					console.log("portipaddress is null");
+				}
+				if (portsubnetmask != null) {
+					document.forms["ipconfig"]["subnetmask"].value = portsubnetmask;
+				} else {
+					console.log("portsubnetmask is null");
+				}
+			}
+		}
+	}
+
+	function chooselinkinterface() {
+		var current = nodes.get(tappedDevice);
+		var currentinterfaceselection = document.getElementById("linkinterface").value;
+		console.log("currentlinkinterface " + currentinterfaceselection);
+		console.log(toJSON(current));
+		
+	}
+
+	
+	function addDevice() {
+		deviceName = document.forms["add-device"]["devicename"].value;
+		deviceType = document.forms["add-device"]["device-type-to-add"].value;
+		console.log("Adding device " + deviceName + " of type " + deviceType);
+		
+		var addDeviceRequest = new XMLHttpRequest();
+		addDeviceRequest.onreadystatechange = function() {
+			if (addDeviceRequest.readyState == 4
+					&& addDeviceRequest.status == 200) {
+				location.reload();
+				console.log("Add Device Request worked");
+
+			}
+		}
+
+
+		var params = JSON.stringify({
+			"devicename" : deviceName,
+			"devicetype" : deviceType
+		});
+
+		console.log()
+
+		addDeviceRequest.open('POST',
+				'http://carre.kmi.open.ac.uk/forge/ptsmith', true); // `false` makes the request synchronous
+		addDeviceRequest.setRequestHeader("Content-type",
+				"application/json; charset=utf-8");
+
+		addDeviceRequest.send(params);
+		toggleAddDeviceOverlay();
+		
+	}
+	
+	function onDeviceClick(deviceType) {
+		document.forms["add-device"]["device-type-to-add"].value = deviceType;
+		toggleAddDeviceOverlay();
+	}
+	
+	function toggleOverlay() {
+		el = document.getElementById("overlay");
+		el.style.visibility = (el.style.visibility == "visible") ? "hidden"
+				: "visible";
+	}
+
+	function toggleAddDeviceOverlay() {
+		el = document.getElementById("add-device-overlay");
+		el.style.visibility = (el.style.visibility == "visible") ? "hidden"
+				: "visible";
+	}
+	
+	function overlay(node) {
+		el = document.getElementById("overlay");
+		console.log("overlay network " + network);
+
+		document.forms["ipconfig"]["interface"].options.length = 0;
+
+		current = nodes.get(node);
+
+		console.log("overlay node " + current.id);
+		console.log("overlay node " + current.label);
+		for (i = 0; i < current.ports.length; i++) {
+			portname = current.ports[i].portName;
+			portipaddress = current.ports[i].portIpAddress;
+			portsubnetmask = current.ports[i].portSubnetMask;
+			defaultselected = false;
+			if (i == 0) {
+				defaultselected = true;
+			}
+			document.forms["ipconfig"]["interface"].options[i] = new Option(
+					portname, portname, defaultselected, false);
+			if (i == 0) {
+				document.forms["ipconfig"]["ipaddress"].value = portipaddress;
+				document.forms["ipconfig"]["subnetmask"].value = portsubnetmask;
+			}
+		}
+
+		currentlinkcount = 0;
+		document.forms["ipconfig"]["linkinterface"].options[0] = new Option("--", "--", true, false);
+		
+		console.log("Nodes " + JSON.stringify(nodes));
+		console.log("Nodes _data length " + nodes._data.length);
+
+		for (var key in nodes._data) {
+			if (nodes.get(key).label != current.label) {
+				console.log("Possible link node " + JSON.stringify(nodes.get(key)));
+				console.log("Ports: " + JSON.stringify(nodes.get(key).ports));
+				if ('undefined' !== typeof nodes.get(key).ports) {
+					for (j = 0; j < nodes.get(key).ports.length; j++) {
+						var optionName = nodes.get(key).label + ":" + nodes.get(key).ports[j].portName;
+						document.forms["ipconfig"]["linkinterface"].options[currentlinkcount + 1] = new Option(
+								optionName, optionName, false, false);
+						currentlinkcount++;
+					}
+				}
+			}
+		}
+
+		
+		el.style.visibility = (el.style.visibility == "visible") ? "hidden"
+				: "visible";
+
+	}
+
+	function configureIP() {
+		var configureIPRequest = new XMLHttpRequest();
+		configureIPRequest.onreadystatechange = function() {
+			if (configureIPRequest.readyState == 4
+					&& configureIPRequest.status == 200) {
+				var toDelete = document.forms["ipconfig"]["delete-device"].checked;
+				var toDeleteLink = document.forms["ipconfig"]["delete-link"].checked;
+				var linkId = document.forms["ipconfig"]["linkinterface"].value;
+				
+				if (toDelete || toDeleteLink || linkId != "--") {
+					location.reload();
+				}
+				var current = nodes.get(tappedDevice);
+				var currentinterfaceselection = document
+						.getElementById("interface").value;
+				console.log("currentinterface " + currentinterfaceselection);
+				console.log(toJSON(current));
+				for (i = 0; i < current.ports.length; i++) {
+					portname = current.ports[i].portName;
+
+					if (portname == currentinterfaceselection) {
+						current.ports[i].portIpAddress = document.forms["ipconfig"]["ipaddress"].value;
+						;
+						current.ports[i].portSubnetMask = document.forms["ipconfig"]["subnetmask"].value;
+						;
+						console.log("portIP: " + portipaddress);
+						console.log("portSubnet: " + portsubnetmask);
+					}
+				}
+				console.log("Configure IP Request worked");
+
+			}
+		}
+		var toDelete = document.forms["ipconfig"]["delete-device"].checked;
+		var toDeleteLink = document.forms["ipconfig"]["delete-link"].checked;
+		var linkId = document.forms["ipconfig"]["linkinterface"].value;
+		console.log("delete checked " + toDelete);
+		if (linkId != "--") {
+			var currentinterfaceselection = document.getElementById("linkinterface").value;
+			var interfacename = document.getElementById("interface").value;
+			var nodeid = tappedDevice;
+			console.log("currentlinkinterface " + currentinterfaceselection);
+			console.log(toJSON(current));
+			var splitlinkdetails = currentinterfaceselection.split(":");
+			var deviceName = splitlinkdetails[0];
+			var otherInterfaceName = splitlinkdetails[1];
+			console.log("NODE ID is " + nodes.get(nodeid).label);
+			if (deviceName != null && otherInterfaceName != null) {
+				var params = JSON.stringify({
+					"linksource" : nodes.get(nodeid).label,
+					"linksourceinterface" : interfacename,
+					"linktarget" : deviceName,
+					"linktargetinterface" : otherInterfaceName
+				});
+				configureIPRequest.open('POST',
+					'http://carre.kmi.open.ac.uk/forge/ptsmith', true); // `false` makes the request synchronous
+				configureIPRequest.setRequestHeader("Content-type",
+					"application/json; charset=utf-8");
+
+				configureIPRequest.send(params);
+				el = document.getElementById("overlay");
+				el.style.visibility = (el.style.visibility == "visible") ? "hidden"
+					: "visible";
+			}
+		} else if (toDeleteLink) {
+			var params = JSON.stringify({
+				"deletelinkdevice" : nodes.get(nodeid).label,
+				"deletelinkinterface" : interfacename
+			});
+			configureIPRequest.open('POST',
+					'http://carre.kmi.open.ac.uk/forge/ptsmith', true); // `false` makes the request synchronous
+			configureIPRequest.setRequestHeader("Content-type",
+					"application/json; charset=utf-8");
+
+			configureIPRequest.send(params);
+			el = document.getElementById("overlay");
+			el.style.visibility = (el.style.visibility == "visible") ? "hidden"
+					: "visible";
+		} else if (toDelete) {
+			var params = JSON.stringify({
+				"deletedevice" : tappedDevice
+			})
+			configureIPRequest.open('POST',
+					'http://carre.kmi.open.ac.uk/forge/ptsmith', true); // `false` makes the request synchronous
+			configureIPRequest.setRequestHeader("Content-type",
+					"application/json; charset=utf-8");
+
+			configureIPRequest.send(params);
+			el = document.getElementById("overlay");
+			el.style.visibility = (el.style.visibility == "visible") ? "hidden"
+					: "visible";
+
+		} else {
+		var ip = document.forms["ipconfig"]["ipaddress"].value;
+		var subnet = document.forms["ipconfig"]["subnetmask"].value;
+		var defaultgateway = document.forms["ipconfig"]["defaultgateway"].value;
+		var interfacename = document.getElementById("interface").value;
+		var nodeid = tappedDevice;
+
+		var params = JSON.stringify({
+			"ipaddress" : ip,
+			"subnetmask" : subnet,
+			"defaultgateway" : defaultgateway,
+			"deviceid" : nodeid,
+			"interfacename" : interfacename
+		});
+
+		console.log()
+
+		configureIPRequest.open('POST',
+				'http://carre.kmi.open.ac.uk/forge/ptsmith', true); // `false` makes the request synchronous
+		configureIPRequest.setRequestHeader("Content-type",
+				"application/json; charset=utf-8");
+
+		configureIPRequest.send(params);
+		el = document.getElementById("overlay");
+		el.style.visibility = (el.style.visibility == "visible") ? "hidden"
+				: "visible";
+		}
+
+	}
+
+	$(window)
+			.load(
+					function() {
+
+						function onTap(properties) {
+							overlay(properties.nodes[0])
+							if (properties.nodes != null) {
+								for (i = 0; i < properties.nodes.length; i++) {
+									console.log(properties.nodes[i])
+								}
+								tappedDevice = properties.nodes[0];
+								console.log("tappedDevice");
+								console.log(tappedDevice);
+							}
+						}
+
+						var request = new XMLHttpRequest();
+						request.timeout = 0;
+						request.onreadystatechange = function() {
+							if (request.readyState == 4
+									&& request.status == 200) {
+								var allJson, nodesJson, edgesJson;
+								if (request.status === 200) {
+									console.log(request.responseText);
+									allJson = eval('(' + request.responseText
+											+ ')');
+									nodesJson = allJson.devices;
+									edgesJson = allJson.edges;
+								}
+
+								// create an array with nodes
+								nodes = new vis.DataSet();
+								nodes.subscribe('*', function() {
+									$('#nodes').html(toJSON(nodes.get()));
+								});
+								if (nodesJson != null) {
+									nodes.add(nodesJson);
+								} else {
+									nodes
+											.add([
+													{
+														"id" : "{b8c1ad78-ae35-4bf3-bf21-1c7e8cfe208d}",
+														"label" : "Access Point1"
+													},
+													{
+														"id" : "{9ced95e5-b478-474e-8775-7006cd295963}",
+														"label" : "Multilayer Switch0"
+													},
+													{
+														"id" : "{3898c3e2-aec5-4b45-bfa7-ce282c20c50a}",
+														"label" : "PC0"
+													}, ]);
+								}
+
+								// create an array with edges
+								edges = new vis.DataSet();
+								edges.subscribe('*', function() {
+									$('#edges').html(toJSON(edges.get()));
+								});
+								if (edgesJson != null) {
+									edges.add(edgesJson);
+								} else {
+									edges
+											.add([
+													{
+														"id" : "{01e3c88b-1b76-4a28-bb56-9f355e4c278a}",
+														"from" : "{b8c1ad78-ae35-4bf3-bf21-1c7e8cfe208d}",
+
+														"to" : "{9ced95e5-b478-474e-8775-7006cd295963}"
+													},
+													{
+														"id" : "{a89b4e59-9e06-4d11-91df-f36f9f7fc97f}",
+														"from" : "{9ced95e5-b478-474e-8775-7006cd295963}",
+
+														"to" : "{3898c3e2-aec5-4b45-bfa7-ce282c20c50a}"
+													}, ]);
+								}
+
+								// create a network
+								var container = $('#network').get(0);
+								var data = {
+									nodes : nodes,
+									edges : edges
+								};
+								var options = {
+									dragNetwork : 'false',
+									dragNodes : 'false',
+									zoomable : 'false',
+
+									groups : {
+										cloudDevice : {
+											shape : 'image',
+											image : "cloud.png"
+										},
+
+										routerDevice : {
+											shape : 'image',
+											image : "router.png"
+										},
+										switchDevice : {
+											shape : 'image',
+											image : "switch.png"
+										},
+										pcDevice : {
+											shape : 'image',
+											image : "PC.png"
+										}
+									}
+								};
+								network = new vis.Network(container, data,
+										options);
+								network.on('click', onTap);
+							}
+						}
+						request.open('GET',
+								'http://carre.kmi.open.ac.uk/forge/ptsmith',
+								true); // `false` makes the request synchronous
+						request.send(null);
+						;
+
+					})
+</script>
+</head>
+
+<body>
+
+
+	<table class="view">
+		<tr>
+			<td colspan=4>
+				<h2>Network</h2>
+				<div id="network"></div>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<figure>
+					<img alt="cloud" src="cloud.png" width="25%"
+						onclick="onDeviceClick(&quot;cloud&quot;)">
+					<figcaption>Cloud</figcaption>
+				</figure>
+			</td>
+			<td>
+				<figure>
+					<img alt="router" src="router.png" width="25%"
+						onclick="onDeviceClick(&quot;router&quot;)">
+					<figcaption>Router</figcaption>
+				</figure>
+			</td>
+			<td>
+				<figure>
+					<img alt="switch" src="switch.png" width="25%"
+						onclick="onDeviceClick(&quot;switch&quot;)">
+					<figcaption>Switch</figcaption>
+				</figure>
+			</td>
+			<td>
+				<figure>
+					<img alt="PC" src="PC.png" width="25%"
+						onclick="onDeviceClick(&quot;pc&quot;)">
+					<figcaption>PC</figcaption>
+				</figure>
+			</td>
+		</tr>
+	</table>
+
+	<div id="overlay">
+		<div>
+			<p>
+			<form name="ipconfig" action="" onsubmit="return configureIP()">
+				Delete this device? <input type="checkbox" name="delete-device">
+				<hr>
+				<select id="interface" name="interface" size="1"
+					onchange="chooseinterface()">
+					<option value="port0">DefaultPort0</option>
+				</select> <br>Delete this connection? <input type="checkbox" name="delete-link"><br><hr>
+				IP address: <input type="text" name="ipaddress"><br>
+				Subnet mask: <input type="text" name="subnetmask"><br><hr>
+				Add connection: <select id="linkinterface" name="linkinterface" size="1">
+					<!-- onchange="chooselinkinterface()">-->
+					<option value="port0">DefaultPort0</option>
+					</select><br>
+				<input type="hidden" name="defaultgateway" value=""><br>
+				<!--  [<a href='#' onclick='configureIP()'>Submit</a>][<a href="#" onclick='toggleOverlay()'>Cancel</a>]-->
+				[<span onclick='configureIP()'>Submit</span>][<span
+					onclick='toggleOverlay()'>Cancel</span>]
+			</form>
+			</p>
+		</div>
+	</div>
+	<div id="add-device-overlay">
+		<div>
+			<p>
+			<form name="add-device" action="" onsubmit="return addDevice()">
+				Device name: <input type="text" name="devicename"><br>
+				<!-- 				<select id="add-device-link" name="add-device-link" size="1" -->
+				<!-- 					onchange="choosedevicelink()"> -->
+				<!-- 					<option value="device0">Device0</option> -->
+				<!-- 				</select> <br>  -->
+				<input type="hidden" name="device-type-to-add" value=""><br>
+				[<span onclick='addDevice()'>Submit</span>][<span
+					onclick='toggleAddDeviceOverlay()'>Cancel</span>]
+			</form>
+			</p>
+		</div>
+	</div>
+
+</body>
+</html>
