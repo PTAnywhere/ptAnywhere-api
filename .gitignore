@@ -21,3 +21,6 @@ release.properties
 
 # Mac OS X
 .DS_Store
+
+# IntelliJ IDEA
+.idea/
