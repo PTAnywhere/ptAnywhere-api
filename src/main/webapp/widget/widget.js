@@ -64,27 +64,16 @@ function addDevice() {
             "application/json; charset=utf-8");
 
     addDeviceRequest.send(params);
-    toggleAddDeviceOverlay();
+    $("#add-device-overlay").toggle();
 
 }
 
 function onDeviceClick(deviceType) {
-    console.log('see this!')
     $("form[name='add-device'] input[name='device-type-to-add']").val(deviceType)
-    //document.forms["add-device"]["device-type-to-add"].value = deviceType;
-    toggleAddDeviceOverlay();
-}
-
-function toggleOverlay() {
-    $("#overlay").toggle();
-}
-
-function toggleAddDeviceOverlay() {
     $("#add-device-overlay").toggle();
 }
 
 function overlay(node) {
-    el = document.getElementById("overlay");
     console.log("overlay network " + network);
 
     document.forms["ipconfig"]["interface"].options.length = 0;
@@ -130,10 +119,7 @@ function overlay(node) {
         }
     }
 
-
-    el.style.visibility = (el.style.visibility == "visible") ? "hidden"
-            : "visible";
-
+    $("#overlay").toggle();
 }
 
 function configureIP() {
@@ -255,134 +241,122 @@ function configureIP() {
     }
 }
 
+function loadTopology(data) {
+    allJson = eval('(' + data.responseText + ')');
+    nodesJson = allJson.devices;
+    edgesJson = allJson.edges;
+
+    // create an array with nodes
+    nodes = new vis.DataSet();
+    nodes.subscribe('*', function() {
+        $('#nodes').html(toJSON(nodes.get()));
+    });
+    if (nodesJson != null) {
+        nodes.add(nodesJson);
+    } else {
+        nodes.add([
+            {
+                "id" : "{b8c1ad78-ae35-4bf3-bf21-1c7e8cfe208d}",
+                "label" : "Access Point1"
+            },
+            {
+                "id" : "{9ced95e5-b478-474e-8775-7006cd295963}",
+                "label" : "Multilayer Switch0"
+            },
+            {
+                "id" : "{3898c3e2-aec5-4b45-bfa7-ce282c20c50a}",
+                "label" : "PC0"
+            },
+        ]);
+    }
+
+    // create an array with edges
+    edges = new vis.DataSet();
+    edges.subscribe('*', function() {
+        $('#edges').html(toJSON(edges.get()));
+    });
+
+    if (edgesJson != null) {
+        edges.add(edgesJson);
+    } else {
+        edges.add([
+            {
+                "id" : "{01e3c88b-1b76-4a28-bb56-9f355e4c278a}",
+                "from" : "{b8c1ad78-ae35-4bf3-bf21-1c7e8cfe208d}",
+
+                "to" : "{9ced95e5-b478-474e-8775-7006cd295963}"
+            },
+            {
+                "id" : "{a89b4e59-9e06-4d11-91df-f36f9f7fc97f}",
+                "from" : "{9ced95e5-b478-474e-8775-7006cd295963}",
+
+                "to" : "{3898c3e2-aec5-4b45-bfa7-ce282c20c50a}"
+            }, ]);
+    }
+
+    // create a network
+    var container = $('#network').get(0);
+    var data = { nodes : nodes, edges : edges };
+    var options = {
+        dragNetwork : 'false',
+        dragNodes : 'false',
+        zoomable : 'false',
+
+        groups : {
+            cloudDevice : {
+                shape : 'image',
+                image : "cloud.png"
+            },
+
+            routerDevice : {
+                shape : 'image',
+                image : "router.png"
+            },
+            switchDevice : {
+                shape : 'image',
+                image : "switch.png"
+            },
+            pcDevice : {
+                shape : 'image',
+                image : "PC.png"
+            }
+        }
+    };
+    network = new vis.Network(container, data, options);
+    network.on('click', onTap);
+}
+
+// convenience method to stringify a JSON object
+function toJSON(obj) {
+    return JSON.stringify(obj, null, 4);
+}
+
+function onTap(properties) {
+    overlay(properties.nodes[0])
+    if (properties.nodes != null) {
+        for (i = 0; i < properties.nodes.length; i++) {
+            console.log(properties.nodes[i])
+        }
+        tappedDevice = properties.nodes[0];
+        console.log("tappedDevice");
+        console.log(tappedDevice);
+    }
+}
 
 $(function() {
 
     $("#add-device-overlay").hide();
+    $("#btnSubmit").click(addDevice);
+    $("#btnCancel").click(function() { $("#add-device-overlay").toggle() });
     $("#cloud").click(function() { onDeviceClick("cloud") });
     $("#router").click(function() { onDeviceClick("router") });
     $("#switch").click(function() { onDeviceClick("switch") });
+    $("#pc").click(function() { onDeviceClick("pc") });
 
     var nodes, edges, network;
     var tappedDevice;
 
-    // convenience method to stringify a JSON object
-    function toJSON(obj) {
-        return JSON.stringify(obj, null, 4);
-    }
-
-    function onTap(properties) {
-        overlay(properties.nodes[0])
-        if (properties.nodes != null) {
-            for (i = 0; i < properties.nodes.length; i++) {
-                console.log(properties.nodes[i])
-            }
-            tappedDevice = properties.nodes[0];
-            console.log("tappedDevice");
-            console.log(tappedDevice);
-        }
-    }
-
-    var request = new XMLHttpRequest();
-    request.timeout = 0;
-    request.onreadystatechange = function() {
-        if (request.readyState == 4
-                && request.status == 200) {
-            var allJson, nodesJson, edgesJson;
-            if (request.status === 200) {
-                console.log(request.responseText);
-                allJson = eval('(' + request.responseText
-                        + ')');
-                nodesJson = allJson.devices;
-                edgesJson = allJson.edges;
-            }
-
-            // create an array with nodes
-            nodes = new vis.DataSet();
-            nodes.subscribe('*', function() {
-                $('#nodes').html(toJSON(nodes.get()));
-            });
-            if (nodesJson != null) {
-                nodes.add(nodesJson);
-            } else {
-                nodes
-                        .add([
-                                {
-                                    "id" : "{b8c1ad78-ae35-4bf3-bf21-1c7e8cfe208d}",
-                                    "label" : "Access Point1"
-                                },
-                                {
-                                    "id" : "{9ced95e5-b478-474e-8775-7006cd295963}",
-                                    "label" : "Multilayer Switch0"
-                                },
-                                {
-                                    "id" : "{3898c3e2-aec5-4b45-bfa7-ce282c20c50a}",
-                                    "label" : "PC0"
-                                }, ]);
-            }
-
-            // create an array with edges
-            edges = new vis.DataSet();
-            edges.subscribe('*', function() {
-                $('#edges').html(toJSON(edges.get()));
-            });
-            if (edgesJson != null) {
-                edges.add(edgesJson);
-            } else {
-                edges
-                        .add([
-                                {
-                                    "id" : "{01e3c88b-1b76-4a28-bb56-9f355e4c278a}",
-                                    "from" : "{b8c1ad78-ae35-4bf3-bf21-1c7e8cfe208d}",
-
-                                    "to" : "{9ced95e5-b478-474e-8775-7006cd295963}"
-                                },
-                                {
-                                    "id" : "{a89b4e59-9e06-4d11-91df-f36f9f7fc97f}",
-                                    "from" : "{9ced95e5-b478-474e-8775-7006cd295963}",
-
-                                    "to" : "{3898c3e2-aec5-4b45-bfa7-ce282c20c50a}"
-                                }, ]);
-            }
-
-            // create a network
-            var container = $('#network').get(0);
-            var data = {
-                nodes : nodes,
-                edges : edges
-            };
-            var options = {
-                dragNetwork : 'false',
-                dragNodes : 'false',
-                zoomable : 'false',
-
-                groups : {
-                    cloudDevice : {
-                        shape : 'image',
-                        image : "cloud.png"
-                    },
-
-                    routerDevice : {
-                        shape : 'image',
-                        image : "router.png"
-                    },
-                    switchDevice : {
-                        shape : 'image',
-                        image : "switch.png"
-                    },
-                    pcDevice : {
-                        shape : 'image',
-                        image : "PC.png"
-                    }
-                }
-            };
-            network = new vis.Network(container, data,
-                    options);
-            network.on('click', onTap);
-        }
-    }
-    request.open('GET',
-            'http://localhost:8080/webPacketTracer/widget/fake.json',  // 'http://carre.kmi.open.ac.uk/forge/ptsmith',
-            true); // `false` makes the request synchronous
-    request.send(null);
+    // 'http://carre.kmi.open.ac.uk/forge/ptsmith',
+    $.get( 'http://localhost:8080/webPacketTracer/widget/fake.json', loadTopology)
+            .fail(loadTopology);  // Apparently status code 304 is an error for this method :-S
 });
