@@ -1,3 +1,7 @@
+var api_url = "http://localhost:8080/ptsmith-rest/ptsmith";  // "http://carre.kmi.open.ac.uk/forge/ptsmith"
+var nodes, edges, network;
+var tappedDevice;
+
 
 function chooseinterface() {
     var current = nodes.get(tappedDevice);
@@ -58,8 +62,7 @@ function addDevice() {
 
     console.log()
 
-    addDeviceRequest.open('POST',
-            'http://carre.kmi.open.ac.uk/forge/ptsmith', true); // `false` makes the request synchronous
+    addDeviceRequest.open('POST', api_url, true); // `false` makes the request synchronous
     addDeviceRequest.setRequestHeader("Content-type",
             "application/json; charset=utf-8");
 
@@ -176,8 +179,7 @@ function configureIP() {
                 "linktarget" : deviceName,
                 "linktargetinterface" : otherInterfaceName
             });
-            configureIPRequest.open('POST',
-                'http://carre.kmi.open.ac.uk/forge/ptsmith', true); // `false` makes the request synchronous
+            configureIPRequest.open('POST', api_url, true); // `false` makes the request synchronous
             configureIPRequest.setRequestHeader("Content-type",
                 "application/json; charset=utf-8");
 
@@ -191,8 +193,7 @@ function configureIP() {
             "deletelinkdevice" : nodes.get(nodeid).label,
             "deletelinkinterface" : interfacename
         });
-        configureIPRequest.open('POST',
-                'http://carre.kmi.open.ac.uk/forge/ptsmith', true); // `false` makes the request synchronous
+        configureIPRequest.open('POST', api_url, true); // `false` makes the request synchronous
         configureIPRequest.setRequestHeader("Content-type",
                 "application/json; charset=utf-8");
 
@@ -204,8 +205,7 @@ function configureIP() {
         var params = JSON.stringify({
             "deletedevice" : tappedDevice
         })
-        configureIPRequest.open('POST',
-                'http://carre.kmi.open.ac.uk/forge/ptsmith', true); // `false` makes the request synchronous
+        configureIPRequest.open('POST', api_url, true); // `false` makes the request synchronous
         configureIPRequest.setRequestHeader("Content-type",
                 "application/json; charset=utf-8");
 
@@ -229,8 +229,7 @@ function configureIP() {
 
         console.log()
 
-        configureIPRequest.open('POST',
-                'http://carre.kmi.open.ac.uk/forge/ptsmith', true); // `false` makes the request synchronous
+        configureIPRequest.open('POST', api_url, true); // `false` makes the request synchronous
         configureIPRequest.setRequestHeader("Content-type",
                 "application/json; charset=utf-8");
 
@@ -344,20 +343,19 @@ function onTap(properties) {
 }
 
 $(function() {
+    $("#overlay").hide();
+    $("#overlay .btnSubmit").click(configureIP);
+    $("#overlay .btnCancel").click(function() { $("#overlay").toggle() });
 
     $("#add-device-overlay").hide();
-    $("#btnSubmit").click(addDevice);
-    $("#btnCancel").click(function() { $("#add-device-overlay").toggle() });
+    $("#add-device-overlay .btnSubmit").click(addDevice);
+    $("#add-device-overlay .btnCancel").click(function() { $("#add-device-overlay").toggle() });
+
     $("#cloud").click(function() { onDeviceClick("cloud") });
     $("#router").click(function() { onDeviceClick("router") });
     $("#switch").click(function() { onDeviceClick("switch") });
     $("#pc").click(function() { onDeviceClick("pc") });
 
-    var nodes, edges, network;
-    var tappedDevice;
-
-    // 'http://carre.kmi.open.ac.uk/forge/ptsmith',
     // http://localhost:8080/webPacketTracer/widget/fake.json
-    $.get( 'http://localhost:8080/ptsmith-rest/ptsmith', loadTopology)
-            .fail(loadTopology);  // Apparently status code 304 is an error for this method :-S
+    $.get(api_url, loadTopology).fail(loadTopology);  // Apparently status code 304 is an error for this method :-S
 });

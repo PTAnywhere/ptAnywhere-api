@@ -53,7 +53,6 @@
 <div id="overlay">
     <div>
         <p>
-
         <form name="ipconfig" action="" onsubmit="return configureIP()">
             Delete this device? <input type="checkbox" name="delete-device">
             <hr>
@@ -66,13 +65,11 @@
             Subnet mask: <input type="text" name="subnetmask"><br>
             <hr>
             Add connection: <select id="linkinterface" name="linkinterface" size="1">
-            <!-- onchange="chooselinkinterface()">-->
             <option value="port0">DefaultPort0</option>
         </select><br>
-            <input type="hidden" name="defaultgateway" value=""><br>
-            <!--  [<a href='#' onclick='configureIP()'>Submit</a>][<a href="#" onclick='toggleOverlay()'>Cancel</a>]-->
-            [<span onclick='configureIP()'>Submit</span>][<span
-                onclick='toggleOverlay()'>Cancel</span>]
+        <input type="hidden" name="defaultgateway" value=""><br>
+        [<span class="btnSubmit">Submit</span>]
+        [<span class="btnCancel">Cancel</span>]
         </form>
         </p>
     </div>
@@ -83,13 +80,9 @@
 
         <form name="add-device" action="" onsubmit="return addDevice()">
             Device name: <input type="text" name="devicename"><br>
-            <!-- 				<select id="add-device-link" name="add-device-link" size="1" -->
-            <!-- 					onchange="choosedevicelink()"> -->
-            <!-- 					<option value="device0">Device0</option> -->
-            <!-- 				</select> <br>  -->
             <input type="hidden" name="device-type-to-add" value=""><br>
-            [<span id="btnSubmit">Submit</span>]
-            [<span id="btnCancel">Cancel</span>]
+            [<span class="btnSubmit">Submit</span>]
+            [<span class="btnCancel">Cancel</span>]
         </form>
         </p>
     </div>
