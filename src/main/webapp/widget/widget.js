@@ -242,7 +242,7 @@ function configureIP() {
 }
 
 function loadTopology(data) {
-    allJson = eval('(' + data.responseText + ')');
+    allJson = eval('(' + data + ')');
     nodesJson = allJson.devices;
     edgesJson = allJson.edges;
 
@@ -357,6 +357,7 @@ $(function() {
     var tappedDevice;
 
     // 'http://carre.kmi.open.ac.uk/forge/ptsmith',
-    $.get( 'http://localhost:8080/webPacketTracer/widget/fake.json', loadTopology)
+    // http://localhost:8080/webPacketTracer/widget/fake.json
+    $.get( 'http://localhost:8080/ptsmith-rest/ptsmith', loadTopology)
             .fail(loadTopology);  // Apparently status code 304 is an error for this method :-S
 });
