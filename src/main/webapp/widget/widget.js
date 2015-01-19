@@ -1,4 +1,7 @@
-var api_url = "http://localhost:8080/ptsmith-rest/ptsmith";  // "http://carre.kmi.open.ac.uk/forge/ptsmith"
+var api_url = "http://localhost:8080/webPacketTracer/webapi/devices";
+// var api_url = "http://localhost:8080/ptsmith-rest/ptsmith";
+// "http://carre.kmi.open.ac.uk/forge/ptsmith"
+
 var nodes, edges, network;
 var tappedDevice;
 
@@ -241,9 +244,8 @@ function configureIP() {
 }
 
 function loadTopology(data) {
-    allJson = eval('(' + data + ')');
-    nodesJson = allJson.devices;
-    edgesJson = allJson.edges;
+    nodesJson = data.devices;
+    edgesJson = data.edges;
 
     // create an array with nodes
     nodes = new vis.DataSet();
@@ -357,5 +359,5 @@ $(function() {
     $("#pc").click(function() { onDeviceClick("pc") });
 
     // http://localhost:8080/webPacketTracer/widget/fake.json
-    $.get(api_url, loadTopology).fail(loadTopology);  // Apparently status code 304 is an error for this method :-S
+    $.getJSON(api_url, loadTopology).fail(loadTopology);  // Apparently status code 304 is an error for this method :-S
 });
