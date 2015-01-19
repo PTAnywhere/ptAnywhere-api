@@ -31,6 +31,6 @@ public class DevicesResource {
         ptSmith.run();
         String devices = ptSmith.getDevicesJson();
         String edges = ptSmith.getEdgesJson();
-        return "{ \n \t\"devices\": " + devices + ",\n \t\"edges\": " + edges + "\n}";
+        return "{ \n \t\"devices\":" + devices + ",\n \t\"edges\":" + edges + "\n}";
     }
 }

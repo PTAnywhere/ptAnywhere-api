@@ -469,6 +469,8 @@ public class PtSmith extends Backpack {
 			}
 			json += "},\n";
 		}
+		if(json.endsWith(",\n"))
+			json = json.substring(0, json.length()-2);
 		json += "]\n";
 		System.err.println("Devices : \n" + json);
 		return json;
@@ -567,6 +569,8 @@ public class PtSmith extends Backpack {
 						+ "},\n";
 			}
 		}
+		if(json.endsWith(",\n"))
+			json = json.substring(0, json.length()-2);
 		json += "]\n";
 		System.err.println("Edges: \n" + json);
 		return json;
