@@ -25,9 +25,7 @@ class DeviceGetter extends PTCallable<Device> {
     public Device internalRun() {
         final Network network = this.task.getIPC().network();
         final com.cisco.pt.ipc.sim.Device cDev = network.getDevice(this.deviceId);
-        getLog().error("Paso 2: " + cDev);
         final Device d = Device.fromCiscoObject(cDev);
-        getLog().error("Paso 3: " + d);
         return d;
     }
 }
@@ -38,8 +36,6 @@ public class DeviceResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Device getDevice(@PathParam("device") String deviceName) {
         final DeviceGetter getter = new DeviceGetter(deviceName);
-        Device d = getter.call();  // Not using a new Thread
-        getter.getLog().error("Eyy: " + d);
-        return d;
+        return getter.call();  // Not using a new Thread
     }
 }
