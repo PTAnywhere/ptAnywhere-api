@@ -18,8 +18,8 @@
                 <version>2.5.1</version>
                 <inherited>true</inherited>
                 <configuration>
-                    <source>1.7</source>
-                    <target>1.7</target>
+                    <source>1.6</source>
+                    <target>1.6</target>
                 </configuration>
             </plugin>
             <plugin>
@@ -80,7 +80,9 @@
         </dependency>
     </dependencies>
     <properties>
-        <jersey.version>2.14</jersey.version>
+        <!-- I cannot use newer versions if I want the war to be java 1.6 compliant. -->
+        <!-- (the production server runs on top of jre1.6 and I am not allowed to update it :-( ) -->
+        <jersey.version>2.6</jersey.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 </project>
