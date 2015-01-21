@@ -1,4 +1,4 @@
-var api_url = "http://localhost:8080/webPacketTracer/webapi/all";
+var api_url = "/webPacketTracer/webapi/all";
 // var api_url = "http://localhost:8080/ptsmith-rest/ptsmith";
 // "http://carre.kmi.open.ac.uk/forge/ptsmith"
 
