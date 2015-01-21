@@ -1,8 +1,10 @@
 package uk.ac.open.kmi.forge.webPacketTracer;
 
 import com.cisco.pt.ipc.sim.Network;
+import com.cisco.pt.ipc.sim.port.HostPort;
 import uk.ac.open.kmi.forge.webPacketTracer.gateway.PTCallable;
 import uk.ac.open.kmi.forge.webPacketTracer.pojo.Device;
+import uk.ac.open.kmi.forge.webPacketTracer.pojo.Port;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -26,6 +28,16 @@ class DeviceGetter extends PTCallable<Device> {
         final Network network = this.task.getIPC().network();
         final com.cisco.pt.ipc.sim.Device cDev = network.getDevice(this.deviceId);
         final Device d = Device.fromCiscoObject(cDev);
+        final Set<Port> ports = new HashSet<Port>();
+        for (int i = 0; i < cDev.getPortCount(); i++) {
+            com.cisco.pt.ipc.sim.port.Port port = cDev.getPortAt(i);
+            if (port instanceof HostPort) {
+                ports.add(Port.fromCiscoObject((HostPort) port));
+            } else {
+                getLog().error("Port " + port.getName() +
+                        " is not an instance of HostPort " + port.getType().toString());
+            }
+        }
         return d;
     }
 }

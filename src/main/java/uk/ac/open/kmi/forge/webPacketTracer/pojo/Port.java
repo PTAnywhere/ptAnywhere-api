@@ -1,5 +1,10 @@
 package uk.ac.open.kmi.forge.webPacketTracer.pojo;
 
+import com.cisco.pt.ipc.sim.Cloud;
+import com.cisco.pt.ipc.sim.Pc;
+import com.cisco.pt.ipc.sim.Router;
+import com.cisco.pt.ipc.sim.port.HostPort;
+
 // { "portName": "Vlan1", "portIpAddress": "0.0.0.0","portSubnetMask": "0.0.0.0"}
 public class Port {
     String portName;  // E.g., "Vlan1"
@@ -13,6 +18,12 @@ public class Port {
         this.portName = portName;
         this.portIpAddress = portIpAddress;
         this.portSubnetMask = portSubnetMask;
+    }
+
+    public static Port fromCiscoObject(com.cisco.pt.ipc.sim.port.HostPort port) {
+        return new Port(port.getName(),
+                        port.getIpAddress().getDottedQuadString(),
+                        port.getSubnetMask().getDottedQuadString());
     }
 
     public String getPortName() {
