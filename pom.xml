@@ -32,6 +32,16 @@
                     <path>/webPacketTracer</path>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.tomcat.maven</groupId>
+                <artifactId>tomcat6-maven-plugin</artifactId>
+                <version>2.2</version>
+                <configuration>
+                    <url>http://carre.kmi.open.ac.uk:8080/manager</url>
+                    <server>productionRepo</server>
+                    <path>/webPacketTracer</path>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
