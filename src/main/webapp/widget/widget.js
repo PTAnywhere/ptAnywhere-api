@@ -1,9 +1,24 @@
-var api_url = "../webapi/all";
+var api_url = "../webapi";
 // var api_url = "http://localhost:8080/ptsmith-rest/ptsmith";
 // "http://carre.kmi.open.ac.uk/forge/ptsmith"
 
 var nodes, edges, network;
 var tappedDevice;
+
+
+$.postJSON = function(url, data, callback) {
+    return jQuery.ajax({
+    headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+    },
+    'type': 'POST',
+    'url': url,
+    'data': JSON.stringify(data),
+    'dataType': 'json',
+    'success': callback
+    });
+};
 
 
 function chooseinterface() {
@@ -41,46 +56,31 @@ function chooselinkinterface() {
 
 }
 
-
-function addDevice() {
-    deviceName = document.forms["create-device"]["name"].value;
-    deviceType = document.forms["create-device"]["type"].value;
-    console.log("Adding device " + deviceName + " of type " + deviceType);
-/*
-    var addDeviceRequest = new XMLHttpRequest();
-    addDeviceRequest.onreadystatechange = function() {
-        if (addDeviceRequest.readyState == 4
-                && addDeviceRequest.status == 200) {
-            location.reload();
-            console.log("Add Device Request worked");
-
-        }
+function addDevice(callback) {
+    newDevice = {
+        "label": document.forms["create-device"]["name"].value,
+        "group": document.forms["create-device"]["type"].value
     }
+    console.log("Adding device " + newDevice.name + " of type " + newDevice.type);
 
-    var params = JSON.stringify({
-        "devicename" : deviceName,
-        "devicetype" : deviceType
-    });
-
-    addDeviceRequest.open('POST', api_url, true); // `false` makes the request synchronous
-    addDeviceRequest.setRequestHeader("Content-type",
-            "application/json; charset=utf-8");
-
-    addDeviceRequest.send(params);
-    */
+    $.postJSON( api_url + "/devices", newDevice,
+        function(data) { console.log("The device was created successfully."); })
+        .done(function(data) { console.log("The device was created successfully."); })
+        .fail(function(data) { console.error("Something went wrong in the device creation.") })
+        .always(callback);
 }
 
 function onDeviceClick(deviceType) {
     $("form[name='create-device'] input[name='type']").val(deviceType);
     dialog = $( "#create-device-dialog" ).dialog({ autoOpen: false, height: 300, width: 350, modal: true, buttons: {
                     "SUBMIT": function() {
-                        addDevice();
-                        $( this ).dialog( "close" );
+                        callback = function() { dialog.dialog( "close" ); };
+                        addDevice(callback);
                     },
                     Cancel: function() {
                         $( this ).dialog( "close" );
                     }
-                }, close: function() { console.log("Closing"); }
+                }, close: function() { console.log("Closing dialog..."); }
             });
     form = dialog.find( "form" ).on("submit", function( event ) { event.preventDefault(); });
     dialog.dialog( "open" );
@@ -368,5 +368,5 @@ $(function() {
     $("#pc").click(function() { onDeviceClick("pc") });
 
     // http://localhost:8080/webPacketTracer/widget/fake.json
-    $.getJSON(api_url, loadTopology).fail(loadTopology);  // Apparently status code 304 is an error for this method :-S
+    $.getJSON(api_url + "/all", loadTopology).fail(loadTopology);  // Apparently status code 304 is an error for this method :-S
 });

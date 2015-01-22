@@ -12,7 +12,6 @@ public abstract class PTRunnable implements Runnable {
         try {
             this.task.before();
             internalRun();
-            this.task.after();
         } catch (IPCError ipcError) {
             this.task.getLog().error("\n\n\nAn IPC error occurred:\n\t" + ipcError.getMessage() + "\n\n\n");
         } catch (Throwable t) {
@@ -22,9 +21,7 @@ public abstract class PTRunnable implements Runnable {
             this.task.getLog().error(t);
         } finally {
             try {
-                if (this.task.packetTracerSession != null) {
-                    this.task.packetTracerSession.close();
-                }
+                this.task.after();
             } catch (Throwable t) {
                 if ((t instanceof ThreadDeath)) {
                     throw ((ThreadDeath) t);

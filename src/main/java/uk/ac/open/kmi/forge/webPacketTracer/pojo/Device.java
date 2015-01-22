@@ -33,7 +33,7 @@ public class Device {
                                + ":" + */device.getName();
         final int deviceX = (int) (device.getXCoordinate()*1.5);
         final int deviceY = (int) (device.getYCoordinate()*1.5);
-        String group;
+        final String group;
         if (device instanceof Router) {
             group = "routerDevice";
         } else if (device instanceof Cloud) {
@@ -43,7 +43,6 @@ public class Device {
         } else {
             group = "switchDevice";
         }
-
         return new Device(id, label, deviceX, deviceY, group);
     }
 
