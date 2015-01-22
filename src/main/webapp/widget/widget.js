@@ -43,10 +43,10 @@ function chooselinkinterface() {
 
 
 function addDevice() {
-    deviceName = document.forms["add-device"]["devicename"].value;
-    deviceType = document.forms["add-device"]["device-type-to-add"].value;
+    deviceName = document.forms["create-device"]["name"].value;
+    deviceType = document.forms["create-device"]["type"].value;
     console.log("Adding device " + deviceName + " of type " + deviceType);
-
+/*
     var addDeviceRequest = new XMLHttpRequest();
     addDeviceRequest.onreadystatechange = function() {
         if (addDeviceRequest.readyState == 4
@@ -57,26 +57,33 @@ function addDevice() {
         }
     }
 
-
     var params = JSON.stringify({
         "devicename" : deviceName,
         "devicetype" : deviceType
     });
-
-    console.log()
 
     addDeviceRequest.open('POST', api_url, true); // `false` makes the request synchronous
     addDeviceRequest.setRequestHeader("Content-type",
             "application/json; charset=utf-8");
 
     addDeviceRequest.send(params);
-    $("#add-device-overlay").toggle();
-
+    */
 }
 
 function onDeviceClick(deviceType) {
-    $("form[name='add-device'] input[name='device-type-to-add']").val(deviceType)
-    $("#add-device-overlay").toggle();
+    $("form[name='create-device'] input[name='type']").val(deviceType);
+    dialog = $( "#create-device-dialog" ).dialog({ autoOpen: false, height: 300, width: 350, modal: true, buttons: {
+                    "SUBMIT": function() {
+                        addDevice();
+                        $( this ).dialog( "close" );
+                    },
+                    Cancel: function() {
+                        $( this ).dialog( "close" );
+                    }
+                }, close: function() { console.log("Closing"); }
+            });
+    form = dialog.find( "form" ).on("submit", function( event ) { event.preventDefault(); });
+    dialog.dialog( "open" );
 }
 
 function overlay(node) {
@@ -352,6 +359,8 @@ $(function() {
     $("#add-device-overlay").hide();
     $("#add-device-overlay .btnSubmit").click(addDevice);
     $("#add-device-overlay .btnCancel").click(function() { $("#add-device-overlay").toggle() });
+
+    $("#create-device-dialog").hide();
 
     $("#cloud").click(function() { onDeviceClick("cloud") });
     $("#router").click(function() { onDeviceClick("router") });

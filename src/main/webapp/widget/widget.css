@@ -82,3 +82,7 @@ pre {
 	padding: 15px;
 	text-align: center;
 }
+
+fieldset {
+	border: 0px none;
+}

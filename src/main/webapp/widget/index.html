@@ -5,13 +5,16 @@
     <!-- TODO change this accordingly depending on where you want to deploy this -->
     <base href="/dev/widget/" target="_blank">
 
-    <link href="widget.css" rel="stylesheet" type="text/css"/>
-    <script src="jquery-2.1.3.min.js"></script>
+    <link rel="stylesheet" href="jquery/jquery-ui.min.css">
+    <link rel="stylesheet" href="jquery/jquery-ui.structure.min.css">
+    <link rel="stylesheet" href="jquery/jquery-ui.theme.min.css">
+    <script src="jquery/jquery.js"></script>
+    <script src="jquery/jquery-ui.min.js"></script>
 
-
-    <script type="text/javascript" src="vis/dist/vis.js"></script>
     <link href="vis/dist/vis.css" rel="stylesheet" type="text/css"/>
+    <script type="text/javascript" src="vis/dist/vis.js"></script>
 
+    <link href="widget.css" rel="stylesheet" type="text/css"/>
     <script type="text/javascript" src="widget.js"></script>
 </head>
 
@@ -52,7 +55,15 @@
         </td>
     </tr>
 </table>
-
+<div id="create-device-dialog" title="Create new device">
+    <form name="create-device">
+        <fieldset>
+            <label for="name">Name</label>
+            <input type="text" name="name" id="name">
+            <input type="hidden" name="type" value="">
+        </fieldset>
+    </form>
+</div>
 <div id="overlay">
     <div>
         <p>
@@ -73,19 +84,6 @@
         <input type="hidden" name="defaultgateway" value=""><br>
         [<span class="btnSubmit">Submit</span>]
         [<span class="btnCancel">Cancel</span>]
-        </form>
-        </p>
-    </div>
-</div>
-<div id="add-device-overlay">
-    <div>
-        <p>
-
-        <form name="add-device" action="" onsubmit="return addDevice()">
-            Device name: <input type="text" name="devicename"><br>
-            <input type="hidden" name="device-type-to-add" value=""><br>
-            [<span class="btnSubmit">Submit</span>]
-            [<span class="btnCancel">Cancel</span>]
         </form>
         </p>
     </div>
