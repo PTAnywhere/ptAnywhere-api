@@ -72,16 +72,19 @@ function addDevice(callback) {
 
 function onDeviceClick(deviceType) {
     $("form[name='create-device'] input[name='type']").val(deviceType);
-    dialog = $( "#create-device-dialog" ).dialog({ autoOpen: false, height: 300, width: 350, modal: true, buttons: {
-                    "SUBMIT": function() {
-                        callback = function() { dialog.dialog( "close" ); };
-                        addDevice(callback);
-                    },
-                    Cancel: function() {
-                        $( this ).dialog( "close" );
-                    }
-                }, close: function() { console.log("Closing dialog..."); }
-            });
+    dialog = $("#create-device-dialog").dialog({
+        title: "Create new " + deviceType,
+        autoOpen: false, height: 300, width: 350, modal: true,
+        buttons: {
+            "SUBMIT": function() {
+                callback = function() { dialog.dialog( "close" ); };
+                addDevice(callback);
+            },
+            Cancel:function() {
+                $( this ).dialog( "close" );
+            }
+        }, close: function() { console.log("Closing dialog..."); }
+     });
     form = dialog.find( "form" ).on("submit", function( event ) { event.preventDefault(); });
     dialog.dialog( "open" );
 }
@@ -361,12 +364,10 @@ $(function() {
     $("#add-device-overlay .btnCancel").click(function() { $("#add-device-overlay").toggle() });
 
     $("#create-device-dialog").hide();
-
-    $("#cloud").click(function() { onDeviceClick("cloud") });
-    $("#router").click(function() { onDeviceClick("router") });
-    $("#switch").click(function() { onDeviceClick("switch") });
-    $("#pc").click(function() { onDeviceClick("pc") });
-
+    $("#creation-menu figure img").each(function() {
+        var deviceId = $(this).attr("id");
+        $(this).click(function() { onDeviceClick(deviceId); });
+    });
     // http://localhost:8080/webPacketTracer/widget/fake.json
     $.getJSON(api_url + "/all", loadTopology).fail(loadTopology);  // Apparently status code 304 is an error for this method :-S
 });
