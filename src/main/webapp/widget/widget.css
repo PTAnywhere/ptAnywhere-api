@@ -86,3 +86,19 @@ pre {
 fieldset {
 	border: 0px none;
 }
+
+#creation-menu figure {
+	display:table-cell;
+	width: 20%;
+	margin: 0;
+	text-align: center;
+}
+
+#creation-menu figure img {
+	width: 120px;
+}
+
+#creation-menu figure figcaption {
+	margin-top: 5%;
+	display: block;
+}
