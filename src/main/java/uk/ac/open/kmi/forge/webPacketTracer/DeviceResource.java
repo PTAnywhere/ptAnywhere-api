@@ -2,6 +2,7 @@ package uk.ac.open.kmi.forge.webPacketTracer;
 
 import com.cisco.pt.ipc.sim.Network;
 import com.cisco.pt.ipc.sim.port.HostPort;
+import com.cisco.pt.ipc.ui.LogicalWorkspace;
 import uk.ac.open.kmi.forge.webPacketTracer.gateway.PTCallable;
 import uk.ac.open.kmi.forge.webPacketTracer.pojo.Device;
 import uk.ac.open.kmi.forge.webPacketTracer.pojo.Port;
@@ -12,7 +13,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 
-abstract class AbstractDeviceGetter extends PTCallable<Device> {
+abstract class AbstractDeviceHandler extends PTCallable<Device> {
     protected com.cisco.pt.ipc.sim.Device getDeviceByName(String deviceName) {
         final Network network = this.task.getIPC().network();
         return network.getDevice(deviceName);
@@ -45,7 +46,7 @@ abstract class AbstractDeviceGetter extends PTCallable<Device> {
     }
 }
 
-class DeviceGetterByName extends AbstractDeviceGetter {
+class DeviceGetterByName extends AbstractDeviceHandler {
     final String name;
     public DeviceGetterByName(String name) {
         this.name = name;
@@ -56,7 +57,7 @@ class DeviceGetterByName extends AbstractDeviceGetter {
     }
 }
 
-class DeviceGetterById extends AbstractDeviceGetter {
+class DeviceGetterById extends AbstractDeviceHandler {
     final String dId;
     public DeviceGetterById(String dId) {
         this.dId = dId;
@@ -67,6 +68,19 @@ class DeviceGetterById extends AbstractDeviceGetter {
     }
 }
 
+class DeviceDeleter extends AbstractDeviceHandler {
+    final String dId;
+    public DeviceDeleter(String dId) {
+        this.dId = dId;
+    }
+    @Override
+    public Device internalRun() {
+        final LogicalWorkspace workspace = this.task.getIPC().appWindow().getActiveWorkspace().getLogicalWorkspace();
+        final com.cisco.pt.ipc.sim.Device d = getDeviceById(this.dId);
+        workspace.removeDevice(d.getName());  // It can only be removed by name :-S
+        return toPOJODevice(d);
+    }
+}
 
 @Path("devices/{device}")
 public class DeviceResource {
@@ -80,5 +94,11 @@ public class DeviceResource {
         } else {
             return new DeviceGetterById(deviceId).call();  // Not using a new Thread
         }
+    }
+
+    @DELETE
+    @Produces(MediaType.APPLICATION_JSON)
+    public Device removeDevice(@PathParam("device") String deviceId) {
+        return new DeviceDeleter(deviceId).call();  // Not using a new Thread
     }
 }
