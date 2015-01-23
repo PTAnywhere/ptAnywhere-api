@@ -65,22 +65,36 @@ function addDevice(callback) {
 
     $.postJSON( api_url + "/devices", newDevice,
         function(data) {
-            redrawTopology();
             console.log("The device was created successfully.");
-        })
-        //.done(function(data) { console.log("The device was created successfully."); })
-        .fail(function(data) { console.error("Something went wrong in the device creation.") })
-        .always(callback);
+        }).done(callback)
+        .fail(function(data) { console.error("Something went wrong in the device creation.") });
+}
+
+
+function deleteDevice(callback) {
+    deviceId = $("form[name='modify-device'] input[name='deviceId']").val();
+    console.log("Deleting device " + deviceId);
+    $.ajax({
+        url: api_url + "/devices/" + deviceId,
+        type: 'DELETE',
+        success: function(result) {
+            console.log("The device was deleted successfully.");
+        }
+    }).done(callback)
+    .fail(function(data) { console.error("Something went wrong in the device creation.") });
 }
 
 function onDeviceClick(deviceType) {
     $("form[name='create-device'] input[name='type']").val(deviceType);
     dialog = $("#create-device-dialog").dialog({
         title: "Create new " + deviceType,
-        autoOpen: false, height: 300, width: 350, modal: true,
+        autoOpen: false, height: 300, width: 350, modal: true, draggable: false,
         buttons: {
             "SUBMIT": function() {
-                callback = function() { dialog.dialog( "close" ); };
+                var callback = function() {
+                    dialog.dialog( "close" );
+                    redrawTopology();
+                };
                 addDevice(callback);
             },
             Cancel:function() {
@@ -93,14 +107,9 @@ function onDeviceClick(deviceType) {
 }
 
 function overlay(node) {
-    console.log("overlay network " + network);
-
-    document.forms["ipconfig"]["interface"].options.length = 0;
-
+    /*
+    document.forms["modify-device"]["interface"].options.length = 0;
     current = nodes.get(node);
-
-    console.log("overlay node " + current.id);
-    console.log("overlay node " + current.label);
     for (i = 0; i < current.ports.length; i++) {
         portname = current.ports[i].portName;
         portipaddress = current.ports[i].portIpAddress;
@@ -109,20 +118,15 @@ function overlay(node) {
         if (i == 0) {
             defaultselected = true;
         }
-        document.forms["ipconfig"]["interface"].options[i] = new Option(
+        document.forms["modify-device"]["interface"].options[i] = new Option(
                 portname, portname, defaultselected, false);
         if (i == 0) {
-            document.forms["ipconfig"]["ipaddress"].value = portipaddress;
-            document.forms["ipconfig"]["subnetmask"].value = portsubnetmask;
+            document.forms["modify-device"]["ipaddress"].value = portipaddress;
+            document.forms["modify-device"]["subnetmask"].value = portsubnetmask;
         }
     }
-
     currentlinkcount = 0;
-    document.forms["ipconfig"]["linkinterface"].options[0] = new Option("--", "--", true, false);
-
-    console.log("Nodes " + JSON.stringify(nodes));
-    console.log("Nodes _data length " + nodes._data.length);
-
+    document.forms["modify-device"]["linkinterface"].options[0] = new Option("--", "--", true, false);
     for (var key in nodes._data) {
         if (nodes.get(key).label != current.label) {
             console.log("Possible link node " + JSON.stringify(nodes.get(key)));
@@ -130,15 +134,36 @@ function overlay(node) {
             if ('undefined' !== typeof nodes.get(key).ports) {
                 for (j = 0; j < nodes.get(key).ports.length; j++) {
                     var optionName = nodes.get(key).label + ":" + nodes.get(key).ports[j].portName;
-                    document.forms["ipconfig"]["linkinterface"].options[currentlinkcount + 1] = new Option(
+                    document.forms["modify-device"]["linkinterface"].options[currentlinkcount + 1] = new Option(
                             optionName, optionName, false, false);
                     currentlinkcount++;
                 }
             }
         }
-    }
-
-    $("#overlay").toggle();
+    }*/
+    $("form[name='modify-device'] input[name='deviceId']").val(node);
+    var callback = function() {
+        dialog.dialog( "close" );
+        redrawTopology();
+    };
+    $("#modify-dialog-tabs").tabs();
+    dialog = $("#modify-device-dialog").dialog({
+        title: "Modify device",
+        autoOpen: false, height: 300, width: 450, modal: true, draggable: false,
+        buttons: {
+            "Delete": function() {
+                deleteDevice(callback);
+             },
+            "SUBMIT": function() {
+                addDevice(callback);
+            },
+            Cancel:function() {
+                $( this ).dialog( "close" );
+            }
+        }, close: function() { console.log("Closing dialog..."); }
+     });
+    form = dialog.find( "form" ).on("submit", function( event ) { event.preventDefault(); });
+    dialog.dialog( "open" );
 }
 
 function configureIP() {
@@ -321,7 +346,6 @@ function loadTopology(data) {
                 shape : 'image',
                 image : "cloud.png"
             },
-
             routerDevice : {
                 shape : 'image',
                 image : "router.png"
@@ -346,14 +370,13 @@ function toJSON(obj) {
 }
 
 function onTap(properties) {
-    overlay(properties.nodes[0])
     if (properties.nodes != null) {
+        overlay(properties.nodes[0]);
         for (i = 0; i < properties.nodes.length; i++) {
             console.log(properties.nodes[i])
         }
         tappedDevice = properties.nodes[0];
-        console.log("tappedDevice");
-        console.log(tappedDevice);
+        console.log("tappedDevice " + tappedDevice);
     }
 }
 
@@ -362,11 +385,8 @@ function redrawTopology() {
 }
 
 $(function() {
-    $("#overlay").hide();
-    $("#overlay .btnSubmit").click(configureIP);
-    $("#overlay .btnCancel").click(function() { $("#overlay").toggle() });
-
     $("#create-device-dialog").hide();
+    $("#modify-device-dialog").hide();
     $("#creation-menu figure img").each(function() {
         var deviceId = $(this).attr("id");
         $(this).click(function() { onDeviceClick(deviceId); });

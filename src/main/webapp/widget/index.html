@@ -2,8 +2,6 @@
 <html>
 <head>
     <title>Network | DataSet</title>
-    <!-- TODO change this accordingly depending on where you want to deploy this -->
-    <base href="/dev/widget/" target="_blank">
 
     <link rel="stylesheet" href="jquery/jquery-ui.min.css">
     <link rel="stylesheet" href="jquery/jquery-ui.structure.min.css">
@@ -23,8 +21,7 @@
 <table class="view">
     <tr>
         <td colspan=4>
-            <h2>Network (development version)</h2>
-
+            <h2>PacketTracer Widget (development version)</h2>
             <div id="network"></div>
         </td>
     </tr>
@@ -50,13 +47,40 @@
 <div id="create-device-dialog" title="Create new device">
     <form name="create-device">
         <fieldset>
-            <label for="name">Name</label>
-            <input type="text" name="name" id="name">
+            <label for="create-name">Name</label>
+            <input type="text" name="name" id="create-name">
             <input type="hidden" name="type" value="">
         </fieldset>
     </form>
 </div>
-<div id="overlay">
+<div id="modify-device-dialog">
+    <div id="modify-dialog-tabs">
+        <form name="modify-device">
+            <input type="hidden" name="deviceId" value="">
+            <ul>
+                <li><a href="#tabs-1">Global Settings</a></li>
+                <li><a href="#tabs-2">Connections</a></li>
+            </ul>
+            <div id="tabs-1">
+                IP address: <input type="text" name="ipaddress"><br>
+                Subnet mask: <input type="text" name="subnetmask"><br>
+            </div>
+            <div id="tabs-2">
+                <select id="interface" name="interface" size="1">
+                    <option value="port0">DefaultPort0</option>
+                </select> <br />
+                Delete this connection? <input type="checkbox" name="delete-link">
+                <hr>
+                Add connection:
+                <select id="linkinterface" name="linkinterface" size="1">
+                    <option value="port0">DefaultPort0</option>
+                </select><br>
+                <input type="hidden" name="defaultgateway" value=""><br>
+            </div>
+        </form>
+    </div>
+</div>
+<!--<div id="overlay">
     <div>
         <p>
         <form name="ipconfig" action="" onsubmit="return configureIP()">
@@ -79,7 +103,7 @@
         </form>
         </p>
     </div>
-</div>
+</div>-->
 
 </body>
 </html>
