@@ -6,31 +6,34 @@ import uk.ac.open.kmi.forge.webPacketTracer.gateway.PTCallable;
 import uk.ac.open.kmi.forge.webPacketTracer.pojo.Device;
 import uk.ac.open.kmi.forge.webPacketTracer.pojo.Port;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.HashSet;
 import java.util.Set;
 
 
-class DeviceGetter extends PTCallable<Device> {
-
-    final String deviceId;
-
-    public DeviceGetter(String deviceId) {
-        this.deviceId = deviceId;
+abstract class AbstractDeviceGetter extends PTCallable<Device> {
+    protected com.cisco.pt.ipc.sim.Device getDeviceByName(String deviceName) {
+        final Network network = this.task.getIPC().network();
+        return network.getDevice(deviceName);
     }
 
-    @Override
-    public Device internalRun() {
+    protected com.cisco.pt.ipc.sim.Device getDeviceById(String deviceId) {
         final Network network = this.task.getIPC().network();
-        final com.cisco.pt.ipc.sim.Device cDev = network.getDevice(this.deviceId);
-        final Device d = Device.fromCiscoObject(cDev);
+        for (int i = 0; i < network.getDeviceCount(); i++) {
+            final com.cisco.pt.ipc.sim.Device ret = network.getDeviceAt(i);
+            if (deviceId.equals(ret.getObjectUUID().getDecoratedHexString())) {
+                return ret;
+            }
+        }
+        return null;
+    }
+
+    protected Device toPOJODevice(com.cisco.pt.ipc.sim.Device d) {
+        final Device ret = Device.fromCiscoObject(d);
         final Set<Port> ports = new HashSet<Port>();
-        for (int i = 0; i < cDev.getPortCount(); i++) {
-            com.cisco.pt.ipc.sim.port.Port port = cDev.getPortAt(i);
+        for (int i = 0; i < d.getPortCount(); i++) {
+            com.cisco.pt.ipc.sim.port.Port port = d.getPortAt(i);
             if (port instanceof HostPort) {
                 ports.add(Port.fromCiscoObject((HostPort) port));
             } else {
@@ -38,16 +41,44 @@ class DeviceGetter extends PTCallable<Device> {
                         " is not an instance of HostPort " + port.getType().toString());
             }
         }
-        return d;
+        return ret;
     }
 }
+
+class DeviceGetterByName extends AbstractDeviceGetter {
+    final String name;
+    public DeviceGetterByName(String name) {
+        this.name = name;
+    }
+    @Override
+    public Device internalRun() {
+        return toPOJODevice(getDeviceByName(this.name));
+    }
+}
+
+class DeviceGetterById extends AbstractDeviceGetter {
+    final String dId;
+    public DeviceGetterById(String dId) {
+        this.dId = dId;
+    }
+    @Override
+    public Device internalRun() {
+        return toPOJODevice(getDeviceById(this.dId));
+    }
+}
+
 
 @Path("devices/{device}")
 public class DeviceResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public Device getDevice(@PathParam("device") String deviceName) {
-        final DeviceGetter getter = new DeviceGetter(deviceName);
-        return getter.call();  // Not using a new Thread
+    public Device getDevice(
+        @PathParam("device") String deviceId,
+        @DefaultValue("false") @QueryParam("byName") boolean byName) {
+        if (byName) {
+            return new DeviceGetterByName(deviceId).call();  // Not using a new Thread
+        } else {
+            return new DeviceGetterById(deviceId).call();  // Not using a new Thread
+        }
     }
 }
