@@ -64,8 +64,11 @@ function addDevice(callback) {
     console.log("Adding device " + newDevice.name + " of type " + newDevice.type);
 
     $.postJSON( api_url + "/devices", newDevice,
-        function(data) { console.log("The device was created successfully."); })
-        .done(function(data) { console.log("The device was created successfully."); })
+        function(data) {
+            redrawTopology();
+            console.log("The device was created successfully.");
+        })
+        //.done(function(data) { console.log("The device was created successfully."); })
         .fail(function(data) { console.error("Something went wrong in the device creation.") })
         .always(callback);
 }
@@ -354,20 +357,19 @@ function onTap(properties) {
     }
 }
 
+function redrawTopology() {
+    $.getJSON(api_url + "/all", loadTopology).fail(loadTopology);  // Apparently status code 304 is an error for this method :-S
+}
+
 $(function() {
     $("#overlay").hide();
     $("#overlay .btnSubmit").click(configureIP);
     $("#overlay .btnCancel").click(function() { $("#overlay").toggle() });
-
-    $("#add-device-overlay").hide();
-    $("#add-device-overlay .btnSubmit").click(addDevice);
-    $("#add-device-overlay .btnCancel").click(function() { $("#add-device-overlay").toggle() });
 
     $("#create-device-dialog").hide();
     $("#creation-menu figure img").each(function() {
         var deviceId = $(this).attr("id");
         $(this).click(function() { onDeviceClick(deviceId); });
     });
-    // http://localhost:8080/webPacketTracer/widget/fake.json
-    $.getJSON(api_url + "/all", loadTopology).fail(loadTopology);  // Apparently status code 304 is an error for this method :-S
+    redrawTopology();
 });
