@@ -106,27 +106,25 @@ function onDeviceClick(deviceType) {
     dialog.dialog( "open" );
 }
 
-function overlay(node) {
-    /*
+function updateOverlay(node) {
+    $("form[name='modify-device'] input[name='deviceId']").val(node);
+
     document.forms["modify-device"]["interface"].options.length = 0;
     current = nodes.get(node);
     for (i = 0; i < current.ports.length; i++) {
-        portname = current.ports[i].portName;
-        portipaddress = current.ports[i].portIpAddress;
-        portsubnetmask = current.ports[i].portSubnetMask;
-        defaultselected = false;
-        if (i == 0) {
-            defaultselected = true;
-        }
+        var portName = current.ports[i].portName;
+        var portIpAddress = current.ports[i].portIpAddress;
+        var portSubnetMask = current.ports[i].portSubnetMask;
+        var defaultSelected = (i == 0);
         document.forms["modify-device"]["interface"].options[i] = new Option(
-                portname, portname, defaultselected, false);
+                portName, portName, defaultSelected, false);
         if (i == 0) {
-            document.forms["modify-device"]["ipaddress"].value = portipaddress;
-            document.forms["modify-device"]["subnetmask"].value = portsubnetmask;
+            document.forms["modify-device"]["ipAddress"].value = portIpAddress;
+            document.forms["modify-device"]["subnetMask"].value = portSubnetMask;
         }
     }
-    currentlinkcount = 0;
-    document.forms["modify-device"]["linkinterface"].options[0] = new Option("--", "--", true, false);
+    currentLinkCount = 0;
+    document.forms["modify-device"]["linkInterface"].options[0] = new Option("--", "--", true, false);
     for (var key in nodes._data) {
         if (nodes.get(key).label != current.label) {
             console.log("Possible link node " + JSON.stringify(nodes.get(key)));
@@ -134,14 +132,17 @@ function overlay(node) {
             if ('undefined' !== typeof nodes.get(key).ports) {
                 for (j = 0; j < nodes.get(key).ports.length; j++) {
                     var optionName = nodes.get(key).label + ":" + nodes.get(key).ports[j].portName;
-                    document.forms["modify-device"]["linkinterface"].options[currentlinkcount + 1] = new Option(
+                    document.forms["modify-device"]["linkInterface"].options[currentLinkCount + 1] = new Option(
                             optionName, optionName, false, false);
-                    currentlinkcount++;
+                    currentLinkCount++;
                 }
             }
         }
-    }*/
-    $("form[name='modify-device'] input[name='deviceId']").val(node);
+    }
+}
+
+function overlay(node) {
+    updateOverlay(node);
     var callback = function() {
         dialog.dialog( "close" );
         redrawTopology();
