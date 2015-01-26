@@ -4,26 +4,31 @@ import com.cisco.pt.ipc.sim.Cloud;
 import com.cisco.pt.ipc.sim.Pc;
 import com.cisco.pt.ipc.sim.Router;
 import com.cisco.pt.ipc.sim.port.HostPort;
+import com.cisco.pt.ipc.sim.port.Link;
 
 // { "portName": "Vlan1", "portIpAddress": "0.0.0.0","portSubnetMask": "0.0.0.0"}
 public class Port {
     String portName;  // E.g., "Vlan1"
     String portIpAddress;  // E.g., "0.0.0.0"
     String portSubnetMask;  // E.g., "0.0.0.0"
+    String linkId;
 
     public Port() {
     }
 
-    public Port(String portName, String portIpAddress, String portSubnetMask) {
+    public Port(String portName, String portIpAddress, String portSubnetMask, String linkId) {
         this.portName = portName;
         this.portIpAddress = portIpAddress;
         this.portSubnetMask = portSubnetMask;
+        this.linkId = linkId;
     }
 
     public static Port fromCiscoObject(com.cisco.pt.ipc.sim.port.HostPort port) {
-        return new Port(port.getName(),
-                        port.getIpAddress().getDottedQuadString(),
-                        port.getSubnetMask().getDottedQuadString());
+        final Link l = port.getLink();
+        return new Port( port.getName(),
+                         port.getIpAddress().getDottedQuadString(),
+                         port.getSubnetMask().getDottedQuadString(),
+                         (l==null)? null: l.getObjectUUID().getDecoratedHexString() );
     }
 
     public String getPortName() {
@@ -48,6 +53,14 @@ public class Port {
 
     public void setPortSubnetMask(String portSubnetMask) {
         this.portSubnetMask = portSubnetMask;
+    }
+
+    public String getLink() {
+        return linkId;
+    }
+
+    public void setLink(String linkId) {
+        this.linkId = linkId;
     }
 
     @Override
