@@ -107,10 +107,12 @@ function onDeviceClick(deviceType) {
 }
 
 function updateOverlay(node) {
-    $("form[name='modify-device'] input[name='deviceId']").val(node);
+    var current = nodes.get(node);
+    var modForm = $("form[name='modify-device']");
+    $("input[name='deviceId']", modForm).val(node);
+    $("input[name='displayName']", modForm).val(current.label);
 
     document.forms["modify-device"]["interface"].options.length = 0;
-    current = nodes.get(node);
     for (i = 0; i < current.ports.length; i++) {
         var portName = current.ports[i].portName;
         var portIpAddress = current.ports[i].portIpAddress;
@@ -282,9 +284,9 @@ function configureIP() {
     }
 }
 
-function loadTopology(data) {
-    nodesJson = data.devices;
-    edgesJson = data.edges;
+function loadTopology(responseData) {
+    nodesJson = responseData.devices;
+    edgesJson = responseData.edges;
 
     // create an array with nodes
     nodes = new vis.DataSet();
@@ -293,21 +295,6 @@ function loadTopology(data) {
     });
     if (nodesJson != null) {
         nodes.add(nodesJson);
-    } else {
-        nodes.add([
-            {
-                "id" : "{b8c1ad78-ae35-4bf3-bf21-1c7e8cfe208d}",
-                "label" : "Access Point1"
-            },
-            {
-                "id" : "{9ced95e5-b478-474e-8775-7006cd295963}",
-                "label" : "Multilayer Switch0"
-            },
-            {
-                "id" : "{3898c3e2-aec5-4b45-bfa7-ce282c20c50a}",
-                "label" : "PC0"
-            },
-        ]);
     }
 
     // create an array with edges
@@ -315,33 +302,17 @@ function loadTopology(data) {
     edges.subscribe('*', function() {
         $('#edges').html(toJSON(edges.get()));
     });
-
     if (edgesJson != null) {
         edges.add(edgesJson);
-    } else {
-        edges.add([
-            {
-                "id" : "{01e3c88b-1b76-4a28-bb56-9f355e4c278a}",
-                "from" : "{b8c1ad78-ae35-4bf3-bf21-1c7e8cfe208d}",
-
-                "to" : "{9ced95e5-b478-474e-8775-7006cd295963}"
-            },
-            {
-                "id" : "{a89b4e59-9e06-4d11-91df-f36f9f7fc97f}",
-                "from" : "{9ced95e5-b478-474e-8775-7006cd295963}",
-
-                "to" : "{3898c3e2-aec5-4b45-bfa7-ce282c20c50a}"
-            }, ]);
     }
 
     // create a network
     var container = $('#network').get(0);
-    var data = { nodes : nodes, edges : edges };
+    var visData = { nodes : nodes, edges : edges };
     var options = {
         dragNetwork : 'false',
         dragNodes : 'false',
         zoomable : 'false',
-
         groups : {
             cloudDevice : {
                 shape : 'image',
@@ -361,7 +332,7 @@ function loadTopology(data) {
             }
         }
     };
-    network = new vis.Network(container, data, options);
+    network = new vis.Network(container, visData, options);
     network.on('click', onTap);
 }
 
