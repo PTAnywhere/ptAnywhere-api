@@ -3,8 +3,10 @@ package uk.ac.open.kmi.forge.webPacketTracer.pojo;
 import com.cisco.pt.ipc.sim.Cloud;
 import com.cisco.pt.ipc.sim.Pc;
 import com.cisco.pt.ipc.sim.Router;
+import com.cisco.pt.ipc.sim.port.HostPort;
 
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.ArrayList;
 import java.util.List;
 
 @XmlRootElement
@@ -28,6 +30,10 @@ public class Device {
     }
 
     public static Device fromCiscoObject(com.cisco.pt.ipc.sim.Device device) {
+        return fromCiscoObject(device, true);
+    }
+
+    public static Device fromCiscoObject(com.cisco.pt.ipc.sim.Device device, boolean loadPorts) {
         final String id = device.getObjectUUID().getDecoratedHexString();
         final String label = /*device.getClass() + ":" + device.getModel()
                                + ":" + */device.getName();
@@ -43,7 +49,15 @@ public class Device {
         } else {
             group = "switchDevice";
         }
-        return new Device(id, label, deviceX, deviceY, group);
+        final Device ret = new Device(id, label, deviceX, deviceY, group);
+        if (loadPorts) {
+            final List<Port> ports = new ArrayList<Port>();
+            for(int i=0; i<device.getPortCount(); i++) {
+                ports.add( Port.fromCiscoObject((HostPort) device.getPortAt(i)) ); // FIXME check this casting!
+            }
+            ret.setPorts(ports);
+        }
+        return ret;
     }
 
     public String getId() {
