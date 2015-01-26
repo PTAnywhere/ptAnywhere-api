@@ -106,6 +106,13 @@ function onDeviceClick(deviceType) {
     dialog.dialog( "open" );
 }
 
+
+function updateInterfaceInformation(port) {
+    document.forms["modify-device"]["ipAddress"].value = port.portIpAddress;
+    document.forms["modify-device"]["subnetMask"].value = port.portSubnetMask;
+}
+
+
 function updateOverlay(node) {
     var current = nodes.get(node);
     var modForm = $("form[name='modify-device']");
@@ -115,16 +122,25 @@ function updateOverlay(node) {
     document.forms["modify-device"]["interface"].options.length = 0;
     for (i = 0; i < current.ports.length; i++) {
         var portName = current.ports[i].portName;
-        var portIpAddress = current.ports[i].portIpAddress;
-        var portSubnetMask = current.ports[i].portSubnetMask;
         var defaultSelected = (i == 0);
         document.forms["modify-device"]["interface"].options[i] = new Option(
                 portName, portName, defaultSelected, false);
-        if (i == 0) {
-            document.forms["modify-device"]["ipAddress"].value = portIpAddress;
-            document.forms["modify-device"]["subnetMask"].value = portSubnetMask;
+        if (defaultSelected) {
+            updateInterfaceInformation(current.ports[i]);
         }
     }
+    $("#interface").change(function () {
+        $("option:selected", this).each(function() { // There is only one selection
+            var selectedIFace = $(this).text();
+            for (i = 0; i < current.ports.length; i++) {
+                if ( selectedIFace == current.ports[i].portName ) {
+                    updateInterfaceInformation(current.ports[i]);
+                    break;
+                }
+            }
+        });
+    });
+
     currentLinkCount = 0;
     document.forms["modify-device"]["linkInterface"].options[0] = new Option("--", "--", true, false);
     for (var key in nodes._data) {
