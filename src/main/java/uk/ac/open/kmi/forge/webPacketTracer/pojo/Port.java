@@ -8,6 +8,7 @@ import com.cisco.pt.ipc.sim.port.Link;
 
 // { "portName": "Vlan1", "portIpAddress": "0.0.0.0","portSubnetMask": "0.0.0.0"}
 public class Port {
+
     String portName;  // E.g., "Vlan1"
     String portIpAddress;  // E.g., "0.0.0.0"
     String portSubnetMask;  // E.g., "0.0.0.0"

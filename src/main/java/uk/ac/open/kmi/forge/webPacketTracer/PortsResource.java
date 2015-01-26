@@ -1,8 +1,6 @@
 package uk.ac.open.kmi.forge.webPacketTracer;
 
-import com.cisco.pt.ipc.sim.Network;
 import uk.ac.open.kmi.forge.webPacketTracer.gateway.PTCallable;
-import uk.ac.open.kmi.forge.webPacketTracer.pojo.Device;
 import uk.ac.open.kmi.forge.webPacketTracer.pojo.Port;
 
 import javax.ws.rs.*;
@@ -10,13 +8,13 @@ import javax.ws.rs.core.MediaType;
 import java.util.Collection;
 
 class PortsGetter extends PTCallable<Collection<Port>> {
-    final String deviceName;
-    public PortsGetter(String deviceName) {
-        this.deviceName = deviceName;
+    final String deviceId;
+    public PortsGetter(String deviceId) {
+        this.deviceId = deviceId;
     }
     @Override
     public Collection<Port> internalRun() {
-        return new DeviceGetterById(this.deviceName).call().getPorts();
+        return new DeviceGetterById(this.deviceId).call().getPorts();
     }
 }
 
