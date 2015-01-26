@@ -106,18 +106,72 @@ function onDeviceClick(deviceType) {
     dialog.dialog( "open" );
 }
 
-
-function updateInterfaceInformation(port) {
-    document.forms["modify-device"]["ipAddress"].value = port.portIpAddress;
-    document.forms["modify-device"]["subnetMask"].value = port.portSubnetMask;
+function getFullPortNameForLink(linkId, notInThisDevice) {
+    for (var key in nodes._data) {
+        var node = nodes.get(key);
+        if (node.label != notInThisDevice.label) {
+            for (i = 0; i < node.ports.length; i++) {
+                var port = node.ports[i];
+                if ('undefined' != typeof port.link) {
+                    if (port.link==linkId) {
+                        return node.label + ":" + port.portName;
+                    }
+                }
+            }
+        }
+    }
+    return null;
 }
 
+function selectLinkedInterface(device, port) {
+    if ('undefined' == typeof port.link) {
+        // Select last option file
+        //$('#linkInterface').val('none');
+        document.forms["modify-device"]["linkId"].value = "";
+        $('#linkInterface option:contains("None")').prop('selected', true);
+    } else {
+        document.forms["modify-device"]["linkId"].value = port.link;
+        var connectedToPort = getFullPortNameForLink(port.link, device);
+        if (connectedToPort==null) {
+            console.error("Error. The link " + port.link + " must be connected to a device.")
+        } else {
+            console.log("Connected to: " + connectedToPort);
+            $('#linkInterface').val(connectedToPort);
+        }
+    }
+}
+
+function updateInterfaceInformation(device, port) {
+    document.forms["modify-device"]["ipAddress"].value = port.portIpAddress;
+    document.forms["modify-device"]["subnetMask"].value = port.portSubnetMask;
+    selectLinkedInterface(device, port)
+}
+
+function populateConnectedToSelect(current, nodes) {
+    currentLinkCount = 0;
+    for (var key in nodes._data) {
+        if (nodes.get(key).label != current.label) {
+            if ('undefined' !== typeof nodes.get(key).ports) {
+                for (j = 0; j < nodes.get(key).ports.length; j++) {
+                    var port = nodes.get(key).ports[j];
+                    var optionName = nodes.get(key).label + ":" + port.portName;
+                    document.forms["modify-device"]["linkInterface"].options[currentLinkCount + 1] = new Option(
+                        optionName, optionName, false, false);
+                    currentLinkCount++;
+                }
+            }
+        }
+    }
+    document.forms["modify-device"]["linkInterface"].options[0] = new Option("None", "none", false, false);
+}
 
 function updateOverlay(node) {
     var current = nodes.get(node);
     var modForm = $("form[name='modify-device']");
     $("input[name='deviceId']", modForm).val(node);
     $("input[name='displayName']", modForm).val(current.label);
+
+    populateConnectedToSelect(current, nodes);
 
     document.forms["modify-device"]["interface"].options.length = 0;
     for (i = 0; i < current.ports.length; i++) {
@@ -126,7 +180,7 @@ function updateOverlay(node) {
         document.forms["modify-device"]["interface"].options[i] = new Option(
                 portName, portName, defaultSelected, false);
         if (defaultSelected) {
-            updateInterfaceInformation(current.ports[i]);
+            updateInterfaceInformation(current, current.ports[i]);
         }
     }
     $("#interface").change(function () {
@@ -134,29 +188,12 @@ function updateOverlay(node) {
             var selectedIFace = $(this).text();
             for (i = 0; i < current.ports.length; i++) {
                 if ( selectedIFace == current.ports[i].portName ) {
-                    updateInterfaceInformation(current.ports[i]);
+                    updateInterfaceInformation(current, current.ports[i]);
                     break;
                 }
             }
         });
     });
-
-    currentLinkCount = 0;
-    document.forms["modify-device"]["linkInterface"].options[0] = new Option("--", "--", true, false);
-    for (var key in nodes._data) {
-        if (nodes.get(key).label != current.label) {
-            console.log("Possible link node " + JSON.stringify(nodes.get(key)));
-            console.log("Ports: " + JSON.stringify(nodes.get(key).ports));
-            if ('undefined' !== typeof nodes.get(key).ports) {
-                for (j = 0; j < nodes.get(key).ports.length; j++) {
-                    var optionName = nodes.get(key).label + ":" + nodes.get(key).ports[j].portName;
-                    document.forms["modify-device"]["linkInterface"].options[currentLinkCount + 1] = new Option(
-                            optionName, optionName, false, false);
-                    currentLinkCount++;
-                }
-            }
-        }
-    }
 }
 
 function overlay(node) {
