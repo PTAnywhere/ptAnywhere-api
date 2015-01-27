@@ -84,8 +84,24 @@ pre {
 	text-align: center;
 }
 
-fieldset {
+#create-device-dialog fieldset {
 	border: 0px none;
+}
+
+#creation-fieldset {
+	margin-top: 30px;
+}
+
+#creation-menu {
+	width: 50%;
+	margin: 0px auto;
+}
+
+#creation-menu figure {
+	display:table-cell;
+	width: 28%;
+	margin: 0;
+	text-align: center;
 }
 
 #creation-menu figure {
