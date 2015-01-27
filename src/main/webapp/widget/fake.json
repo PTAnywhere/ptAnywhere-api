@@ -1,91 +1,86 @@
 {
-  "devices":[
+  "devices": [
     {
-      "id": "{2dfc69ec-ea4c-4c24-b0fd-6fb0a340e1cc}",
-      "label": "LeftHandSide",
-      "x":577,
-      "y":288,
-      "group": "pcDevice"
-    , "ports": [{ "portName": "FastEthernet0", "portIpAddress": "0.0.0.0","portSubnetMask": "0.0.0.0"}]
+      "group":"pcDevice",
+      "id":"{24024c52-6227-4917-aa23-9cf93099ef92}",
+      "label":"PC0",
+      "ports":[
+          {"link":"{f54e73ea-0b77-4bc5-a64e-94033df38ba7}","portIpAddress":"10.0.0.2","portName":"FastEthernet0","portSubnetMask":"255.255.255.0"}
+      ],
+      "x":100,
+      "y":372
     },
     {
-      "id": "{1d689e3a-e3fe-4ebb-8319-5e9c4be0e233}",
-      "label": "ddd",
-      "x":153,
-      "y":106,
-      "group": "switchDevice"
-    , "ports": [{ "portName": "Vlan1", "portIpAddress": "0.0.0.0","portSubnetMask": "0.0.0.0"}]
+      "group":"routerDevice",
+      "id":"{c871bab9-16f1-4b27-b4d7-63c6122e1df9}",
+      "label":"Router0",
+      "ports":[
+            {"portIpAddress":"0.0.0.0","portName":"Vlan1","portSubnetMask":"0.0.0.0"},
+            {"link":"{f54e73ea-0b77-4bc5-a64e-94033df38ba7}","portIpAddress":"10.0.0.1","portName":"FastEthernet0/0","portSubnetMask":"255.255.255.0"},
+            {"portIpAddress":"0.0.0.0","portName":"FastEthernet0/1","portSubnetMask":"0.0.0.0"},
+            {"link":"{8bfc6692-9299-4071-9d4b-4b779ca0fdc7}","portIpAddress":"10.1.0.1","portName":"Serial1/0","portSubnetMask":"255.255.255.0"},
+            {"portIpAddress":"0.0.0.0","portName":"Serial1/1","portSubnetMask":"0.0.0.0"},
+            {"portIpAddress":"0.0.0.0","portName":"Serial1/2","portSubnetMask":"0.0.0.0"},
+            {"portIpAddress":"0.0.0.0","portName":"Serial1/3","portSubnetMask":"0.0.0.0"}
+      ],
+      "x":361,
+      "y":372
     },
     {
-      "id": "{1052f9ab-6e14-48cc-9649-d0dce3550495}",
-      "label": "Internet",
-      "x":78,
-      "y":261,
-      "group": "cloudDevice"
+      "group":"pcDevice",
+      "id":"{d608189b-f415-47be-b294-9349756970e7}",
+      "label":"PC1",
+      "ports": [
+            {"portIpAddress":"0.0.0.0","portName":"FastEthernet0","portSubnetMask":"0.0.0.0"}
+      ],
+      "x":873,
+      "y":603
     },
     {
-      "id": "{3bc3b1ae-5935-4537-84c4-ff918b54fb59}",
-      "label": "MyRouter",
-      "x":264,
-      "y":261,
-      "group": "routerDevice"
-    , "ports": [{ "portName": "Vlan1", "portIpAddress": "0.0.0.0","portSubnetMask": "0.0.0.0"},
-      { "portName": "GigabitEthernet0/0", "portIpAddress": "0.0.0.0","portSubnetMask": "0.0.0.0"},
-      { "portName": "GigabitEthernet0/1", "portIpAddress": "0.0.0.0","portSubnetMask": "0.0.0.0"}]
+      "group":"routerDevice",
+      "id":"{50bf9ea1-2cd6-4067-a85d-a8b5aac7f83b}",
+      "label":"Router1",
+      "ports":[
+          {"portIpAddress":"0.0.0.0","portName":"Vlan1","portSubnetMask":"0.0.0.0"},
+          {"link":"{dcec93cb-4bb5-4e66-9548-2a2e2692eb22}","portIpAddress":"10.2.0.1","portName":"FastEthernet0/0","portSubnetMask":"255.255.255.0"},
+          {"portIpAddress":"0.0.0.0","portName":"FastEthernet0/1","portSubnetMask":"0.0.0.0"},
+          {"link":"{8bfc6692-9299-4071-9d4b-4b779ca0fdc7}","portIpAddress":"10.1.0.2","portName":"Serial1/0","portSubnetMask":"255.255.255.0"},
+          {"portIpAddress":"0.0.0.0","portName":"Serial1/1","portSubnetMask":"0.0.0.0"},
+          {"portIpAddress":"0.0.0.0","portName":"Serial1/2","portSubnetMask":"0.0.0.0"},
+          {"portIpAddress":"0.0.0.0","portName":"Serial1/3","portSubnetMask":"0.0.0.0"}
+      ],
+      "x":688,
+      "y":376
     },
     {
-      "id": "{51c09438-6359-4ea3-9b7d-4fcd01d5309a}",
-      "label": "Router0",
-      "x":486,
-      "y":456,
-      "group": "routerDevice"
-    , "ports": [{ "portName": "Vlan1", "portIpAddress": "0.0.0.0","portSubnetMask": "0.0.0.0"},
-      { "portName": "FastEthernet0/0", "portIpAddress": "0.0.0.0","portSubnetMask": "0.0.0.0"},
-      { "portName": "FastEthernet0/1", "portIpAddress": "0.0.0.0","portSubnetMask": "0.0.0.0"}]
-    },
-    {
-      "id": "{a5a69210-4ea1-4b88-8091-d10010809183}",
-      "label": "RightHandSide",
-      "x":619,
-      "y":145,
-      "group": "pcDevice"
-    , "ports": [{ "portName": "FastEthernet0", "portIpAddress": "0.0.0.0","portSubnetMask": "0.0.0.0"}]
-    },
-    {
-      "id": "{2d679744-9bdc-4731-a737-2b12098a43f5}",
-      "label": "MySwitch",
-      "x":436,
-      "y":256,
-      "group": "switchDevice"
-    , "ports": [{ "portName": "Vlan1", "portIpAddress": "0.0.0.0","portSubnetMask": "0.0.0.0"}]
-    },
-  ]
-,
+      "group":"pcDevice",
+      "id":"{7c8e41b4-10a7-4766-9d6a-935ab6bc8249}",
+      "label":"Server0","ports":[
+          {"link":"{dcec93cb-4bb5-4e66-9548-2a2e2692eb22}","portIpAddress":"10.2.0.2","portName":"FastEthernet0","portSubnetMask":"255.255.255.0"}
+      ],
+      "x":895,
+      "y":376
+    }],
   "edges":[
     {
       "id": "{14770f84-5071-4fcb-a4ed-0c8bbc3905c2}",
-      "from": "{1052f9ab-6e14-48cc-9649-d0dce3550495}",
-
-      "to": "{3bc3b1ae-5935-4537-84c4-ff918b54fb59}"
+      "from": "{24024c52-6227-4917-aa23-9cf93099ef92}",
+      "to": "{c871bab9-16f1-4b27-b4d7-63c6122e1df9}"
     },
     {
       "id": "{beb3870c-7c75-4a27-a469-fb80b9dd56aa}",
-      "from": "{2dfc69ec-ea4c-4c24-b0fd-6fb0a340e1cc}",
-
-      "to": "{2d679744-9bdc-4731-a737-2b12098a43f5}"
+      "from": "{c871bab9-16f1-4b27-b4d7-63c6122e1df9}",
+      "to": "{50bf9ea1-2cd6-4067-a85d-a8b5aac7f83b}"
     },
     {
       "id": "{90cb5cac-8417-46ad-babb-31913a08e1b9}",
-      "from": "{a5a69210-4ea1-4b88-8091-d10010809183}",
-
-      "to": "{2d679744-9bdc-4731-a737-2b12098a43f5}"
+      "from": "{50bf9ea1-2cd6-4067-a85d-a8b5aac7f83b}",
+      "to": "{d608189b-f415-47be-b294-9349756970e7}"
     },
     {
       "id": "{13d1a71c-e616-4add-aca0-acc69e5fd96a}",
-      "from": "{3bc3b1ae-5935-4537-84c4-ff918b54fb59}",
-
-      "to": "{2d679744-9bdc-4731-a737-2b12098a43f5}"
-    },
+      "from": "{50bf9ea1-2cd6-4067-a85d-a8b5aac7f83b}",
+      "to": "{7c8e41b4-10a7-4766-9d6a-935ab6bc8249}"
+    }
   ]
-
 }
