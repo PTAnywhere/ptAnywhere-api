@@ -1,6 +1,6 @@
 package uk.ac.open.kmi.forge.webPacketTracer.pojo;
 
-import com.cisco.pt.ipc.sim.port.*;
+import com.cisco.pt.ipc.sim.port.Link;
 
 import java.util.*;
 
