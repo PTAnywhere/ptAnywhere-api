@@ -84,6 +84,36 @@ function deleteDevice(callback) {
     .fail(function(data) { console.error("Something went wrong in the device creation.") });
 }
 
+function modifyDevice(callback) {
+    // Check the tab
+    var selectedTab = $("li.ui-state-active").attr("aria-controls");
+    if (selectedTab=="tabs-1") {
+        // General settings: PUT to /devices/id
+        console.log("PUT to /devices/id");
+    } else if (selectedTab=="tabs-2") {
+        // Interfaces
+        // a. Send new IP settings
+        console.log("PUT to /devices/id/ports/port");
+        // b. If link has changed
+        var previousLink = document.forms["modify-device"]["linkInterfacePrevious"].value;
+        var selectedConnection = $('#linkInterface').val();
+        if (previousLink!=selectedConnection) {
+            if (previousLink!="none") {
+                // b1. DELETE to /devices/id/ports/id/link
+                console.log("DELETE to /devices/id/ports/id/link (" + previousLink + ")");
+            }
+            if (selectedConnection!="none") {
+                // b2. If connection is not to "none" => POST to /devices/id/ports/id/link
+                console.log("POST to /devices/id/ports/id/link (" + selectedConnection + ")");
+            }
+        }
+    } else {
+        console.error("ERROR. Selected tab unknown.");
+    }
+    // FIXME
+    callback();
+}
+
 function onDeviceClick(deviceType) {
     $("form[name='create-device'] input[name='type']").val(deviceType);
     dialog = $("#create-device-dialog").dialog({
@@ -100,7 +130,7 @@ function onDeviceClick(deviceType) {
             Cancel:function() {
                 $( this ).dialog( "close" );
             }
-        }, close: function() { console.log("Closing dialog..."); }
+        }, close: function() { /*console.log("Closing dialog...");*/ }
      });
     form = dialog.find( "form" ).on("submit", function( event ) { event.preventDefault(); });
     dialog.dialog( "open" );
@@ -129,6 +159,7 @@ function selectLinkedInterface(device, port) {
         //$('#linkInterface').val('none');
         document.forms["modify-device"]["linkId"].value = "";
         $('#linkInterface option:contains("None")').prop('selected', true);
+        document.forms["modify-device"]["linkInterfacePrevious"].value = "none";
     } else {
         document.forms["modify-device"]["linkId"].value = port.link;
         var connectedToPort = getFullPortNameForLink(port.link, device);
@@ -136,6 +167,7 @@ function selectLinkedInterface(device, port) {
             console.error("Error. The link " + port.link + " must be connected to a device.")
         } else {
             console.log("Connected to: " + connectedToPort);
+            document.forms["modify-device"]["linkInterfacePrevious"].value = connectedToPort;
             $('#linkInterface').val(connectedToPort);
         }
     }
@@ -144,7 +176,7 @@ function selectLinkedInterface(device, port) {
 function updateInterfaceInformation(device, port) {
     document.forms["modify-device"]["ipAddress"].value = port.portIpAddress;
     document.forms["modify-device"]["subnetMask"].value = port.portSubnetMask;
-    selectLinkedInterface(device, port)
+    selectLinkedInterface(device, port);
 }
 
 function populateConnectedToSelect(current, nodes) {
@@ -205,13 +237,13 @@ function overlay(node) {
     $("#modify-dialog-tabs").tabs();
     dialog = $("#modify-device-dialog").dialog({
         title: "Modify device",
-        autoOpen: false, height: 300, width: 450, modal: true, draggable: false,
+        autoOpen: false, height: 350, width: 450, modal: true, draggable: false,
         buttons: {
             "Delete": function() {
                 deleteDevice(callback);
              },
             "SUBMIT": function() {
-                addDevice(callback);
+                modifyDevice(callback);
             },
             Cancel:function() {
                 $( this ).dialog( "close" );
@@ -406,7 +438,10 @@ function onTap(properties) {
 }
 
 function redrawTopology() {
-    $.getJSON(api_url + "/all", loadTopology).fail(loadTopology);  // Apparently status code 304 is an error for this method :-S
+    //$.getJSON(api_url + "/all", loadTopology).fail(function() {
+    $.getJSON("fake.json", loadTopology).fail(function() {
+        console.log("The topology could not be loaded. Possible timeout.");
+    });  // Apparently status code 304 is an error for this method :-S
 }
 
 $(function() {
