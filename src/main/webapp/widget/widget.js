@@ -248,7 +248,7 @@ function overlay(node) {
             Cancel:function() {
                 $( this ).dialog( "close" );
             }
-        }, close: function() { console.log("Closing dialog..."); }
+        }, close: function() { /*console.log("Closing dialog...");*/ }
      });
     form = dialog.find( "form" ).on("submit", function( event ) { event.preventDefault(); });
     dialog.dialog( "open" );
