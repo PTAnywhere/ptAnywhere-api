@@ -53,7 +53,14 @@ public class Device {
         if (loadPorts) {
             final List<Port> ports = new ArrayList<Port>();
             for(int i=0; i<device.getPortCount(); i++) {
-                ports.add( Port.fromCiscoObject((HostPort) device.getPortAt(i)) ); // FIXME check this casting!
+                com.cisco.pt.ipc.sim.port.Port port = device.getPortAt(i);
+                if (port instanceof HostPort) {
+                    ports.add(Port.fromCiscoObject((HostPort) port));
+                } else {
+                    // FIXME log it!
+                    //getLog().error("Port " + port.getName() +
+                    //        " is not an instance of HostPort " + port.getType().toString());
+                }
             }
             ret.setPorts(ports);
         }
