@@ -1,6 +1,5 @@
 package uk.ac.open.kmi.forge.webPacketTracer.gateway;
 
-import com.cisco.pt.ipc.IPCError;
 import com.cisco.pt.ipc.IPCFactory;
 import com.cisco.pt.ipc.ui.IPC;
 import com.cisco.pt.ptmp.ConnectionNegotiationProperties;

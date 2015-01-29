@@ -22,7 +22,7 @@ class PortsGetter extends PTCallable<Collection<Port>> {
 public class PortsResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public Collection<Port> getDevice(
+    public Collection<Port> getPorts(
             @PathParam("device") String deviceId) {
         return new PortsGetter(deviceId).call();  // Not using a new Thread
     }
