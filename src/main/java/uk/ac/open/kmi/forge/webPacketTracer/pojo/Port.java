@@ -1,5 +1,7 @@
 package uk.ac.open.kmi.forge.webPacketTracer.pojo;
 
+import com.cisco.pt.IPAddress;
+import com.cisco.pt.impl.IPAddressImpl;
 import com.cisco.pt.ipc.sim.Cloud;
 import com.cisco.pt.ipc.sim.Pc;
 import com.cisco.pt.ipc.sim.Router;
@@ -25,6 +27,8 @@ public class Port {
     }
 
     public static Port fromCiscoObject(com.cisco.pt.ipc.sim.port.Port port) {
+        if (port==null) return null;
+
         final Link l = port.getLink();
         final Port ret = new Port( port.getName(), "", "",
                 (l==null)? null: l.getObjectUUID().getDecoratedHexString() );

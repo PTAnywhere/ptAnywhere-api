@@ -34,6 +34,7 @@ public class Device {
     }
 
     public static Device fromCiscoObject(com.cisco.pt.ipc.sim.Device device, boolean loadPorts) {
+        if (device==null) return null;
         final String id = device.getObjectUUID().getDecoratedHexString();
         final String label = /*device.getClass() + ":" + device.getModel()
                                + ":" + */device.getName();
