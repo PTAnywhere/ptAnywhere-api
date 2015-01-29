@@ -83,12 +83,13 @@ class LinkCreator extends LinkHandler {
         final Port port = this.pGetter.getPort();
         // String deviceName1, String portName1, String deviceName2, String portName2, ConnectType connType
         getLog().error("Everything ok: " + this.linkToCreate.getToDevice() + ", " + this.linkToCreate.getToPort());
-        final boolean success = workspace.createLink(device.getLabel(), port.getPortName(), this.linkToCreate.getToDevice(), this.linkToCreate.getToPort(), ConnectType.AUTO);
+        final boolean success = workspace.createLink(device.getLabel(), port.getPortName(), this.linkToCreate.getToDevice(), this.linkToCreate.getToPort(), ConnectType.ETHERNET_STRAIGHT);
         if (success) {
             return "new-id"; // TODO return the correct id
         }
 
-        getLog().error("Unsuccessful creation of link in " + device.getLabel() + ":" + port.getPortName() + ".");
+        getLog().error("Unsuccessful creation of link between " + device.getLabel() + ":" + port.getPortName() +
+                " and " + this.linkToCreate.getToDevice() + ":" + this.linkToCreate.getToPort() + ".");
         // TODO throw appropriate exception!
         return null;
     }
