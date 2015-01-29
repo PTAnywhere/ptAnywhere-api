@@ -326,10 +326,53 @@ function loadTopology(responseData) {
                 shape : 'image',
                 image : "PC.png"
             }
+        },
+        stabilize: false,
+        dataManipulation: true,
+        onAdd: function(data,callback) {
+          var span = document.getElementById('operation');
+          var idInput = document.getElementById('node-id');
+          var labelInput = document.getElementById('node-label');
+          var saveButton = document.getElementById('saveButton');
+          var cancelButton = document.getElementById('cancelButton');
+          var div = document.getElementById('network-popUp');
+          span.innerHTML = "Add Node";
+          idInput.value = data.id;
+          labelInput.value = data.label;
+          saveButton.onclick = saveData.bind(this,data,callback);
+          cancelButton.onclick = clearPopUp.bind();
+          div.style.display = 'block';
+        },
+        onEdit: function(data,callback) {
+          var span = document.getElementById('operation');
+          var idInput = document.getElementById('node-id');
+          var labelInput = document.getElementById('node-label');
+          var saveButton = document.getElementById('saveButton');
+          var cancelButton = document.getElementById('cancelButton');
+          //var div = document.getElementById('network-popUp');
+          span.innerHTML = "Edit Node";
+          idInput.value = data.id;
+          labelInput.value = data.label;
+          console.log(data);
+          overlay(data.id);
+          //saveButton.onclick = saveData.bind(this,data,callback);
+          //cancelButton.onclick = clearPopUp.bind();
+          //div.style.display = 'block';
+        },
+        onConnect: function(data,callback) {
+          if (data.from == data.to) {
+            var r=confirm("Do you want to connect the node to itself?");
+            if (r==true) {
+              callback(data);
+            }
+          }
+          else {
+            callback(data);
+          }
         }
     };
     network = new vis.Network(container, visData, options);
-    network.on('click', onTap);
+    //network.on('click', onTap);
 }
 
 // convenience method to stringify a JSON object
