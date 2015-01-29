@@ -31,13 +31,7 @@ abstract class AbstractDeviceHandler extends PTCallable<Device> {
     }
 
     protected Device toPOJODevice(com.cisco.pt.ipc.sim.Device d) {
-        final Device ret = Device.fromCiscoObject(d);
-        final Set<Port> ports = new HashSet<Port>();
-        for (int i = 0; i < d.getPortCount(); i++) {
-            final com.cisco.pt.ipc.sim.port.Port port = d.getPortAt(i);
-            ports.add(Port.fromCiscoObject(port));
-        }
-        return ret;
+        return Device.fromCiscoObject(d);
     }
 }
 
