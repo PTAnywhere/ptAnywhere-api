@@ -3,7 +3,6 @@ var api_url = "../webapi";
 // "http://carre.kmi.open.ac.uk/forge/ptsmith"
 
 var nodes, edges, network;
-var tappedDevice;
 
 function requestJSON(verb, url, data, callback) {
     return $.ajax({
@@ -27,43 +26,8 @@ $.putJSON = function(url, data, callback) {
     return requestJSON('PUT', url, data, callback);
 };
 
-function chooseinterface() {
-    var current = nodes.get(tappedDevice);
-    var currentinterfaceselection = document.getElementById("interface").value;
-    console.log("currentinterface " + currentinterfaceselection);
-    console.log(toJSON(current));
-    for (i = 0; i < current.ports.length; i++) {
-        portname = current.ports[i].portName;
-
-        if (portname == currentinterfaceselection) {
-            portipaddress = current.ports[i].portIpAddress;
-            portsubnetmask = current.ports[i].portSubnetMask;
-            console.log("portIP: " + portipaddress);
-            console.log("portSubnet: " + portsubnetmask);
-            if (portipaddress != null) {
-                document.forms["ipconfig"]["ipaddress"].value = portipaddress;
-            } else {
-                console.log("portipaddress is null");
-            }
-            if (portsubnetmask != null) {
-                document.forms["ipconfig"]["subnetmask"].value = portsubnetmask;
-            } else {
-                console.log("portsubnetmask is null");
-            }
-        }
-    }
-}
-
-function chooselinkinterface() {
-    var current = nodes.get(tappedDevice);
-    var currentinterfaceselection = document.getElementById("linkinterface").value;
-    console.log("currentlinkinterface " + currentinterfaceselection);
-    console.log(toJSON(current));
-
-}
-
 function addDevice(callback) {
-    newDevice = {
+    var newDevice = {
         "label": document.forms["create-device"]["name"].value,
         "group": document.forms["create-device"]["type"].value
     }
@@ -81,41 +45,64 @@ function getDeviceToModify() {
 }
 
 function deleteDevice(callback) {
-    deviceId = getDeviceToModify();
-    console.log("Deleting device " + deviceId);
+    var deviceId = getDeviceToModify();
     $.ajax({
         url: api_url + "/devices/" + deviceId,
         type: 'DELETE',
         success: function(result) {
-            console.log("The device was deleted successfully.");
+            console.log("The device has been deleted successfully.");
         }
     }).done(callback)
     .fail(function(data) { console.error("Something went wrong in the device creation.") });
 }
 
-function modifyDevice(deviceId) {
+function modifyDevice(deviceId, callback) {
     // General settings: PUT to /devices/id
-    modification = {
+    var modification = {
         label: $("form[name='modify-device'] input[name='displayName']").val()
     }
     $.putJSON(api_url + "/devices/" + deviceId, modification,
         function(result) {
-            console.log("The device was modified successfully.");
-    })
+            console.log("The device has been modified successfully.");
+    }).done(callback)
     .fail(function(data) { console.error("Something went wrong in the device modification.") });
 }
 
 function modifyPort(deviceId, portName) {
     // Send new IP settings
-    modification = {
+    var modification = {
         portIpAddress: $("form[name='modify-device'] input[name='ipAddress']").val(),
         portSubnetMask: $("form[name='modify-device'] input[name='subnetMask']").val()
     }
     $.putJSON(api_url + "/devices/" + deviceId + "/ports/" + portName, modification,
         function(result) {
-            console.log("The port was modified successfully.");
+            console.log("The port has been modified successfully.");
     })
     .fail(function(data) { console.error("Something went wrong in the port modification.") });
+}
+
+function deleteLink(deviceId, portName, callback) {
+    $.ajax({
+        url: api_url + "/devices/" + deviceId + "/ports/" + portName + "/link",
+        type: 'DELETE',
+        success: function(result) {
+            console.log("The link has been deleted successfully.");
+        }
+    }).done(callback)
+    .fail(function(data) { console.error("Something went wrong in the link deletion.") });
+}
+
+function createLink(fromDeviceId, fromPortName, toDeviceAndPort, callback) {
+    var slices = toDeviceAndPort.split(":"); // FIXME what if the port name or the device label have a ":"
+    var modification = {
+        toDevice: slices[0],
+        toPort: slices[1]
+    }
+    $.postJSON(api_url + "/devices/" + fromDeviceId + "/ports/" + fromPortName + "/link", modification,
+        function(result) {
+            console.log("The link has been created successfully.");
+    }).done(callback)
+    .fail(function(data) { console.error("Something went wrong in the link creation.") });
 }
 
 function handleModificationSubmit(callback) {
@@ -123,28 +110,34 @@ function handleModificationSubmit(callback) {
     var selectedTab = $("li.ui-state-active").attr("aria-controls");
     var deviceId = getDeviceToModify();
     if (selectedTab=="tabs-1") { // General settings
-        modifyDevice(deviceId);
+        modifyDevice(deviceId, callback);
     } else if (selectedTab=="tabs-2") { // Interfaces
-        var selectedPort = $("#interface").val()
+        var selectedPort = $("#interface").val().replace("/", "%20");
+        // Room for improvement: the following request could be avoided when nothing has changed
         modifyPort(deviceId, selectedPort);
+        // The following requests can be done simultaneously
         // b. If link has changed
         var previousLink = document.forms["modify-device"]["linkInterfacePrevious"].value;
         var selectedConnection = $('#linkInterface').val();
         if (previousLink!=selectedConnection) {
             if (previousLink!="none") {
                 // b1. DELETE to /devices/id/ports/id/link
-                console.log("DELETE to /devices/id/ports/id/link (" + previousLink + ")");
-            }
-            if (selectedConnection!="none") {
-                // b2. If connection is not to "none" => POST to /devices/id/ports/id/link
-                console.log("POST to /devices/id/ports/id/link (" + selectedConnection + ")");
+                deleteLink(deviceId, selectedPort, function() {
+                    if (selectedConnection!="none") {
+                        // b2. If connection is not to "none" => POST to /devices/id/ports/id/link
+                        createLink(deviceId, selectedPort, selectedConnection, callback); // create after delete
+                    } else callback();
+                });
+            } else {
+                if (selectedConnection!="none") {
+                    // b2. If connection is not to "none" => POST to /devices/id/ports/id/link
+                    createLink(deviceId, selectedPort, selectedConnection, callback);
+                } else callback();
             }
         }
     } else {
         console.error("ERROR. Selected tab unknown.");
     }
-    // FIXME
-    callback();
 }
 
 function onDeviceClick(deviceType) {
@@ -287,121 +280,6 @@ function overlay(node) {
     dialog.dialog( "open" );
 }
 
-function configureIP() {
-    var configureIPRequest = new XMLHttpRequest();
-    configureIPRequest.onreadystatechange = function() {
-        if (configureIPRequest.readyState == 4
-                && configureIPRequest.status == 200) {
-            var toDelete = document.forms["ipconfig"]["delete-device"].checked;
-            var toDeleteLink = document.forms["ipconfig"]["delete-link"].checked;
-            var linkId = document.forms["ipconfig"]["linkinterface"].value;
-
-            if (toDelete || toDeleteLink || linkId != "--") {
-                location.reload();
-            }
-            var current = nodes.get(tappedDevice);
-            var currentinterfaceselection = document
-                    .getElementById("interface").value;
-            console.log("currentinterface " + currentinterfaceselection);
-            console.log(toJSON(current));
-            for (i = 0; i < current.ports.length; i++) {
-                portname = current.ports[i].portName;
-
-                if (portname == currentinterfaceselection) {
-                    current.ports[i].portIpAddress = document.forms["ipconfig"]["ipaddress"].value;
-                    ;
-                    current.ports[i].portSubnetMask = document.forms["ipconfig"]["subnetmask"].value;
-                    ;
-                    console.log("portIP: " + portipaddress);
-                    console.log("portSubnet: " + portsubnetmask);
-                }
-            }
-            console.log("Configure IP Request worked");
-
-        }
-    }
-    var toDelete = document.forms["ipconfig"]["delete-device"].checked;
-    var toDeleteLink = document.forms["ipconfig"]["delete-link"].checked;
-    var linkId = document.forms["ipconfig"]["linkinterface"].value;
-    console.log("delete checked " + toDelete);
-    if (linkId != "--") {
-        var currentinterfaceselection = document.getElementById("linkinterface").value;
-        var interfacename = document.getElementById("interface").value;
-        var nodeid = tappedDevice;
-        console.log("currentlinkinterface " + currentinterfaceselection);
-        console.log(toJSON(current));
-        var splitlinkdetails = currentinterfaceselection.split(":");
-        var deviceName = splitlinkdetails[0];
-        var otherInterfaceName = splitlinkdetails[1];
-        console.log("NODE ID is " + nodes.get(nodeid).label);
-        if (deviceName != null && otherInterfaceName != null) {
-            var params = JSON.stringify({
-                "linksource" : nodes.get(nodeid).label,
-                "linksourceinterface" : interfacename,
-                "linktarget" : deviceName,
-                "linktargetinterface" : otherInterfaceName
-            });
-            configureIPRequest.open('POST', api_url, true); // `false` makes the request synchronous
-            configureIPRequest.setRequestHeader("Content-type",
-                "application/json; charset=utf-8");
-
-            configureIPRequest.send(params);
-            el = document.getElementById("overlay");
-            el.style.visibility = (el.style.visibility == "visible") ? "hidden"
-                : "visible";
-        }
-    } else if (toDeleteLink) {
-        var params = JSON.stringify({
-            "deletelinkdevice" : nodes.get(nodeid).label,
-            "deletelinkinterface" : interfacename
-        });
-        configureIPRequest.open('POST', api_url, true); // `false` makes the request synchronous
-        configureIPRequest.setRequestHeader("Content-type",
-                "application/json; charset=utf-8");
-
-        configureIPRequest.send(params);
-        el = document.getElementById("overlay");
-        el.style.visibility = (el.style.visibility == "visible") ? "hidden"
-                : "visible";
-    } else if (toDelete) {
-        var params = JSON.stringify({
-            "deletedevice" : tappedDevice
-        })
-        configureIPRequest.open('POST', api_url, true); // `false` makes the request synchronous
-        configureIPRequest.setRequestHeader("Content-type",
-                "application/json; charset=utf-8");
-
-        configureIPRequest.send(params);
-        el = document.getElementById("overlay");
-        el.style.visibility = (el.style.visibility == "visible") ? "hidden" : "visible";
-    } else {
-        var ip = document.forms["ipconfig"]["ipaddress"].value;
-        var subnet = document.forms["ipconfig"]["subnetmask"].value;
-        var defaultgateway = document.forms["ipconfig"]["defaultgateway"].value;
-        var interfacename = document.getElementById("interface").value;
-        var nodeid = tappedDevice;
-
-        var params = JSON.stringify({
-            "ipaddress" : ip,
-            "subnetmask" : subnet,
-            "defaultgateway" : defaultgateway,
-            "deviceid" : nodeid,
-            "interfacename" : interfacename
-        });
-
-        console.log()
-
-        configureIPRequest.open('POST', api_url, true); // `false` makes the request synchronous
-        configureIPRequest.setRequestHeader("Content-type",
-                "application/json; charset=utf-8");
-
-        configureIPRequest.send(params);
-        el = document.getElementById("overlay");
-        el.style.visibility = (el.style.visibility == "visible") ? "hidden"
-                : "visible";
-    }
-}
-
 function loadTopology(responseData) {
     nodesJson = responseData.devices;
     edgesJson = responseData.edges;
@@ -462,11 +340,6 @@ function toJSON(obj) {
 function onTap(properties) {
     if (properties.nodes != null) {
         overlay(properties.nodes[0]);
-        for (i = 0; i < properties.nodes.length; i++) {
-            console.log(properties.nodes[i])
-        }
-        tappedDevice = properties.nodes[0];
-        //console.log("tappedDevice " + tappedDevice);
     }
 }
 

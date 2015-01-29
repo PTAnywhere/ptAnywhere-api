@@ -17,7 +17,7 @@ public class PTCommon {
     protected int port = 40000;
     private static final Log LOGGER = LogFactory.getLog(PTCommon.class);
 
-    protected Log getLog() {
+    public Log getLog() {
         return LOGGER;
     }
 

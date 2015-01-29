@@ -11,15 +11,16 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
 abstract class LinkHandler extends PTCallable<String> {
-    final PortGetter pGetter;
+    final PortManager portMngr;
     public LinkHandler(String deviceId, String portName) {
-        this.pGetter = new PortGetter(deviceId, portName);
+        this.portMngr = new PortManager(deviceId, portName, this.task);
     }
+
     public Device getDevice() {
-        return this.pGetter.getDevice();
+        return this.portMngr.getDevice();
     }
     public Port getPort() {
-        return this.pGetter.getPort();
+        return this.portMngr.getPort();
     }
     public String getLinkId() {
         final Port port = getPort();
@@ -27,6 +28,10 @@ abstract class LinkHandler extends PTCallable<String> {
             return null;
         }
         return port.getLink();
+    }
+    public String escapeForJson(String unescaped) {
+        if (unescaped==null) return null;
+        return "\"" + unescaped + "\"";
     }
 }
 
@@ -36,7 +41,7 @@ class LinkGetter extends LinkHandler {
     }
     @Override
     public String internalRun() {
-        return getLinkId();
+        return escapeForJson(getLinkId());
     }
 }
 
@@ -51,11 +56,11 @@ class LinkDeleter extends LinkHandler {
             return null;
         }
         final LogicalWorkspace workspace = this.task.getIPC().appWindow().getActiveWorkspace().getLogicalWorkspace();
-        final Device device = this.pGetter.getDevice();
-        final Port port = this.pGetter.getPort();
+        final Device device = this.portMngr.getDevice();
+        final Port port = this.portMngr.getPort();
         final boolean success = workspace.deleteLink(device.getLabel(), port.getPortName());
         if (success) {
-            return port.getLink();
+            return escapeForJson(port.getLink());
         }
 
         getLog().error("Unsuccessful deletion of link in " + device.getLabel() + ":" + port.getPortName() + ".");
@@ -79,13 +84,14 @@ class LinkCreator extends LinkHandler {
             return null;
         }
         final LogicalWorkspace workspace = this.task.getIPC().appWindow().getActiveWorkspace().getLogicalWorkspace();
-        final Device device = this.pGetter.getDevice();
-        final Port port = this.pGetter.getPort();
+        final Device device = this.portMngr.getDevice();
+        final Port port = this.portMngr.getPort();
         // String deviceName1, String portName1, String deviceName2, String portName2, ConnectType connType
         getLog().error("Everything ok: " + this.linkToCreate.getToDevice() + ", " + this.linkToCreate.getToPort());
         final boolean success = workspace.createLink(device.getLabel(), port.getPortName(), this.linkToCreate.getToDevice(), this.linkToCreate.getToPort(), ConnectType.ETHERNET_STRAIGHT);
         if (success) {
-            return "new-id"; // TODO return the correct id
+            this.portMngr.reloadPort();
+            return escapeForJson(getLinkId());
         }
 
         getLog().error("Unsuccessful creation of link between " + device.getLabel() + ":" + port.getPortName() +
@@ -106,7 +112,7 @@ public class LinkResource {
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     public String removeLink(@PathParam("device") String deviceId,
-                            @PathParam("port") String portName) {
+                             @PathParam("port") String portName) {
         return new LinkDeleter(deviceId, portName).call();
     }
     @POST

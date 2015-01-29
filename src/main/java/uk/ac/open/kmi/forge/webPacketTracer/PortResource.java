@@ -5,6 +5,7 @@ import com.cisco.pt.impl.IPAddressImpl;
 import com.cisco.pt.ipc.sim.Network;
 import com.cisco.pt.ipc.sim.port.HostPort;
 import uk.ac.open.kmi.forge.webPacketTracer.gateway.PTCallable;
+import uk.ac.open.kmi.forge.webPacketTracer.gateway.PTCommon;
 import uk.ac.open.kmi.forge.webPacketTracer.pojo.Device;
 import uk.ac.open.kmi.forge.webPacketTracer.pojo.Port;
 
@@ -14,15 +15,18 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 
 
-abstract class AbstractPortHandler extends PTCallable<Port> {
+class PortManager {
 
     final String deviceId;
     String portName;
+    PTCommon common;
     com.cisco.pt.ipc.sim.Device device;  // Used in link resource!
     com.cisco.pt.ipc.sim.port.Port cachedPort = null;
 
-    public AbstractPortHandler(String deviceId, String portNamee) {
+    public PortManager(String deviceId, String portNamee, PTCommon common) {
+        super();
         this.deviceId = deviceId;
+        this.common = common;
         // FIXME: Issue with names containing slashes or backslashes and tomcat6.
         // http://stackoverflow.com/questions/2291428/jax-rs-pathparam-how-to-pass-a-string-with-slashes-hyphens-equals-too
         // To overcome it, I replaced slashes with spaces...
@@ -30,13 +34,13 @@ abstract class AbstractPortHandler extends PTCallable<Port> {
             portNamee = URLDecoder.decode(portNamee, "UTF-8");
             this.portName = portNamee.replace(" ", "/");
         } catch (UnsupportedEncodingException e) {
-            getLog().error("Apparently UTF-8 does not exist as an encoding :-S", e);
+            this.common.getLog().error("Apparently UTF-8 does not exist as an encoding :-S", e);
             this.portName = portNamee; // This should never happen!
         }
     }
 
     private void loadDevice() {
-        final Network network = this.task.getIPC().network();
+        final Network network = this.common.getIPC().network();
         for (int i = 0; i < network.getDeviceCount(); i++) {
             final com.cisco.pt.ipc.sim.Device ret = network.getDeviceAt(i);
             if (this.deviceId.equals(ret.getObjectUUID().getDecoratedHexString())) {
@@ -58,6 +62,11 @@ abstract class AbstractPortHandler extends PTCallable<Port> {
         }
     }
 
+
+    public void reloadPort() {
+        loadPort();
+    }
+
     public com.cisco.pt.ipc.sim.port.Port getPTPort() {
         if (this.cachedPort==null) loadPort();
         return this.cachedPort;
@@ -73,13 +82,20 @@ abstract class AbstractPortHandler extends PTCallable<Port> {
     }
 }
 
+abstract class AbstractPortHandler extends PTCallable<Port> {
+    final PortManager mngr;
+    public AbstractPortHandler(String deviceId, String portNamee) {
+        this.mngr = new PortManager(deviceId, portNamee, this.task);
+    }
+}
+
 class PortGetter extends AbstractPortHandler {
     public PortGetter(String deviceId, String portName) {
         super(deviceId, portName);
     }
     @Override
     public Port internalRun() {
-        return getPort();
+        return this.mngr.getPort();
     }
 }
 
@@ -94,14 +110,14 @@ class PortModifier extends AbstractPortHandler {
 
     @Override
     public Port internalRun() {
-        final com.cisco.pt.ipc.sim.port.Port p = getPTPort();
+        final com.cisco.pt.ipc.sim.port.Port p = this.mngr.getPTPort();
         if (p!=null) {
             if (p instanceof HostPort) {
                 final IPAddress ip = new IPAddressImpl(this.modification.getPortIpAddress());
                 final IPAddress subnet = new IPAddressImpl(this.modification.getPortSubnetMask());
                 ((HostPort) p).setIpSubnetMask(ip, subnet);
             }
-            return getPort();
+            return this.mngr.getPort();
         }
         return null;
     }
