@@ -93,13 +93,29 @@ function deleteDevice(callback) {
     .fail(function(data) { console.error("Something went wrong in the device creation.") });
 }
 
-function modifyDevice(deviceId, data) {
+function modifyDevice(deviceId) {
     // General settings: PUT to /devices/id
-    $.putJSON(api_url + "/devices/" + deviceId, data,
+    modification = {
+        label: $("form[name='modify-device'] input[name='displayName']").val()
+    }
+    $.putJSON(api_url + "/devices/" + deviceId, modification,
         function(result) {
             console.log("The device was modified successfully.");
     })
-    .fail(function(data) { console.error("Something went wrong in the device creation.") });
+    .fail(function(data) { console.error("Something went wrong in the device modification.") });
+}
+
+function modifyPort(deviceId, portName) {
+    // Send new IP settings
+    modification = {
+        portIpAddress: $("form[name='modify-device'] input[name='ipAddress']").val(),
+        portSubnetMask: $("form[name='modify-device'] input[name='subnetMask']").val()
+    }
+    $.putJSON(api_url + "/devices/" + deviceId + "/ports/" + portName, modification,
+        function(result) {
+            console.log("The port was modified successfully.");
+    })
+    .fail(function(data) { console.error("Something went wrong in the port modification.") });
 }
 
 function handleModificationSubmit(callback) {
@@ -107,14 +123,10 @@ function handleModificationSubmit(callback) {
     var selectedTab = $("li.ui-state-active").attr("aria-controls");
     var deviceId = getDeviceToModify();
     if (selectedTab=="tabs-1") { // General settings
-        modification = {
-            label: $("form[name='modify-device'] input[name='displayName']").val()
-        }
-        console.log(modification);
-        modifyDevice(deviceId, modification);
+        modifyDevice(deviceId);
     } else if (selectedTab=="tabs-2") { // Interfaces
-        // a. Send new IP settings
-        console.log("PUT to /devices/id/ports/port");
+        var selectedPort = $("#interface").val()
+        modifyPort(deviceId, selectedPort);
         // b. If link has changed
         var previousLink = document.forms["modify-device"]["linkInterfacePrevious"].value;
         var selectedConnection = $('#linkInterface').val();
@@ -187,7 +199,7 @@ function selectLinkedInterface(device, port) {
         if (connectedToPort==null) {
             console.error("Error. The link " + port.link + " must be connected to a device.")
         } else {
-            console.log("Connected to: " + connectedToPort);
+            //console.log("Connected to: " + connectedToPort);
             document.forms["modify-device"]["linkInterfacePrevious"].value = connectedToPort;
             $('#linkInterface').val(connectedToPort);
         }
@@ -454,7 +466,7 @@ function onTap(properties) {
             console.log(properties.nodes[i])
         }
         tappedDevice = properties.nodes[0];
-        console.log("tappedDevice " + tappedDevice);
+        //console.log("tappedDevice " + tappedDevice);
     }
 }
 
