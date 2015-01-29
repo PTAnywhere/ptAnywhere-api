@@ -5,14 +5,13 @@ var api_url = "../webapi";
 var nodes, edges, network;
 var tappedDevice;
 
-
-$.postJSON = function(url, data, callback) {
-    return jQuery.ajax({
+function requestJSON(verb, url, data, callback) {
+    return $.ajax({
     headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json'
     },
-    'type': 'POST',
+    'type': verb,
     'url': url,
     'data': JSON.stringify(data),
     'dataType': 'json',
@@ -20,6 +19,13 @@ $.postJSON = function(url, data, callback) {
     });
 };
 
+$.postJSON = function(url, data, callback) {
+    return requestJSON('POST', url, data, callback);
+};
+
+$.putJSON = function(url, data, callback) {
+    return requestJSON('PUT', url, data, callback);
+};
 
 function chooseinterface() {
     var current = nodes.get(tappedDevice);
@@ -70,9 +76,12 @@ function addDevice(callback) {
         .fail(function(data) { console.error("Something went wrong in the device creation.") });
 }
 
+function getDeviceToModify() {
+    return $("form[name='modify-device'] input[name='deviceId']").val();
+}
 
 function deleteDevice(callback) {
-    deviceId = $("form[name='modify-device'] input[name='deviceId']").val();
+    deviceId = getDeviceToModify();
     console.log("Deleting device " + deviceId);
     $.ajax({
         url: api_url + "/devices/" + deviceId,
@@ -84,14 +93,26 @@ function deleteDevice(callback) {
     .fail(function(data) { console.error("Something went wrong in the device creation.") });
 }
 
-function modifyDevice(callback) {
+function modifyDevice(deviceId, data) {
+    // General settings: PUT to /devices/id
+    $.putJSON(api_url + "/devices/" + deviceId, data,
+        function(result) {
+            console.log("The device was modified successfully.");
+    })
+    .fail(function(data) { console.error("Something went wrong in the device creation.") });
+}
+
+function handleModificationSubmit(callback) {
     // Check the tab
     var selectedTab = $("li.ui-state-active").attr("aria-controls");
-    if (selectedTab=="tabs-1") {
-        // General settings: PUT to /devices/id
-        console.log("PUT to /devices/id");
-    } else if (selectedTab=="tabs-2") {
-        // Interfaces
+    var deviceId = getDeviceToModify();
+    if (selectedTab=="tabs-1") { // General settings
+        modification = {
+            label: $("form[name='modify-device'] input[name='displayName']").val()
+        }
+        console.log(modification);
+        modifyDevice(deviceId, modification);
+    } else if (selectedTab=="tabs-2") { // Interfaces
         // a. Send new IP settings
         console.log("PUT to /devices/id/ports/port");
         // b. If link has changed
@@ -243,7 +264,7 @@ function overlay(node) {
                 deleteDevice(callback);
              },
             "SUBMIT": function() {
-                modifyDevice(callback);
+                handleModificationSubmit(callback);
             },
             Cancel:function() {
                 $( this ).dialog( "close" );
@@ -395,9 +416,9 @@ function loadTopology(responseData) {
     var container = $('#network').get(0);
     var visData = { nodes : nodes, edges : edges };
     var options = {
-        dragNetwork : 'false',
-        dragNodes : 'false',
-        zoomable : 'false',
+        //dragNetwork : false,
+        //dragNodes : true,
+        //zoomable : false,
         groups : {
             cloudDevice : {
                 shape : 'image',
@@ -438,8 +459,8 @@ function onTap(properties) {
 }
 
 function redrawTopology() {
-    //$.getJSON(api_url + "/all", loadTopology).fail(function() {
-    $.getJSON("fake.json", loadTopology).fail(function() {
+    $.getJSON(api_url + "/all", loadTopology).fail(function() {
+    //$.getJSON("fake.json", loadTopology).fail(function() {
         console.log("The topology could not be loaded. Possible timeout.");
     });  // Apparently status code 304 is an error for this method :-S
 }
