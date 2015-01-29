@@ -71,6 +71,22 @@ class DeviceDeleter extends AbstractDeviceHandler {
     }
 }
 
+class DeviceModifier extends AbstractDeviceHandler {
+    final String dId;
+    final Device modification;
+    public DeviceModifier(String dId, Device modification) {
+        this.dId = dId;
+        this.modification = modification;
+    }
+    @Override
+    public Device internalRun() {
+        final LogicalWorkspace workspace = this.task.getIPC().appWindow().getActiveWorkspace().getLogicalWorkspace();
+        final com.cisco.pt.ipc.sim.Device d = getDeviceById(this.dId);
+        d.setName(this.modification.getLabel());  // Right now, we only allow to change the name of the label!
+        return toPOJODevice(d);
+    }
+}
+
 @Path("devices/{device}")
 public class DeviceResource {
     @GET
@@ -89,5 +105,13 @@ public class DeviceResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Device removeDevice(@PathParam("device") String deviceId) {
         return new DeviceDeleter(deviceId).call();  // Not using a new Thread
+    }
+
+    @PUT
+    @Produces(MediaType.APPLICATION_JSON)
+    public Device modifyDevice(
+            Device modification,
+            @PathParam("device") String deviceId) {
+        return new DeviceModifier(deviceId, modification).call();  // Not using a new Thread
     }
 }
