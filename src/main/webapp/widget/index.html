@@ -61,11 +61,16 @@
 </fieldset>
 <div id="create-device-dialog" title="Create new device">
     <form name="create-device">
-        <fieldset>
-            <label for="create-name">Name</label>
-            <input type="text" name="name" id="create-name">
-            <input type="hidden" name="type" value="">
-        </fieldset>
+        <label for="create-name">Name</label>
+        <input type="text" name="name" id="create-name">
+        <br>
+        <label for="device-type">Device type</label>
+        <select id="type" name="type" id="device-type">
+            <option value="cloud">Cloud</option>
+            <option value="router">Router</option>
+            <option value="switch">Switch</option>
+            <option value="pc">PC</option>
+        </select>
     </form>
 </div>
 <div id="modify-device-dialog">

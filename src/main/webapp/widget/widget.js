@@ -31,7 +31,7 @@ function addDevice(callback) {
         "label": document.forms["create-device"]["name"].value,
         "group": document.forms["create-device"]["type"].value
     }
-    console.log("Adding device " + newDevice.name + " of type " + newDevice.type);
+    console.log("Adding device " + newDevice.label + " of type " + newDevice.group);
 
     $.postJSON( api_url + "/devices", newDevice,
         function(data) {
@@ -44,15 +44,14 @@ function getDeviceToModify() {
     return $("form[name='modify-device'] input[name='deviceId']").val();
 }
 
-function deleteDevice(callback) {
-    var deviceId = getDeviceToModify();
+function deleteDevice(deviceId) {
     $.ajax({
         url: api_url + "/devices/" + deviceId,
         type: 'DELETE',
         success: function(result) {
             console.log("The device has been deleted successfully.");
         }
-    }).done(callback)
+    }).done(redrawTopology)
     .fail(function(data) { console.error("Something went wrong in the device creation.") });
 }
 
@@ -140,10 +139,9 @@ function handleModificationSubmit(callback) {
     }
 }
 
-function onDeviceClick(deviceType) {
-    $("form[name='create-device'] input[name='type']").val(deviceType);
-    dialog = $("#create-device-dialog").dialog({
-        title: "Create new " + deviceType,
+function onDeviceClick() {
+    var dialog = $("#create-device-dialog").dialog({
+        title: "Create new device",
         autoOpen: false, height: 300, width: 350, modal: true, draggable: false,
         buttons: {
             "SUBMIT": function() {
@@ -158,7 +156,7 @@ function onDeviceClick(deviceType) {
             }
         }, close: function() { /*console.log("Closing dialog...");*/ }
      });
-    form = dialog.find( "form" ).on("submit", function( event ) { event.preventDefault(); });
+    var form = dialog.find( "form" ).on("submit", function( event ) { event.preventDefault(); });
     dialog.dialog( "open" );
 }
 
@@ -339,9 +337,10 @@ function loadTopology(responseData) {
           span.innerHTML = "Add Node";
           idInput.value = data.id;
           labelInput.value = data.label;
-          saveButton.onclick = saveData.bind(this,data,callback);
-          cancelButton.onclick = clearPopUp.bind();
-          div.style.display = 'block';
+          onDeviceClick();
+          //saveButton.onclick = saveData.bind(this,data,callback);
+          //cancelButton.onclick = clearPopUp.bind();
+          //div.style.display = 'block';
         },
         onEdit: function(data,callback) {
           var span = document.getElementById('operation');
@@ -358,6 +357,15 @@ function loadTopology(responseData) {
           //saveButton.onclick = saveData.bind(this,data,callback);
           //cancelButton.onclick = clearPopUp.bind();
           //div.style.display = 'block';
+        },
+        onDelete: function(data,callback) {
+          var span = document.getElementById('operation');
+          var idInput = document.getElementById('node-id');
+          var labelInput = document.getElementById('node-label');
+          //var div = document.getElementById('network-popUp');
+          idInput.value = data.id;
+          labelInput.value = data.label;
+          deleteDevice(data.nodes[0])
         },
         onConnect: function(data,callback) {
           if (data.from == data.to) {
@@ -396,9 +404,5 @@ function redrawTopology() {
 $(function() {
     $("#create-device-dialog").hide();
     $("#modify-device-dialog").hide();
-    $("#creation-menu figure img").each(function() {
-        var deviceId = $(this).attr("id");
-        $(this).click(function() { onDeviceClick(deviceId); });
-    });
     redrawTopology();
 });
