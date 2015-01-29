@@ -34,13 +34,8 @@ abstract class AbstractDeviceHandler extends PTCallable<Device> {
         final Device ret = Device.fromCiscoObject(d);
         final Set<Port> ports = new HashSet<Port>();
         for (int i = 0; i < d.getPortCount(); i++) {
-            com.cisco.pt.ipc.sim.port.Port port = d.getPortAt(i);
-            if (port instanceof HostPort) {
-                ports.add(Port.fromCiscoObject((HostPort) port));
-            } else {
-                getLog().error("Port " + port.getName() +
-                        " is not an instance of HostPort " + port.getType().toString());
-            }
+            final com.cisco.pt.ipc.sim.port.Port port = d.getPortAt(i);
+            ports.add(Port.fromCiscoObject(port));
         }
         return ret;
     }

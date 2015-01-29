@@ -24,12 +24,19 @@ public class Port {
         this.linkId = linkId;
     }
 
-    public static Port fromCiscoObject(com.cisco.pt.ipc.sim.port.HostPort port) {
+    public static Port fromCiscoObject(com.cisco.pt.ipc.sim.port.Port port) {
         final Link l = port.getLink();
-        return new Port( port.getName(),
-                         port.getIpAddress().getDottedQuadString(),
-                         port.getSubnetMask().getDottedQuadString(),
-                         (l==null)? null: l.getObjectUUID().getDecoratedHexString() );
+        final Port ret = new Port( port.getName(), "", "",
+                (l==null)? null: l.getObjectUUID().getDecoratedHexString() );
+        if (port instanceof HostPort) {
+            final HostPort hPort = (HostPort) port;
+            ret.setPortIpAddress(hPort.getIpAddress().getDottedQuadString());
+            ret.setPortSubnetMask(hPort.getSubnetMask().getDottedQuadString());
+        }
+        // It can also be a SwitchPort
+        // getLog().error("Port " + port.getName() +
+        //        " is not an instance of HostPort " + port.getType().toString());
+        return ret;
     }
 
     public String getPortName() {

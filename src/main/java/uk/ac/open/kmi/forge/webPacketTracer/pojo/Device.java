@@ -54,13 +54,7 @@ public class Device {
             final List<Port> ports = new ArrayList<Port>();
             for(int i=0; i<device.getPortCount(); i++) {
                 com.cisco.pt.ipc.sim.port.Port port = device.getPortAt(i);
-                if (port instanceof HostPort) {
-                    ports.add(Port.fromCiscoObject((HostPort) port));
-                } else {
-                    // FIXME log it!
-                    //getLog().error("Port " + port.getName() +
-                    //        " is not an instance of HostPort " + port.getType().toString());
-                }
+                ports.add(Port.fromCiscoObject(port));
             }
             ret.setPorts(ports);
         }
