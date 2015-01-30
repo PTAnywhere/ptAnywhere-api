@@ -133,7 +133,7 @@ function handleModificationSubmit(callback) {
                     createLink(deviceId, selectedPort, selectedConnection, callback);
                 } else callback();
             }
-        }
+        } else callback();  // In case just the port details are modified...
     } else {
         console.error("ERROR. Selected tab unknown.");
     }
@@ -395,8 +395,8 @@ function onTap(properties) {
 }
 
 function redrawTopology() {
-    //$.getJSON(api_url + "/all", loadTopology).fail(function() {
-    $.getJSON("fake.json", loadTopology).fail(function() {
+    $.getJSON(api_url + "/all", loadTopology).fail(function() {
+    //$.getJSON("fake.json", loadTopology).fail(function() {
         console.log("The topology could not be loaded. Possible timeout.");
     });  // Apparently status code 304 is an error for this method :-S
 }
