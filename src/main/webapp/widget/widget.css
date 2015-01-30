@@ -88,6 +88,31 @@ pre {
 	border: 0px none;
 }
 
+/* select with custom icons */
+select {
+	width: 200px;
+}
+.ui-selectmenu-menu .ui-menu.customicons .ui-menu-item {
+	padding: 0.5em 0 0.5em 3em;
+}
+.ui-selectmenu-menu .ui-menu.customicons .ui-menu-item .ui-icon {
+	height: 24px;
+	width: 24px;
+	top: 0.1em;
+}
+.ui-icon.cloud {
+	background: url("cloud.png") 0 0 no-repeat;
+}
+.ui-icon.pc {
+	background: url("PC.png") 0 0 no-repeat;
+}
+.ui-icon.router {
+	background: url("router.png") 0 0 no-repeat;
+}
+.ui-icon.switch {
+	background: url("switch.png") 0 0 no-repeat;
+}
+
 #creation-fieldset {
 	margin-top: 30px;
 }
@@ -145,3 +170,25 @@ pre {
 	border-top-right-radius: 6px;
 	border-top-width: 1px;
 }
+
+
+/* Edit menu */
+
+#network-manipulate-editEdge {
+	display: none;
+}
+
+#network-manipulate-connectNode {
+	display: none;
+}
+
+div.network-seperatorLine {
+	width: 0;
+	margin: 5px 0 0px 0;
+}
+
+div.network-manipulationDiv {
+	padding-top: 5px;
+	height: 35px;
+}
+ fieldset {      border: 0;    }    label {      display: block;    }    select {      width: 200px;    }

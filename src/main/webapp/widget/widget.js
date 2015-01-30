@@ -140,6 +140,7 @@ function handleModificationSubmit(callback) {
 }
 
 function onDeviceClick() {
+    //$("#device-type").iconselectmenu().iconselectmenu("menuWidget").addClass("ui-menu-icons customicons");
     var dialog = $("#create-device-dialog").dialog({
         title: "Create new device",
         autoOpen: false, height: 300, width: 350, modal: true, draggable: false,
@@ -263,9 +264,6 @@ function overlay(node) {
         title: "Modify device",
         autoOpen: false, height: 350, width: 450, modal: true, draggable: false,
         buttons: {
-            "Delete": function() {
-                deleteDevice(callback);
-             },
             "SUBMIT": function() {
                 handleModificationSubmit(callback);
             },
@@ -352,7 +350,6 @@ function loadTopology(responseData) {
           span.innerHTML = "Edit Node";
           idInput.value = data.id;
           labelInput.value = data.label;
-          console.log(data);
           overlay(data.id);
           //saveButton.onclick = saveData.bind(this,data,callback);
           //cancelButton.onclick = clearPopUp.bind();
@@ -365,7 +362,10 @@ function loadTopology(responseData) {
           //var div = document.getElementById('network-popUp');
           idInput.value = data.id;
           labelInput.value = data.label;
-          deleteDevice(data.nodes[0])
+          if (data.nodes.length>0)
+            deleteDevice(data.nodes[0])
+          else if (data.edges.length>0)
+            console.log("The edge deletion has been disabled. Use the dialog.");
         },
         onConnect: function(data,callback) {
           if (data.from == data.to) {
@@ -395,13 +395,26 @@ function onTap(properties) {
 }
 
 function redrawTopology() {
-    $.getJSON(api_url + "/all", loadTopology).fail(function() {
-    //$.getJSON("fake.json", loadTopology).fail(function() {
+    //$.getJSON(api_url + "/all", loadTopology).fail(function() {
+    $.getJSON("fake.json", loadTopology).fail(function() {
         console.log("The topology could not be loaded. Possible timeout.");
     });  // Apparently status code 304 is an error for this method :-S
 }
 
 $(function() {
+    $.widget( "custom.iconselectmenu", $.ui.selectmenu, {
+        _renderItem: function( ul, item ) {
+            var li = $( "<li>", { text: item.label } );
+            if ( item.disabled ) {
+                li.addClass( "ui-state-disabled" );
+            }
+            $( "<span>", {
+                style: item.element.attr( "data-style" ),
+                "class": "ui-icon " + item.element.attr( "data-class" )
+             }).appendTo( li );
+             return li.appendTo( ul );
+        }
+    });
     $("#create-device-dialog").hide();
     $("#modify-device-dialog").hide();
     redrawTopology();
