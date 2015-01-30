@@ -140,10 +140,9 @@ function handleModificationSubmit(callback) {
 }
 
 function onDeviceClick() {
-    //$("#device-type").iconselectmenu().iconselectmenu("menuWidget").addClass("ui-menu-icons customicons");
     var dialog = $("#create-device-dialog").dialog({
         title: "Create new device",
-        autoOpen: false, height: 300, width: 350, modal: true, draggable: false,
+        autoOpen: false, height: 300, width: 400, modal: true, draggable: false,
         buttons: {
             "SUBMIT": function() {
                 var callback = function() {
@@ -158,6 +157,7 @@ function onDeviceClick() {
         }, close: function() { /*console.log("Closing dialog...");*/ }
      });
     var form = dialog.find( "form" ).on("submit", function( event ) { event.preventDefault(); });
+    $("#device-type").iconselectmenu().iconselectmenu("menuWidget").addClass("ui-menu-icons customicons");
     dialog.dialog( "open" );
 }
 
@@ -260,7 +260,7 @@ function overlay(node) {
         redrawTopology();
     };
     $("#modify-dialog-tabs").tabs();
-    dialog = $("#modify-device-dialog").dialog({
+    var dialog = $("#modify-device-dialog").dialog({
         title: "Modify device",
         autoOpen: false, height: 350, width: 450, modal: true, draggable: false,
         buttons: {
@@ -272,7 +272,7 @@ function overlay(node) {
             }
         }, close: function() { /*console.log("Closing dialog...");*/ }
      });
-    form = dialog.find( "form" ).on("submit", function( event ) { event.preventDefault(); });
+    var form = dialog.find( "form" ).on("submit", function( event ) { event.preventDefault(); });
     dialog.dialog( "open" );
 }
 
@@ -380,18 +380,11 @@ function loadTopology(responseData) {
         }
     };
     network = new vis.Network(container, visData, options);
-    //network.on('click', onTap);
 }
 
 // convenience method to stringify a JSON object
 function toJSON(obj) {
     return JSON.stringify(obj, null, 4);
-}
-
-function onTap(properties) {
-    if (properties.nodes != null) {
-        overlay(properties.nodes[0]);
-    }
 }
 
 function redrawTopology() {

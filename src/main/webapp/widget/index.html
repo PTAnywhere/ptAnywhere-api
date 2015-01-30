@@ -40,11 +40,12 @@
 </table>
 <div id="create-device-dialog" title="Create new device">
     <form name="create-device">
-        <label for="create-name">Name</label>
-        <input type="text" name="name" id="create-name">
-        <br>
         <fieldset>
-            <label for="device-type">Device type:</label>
+            <label for="create-name">Name: </label>
+            <input type="text" name="name" id="create-name">
+        </fieldset>
+        <fieldset>
+            <label for="device-type">Device type: </label>
             <select name="type" id="device-type">
                 <option value="cloud" data-class="cloud">Cloud</option>
                 <option value="router" data-class="router">Router</option>
@@ -84,29 +85,5 @@
         </form>
     </div>
 </div>
-<!--<div id="overlay">
-    <div>
-        <p>
-        <form name="ipconfig" action="" onsubmit="return configureIP()">
-            Delete this device? <input type="checkbox" name="delete-device">
-            <hr>
-            <select id="interface" name="interface" size="1"
-                    onchange="chooseinterface()">
-                <option value="port0">DefaultPort0</option>
-            </select> <br>Delete this connection? <input type="checkbox" name="delete-link"><br>
-            <hr>
-            IP address: <input type="text" name="ipaddress"><br>
-            Subnet mask: <input type="text" name="subnetmask"><br>
-            <hr>
-            Add connection: <select id="linkinterface" name="linkinterface" size="1">
-            <option value="port0">DefaultPort0</option>
-        </select><br>
-        <input type="hidden" name="defaultgateway" value=""><br>
-        [<span class="btnSubmit">Submit</span>]
-        [<span class="btnCancel">Cancel</span>]
-        </form>
-        </p>
-    </div>
-</div>-->
 </body>
 </html>
