@@ -4,16 +4,16 @@
 <head profile="http://selenium-ide.openqa.org/profiles/test-case">
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <link rel="selenium.base" href="http://carre.kmi.open.ac.uk/" />
-<title>createelements</title>
+<title>editDeviceName</title>
 </head>
 <body>
 <table cellpadding="1" cellspacing="1" border="1">
 <thead>
-<tr><td rowspan="1" colspan="3">createelements</td></tr>
+<tr><td rowspan="1" colspan="3">editDeviceName</td></tr>
 </thead><tbody>
 <tr>
 	<td>open</td>
-	<td>dev/widget/index.html</td>
+	<td>/dev/widget/index.html</td>
 	<td></td>
 </tr>
 <tr>
@@ -23,49 +23,35 @@
 </tr>
 <tr>
 	<td>click</td>
-	<td>css=#network-manipulate-editModeButton &gt; span.network-manipulationLabel</td>
+	<td>id=network-manipulate-editModeButton</td>
+	<td></td>
+</tr>
+<tr>
+	<td>runScript</td>
+	<td>var n = nodes.get({ filter: function (item) { return (item.label == &quot;HolaMundo&quot;); } }); network.selectNodes([n[0].id]);</td>
+	<td></td>
+</tr>
+<tr>
+	<td>runScript</td>
+	<td>network._loadManipulationSystem()</td>
 	<td></td>
 </tr>
 <tr>
 	<td>click</td>
-	<td>css=span.network-manipulationLabel</td>
-	<td></td>
-</tr>
-<tr>
-	<td>clickAt</td>
-	<td>css=canvas</td>
-	<td>200,200</td>
-</tr>
-<tr>
-	<td>waitForVisible</td>
-	<td>css=#device-type-button</td>
-	<td></td>
-</tr>
-<tr>
-	<td>waitForVisible</td>
-	<td>id=create-name</td>
+	<td>id=network-manipulate-editNode</td>
 	<td></td>
 </tr>
 <tr>
 	<td>type</td>
-	<td>id=create-name</td>
-	<td>HolaMundo</td>
-</tr>
-<tr>
-	<td>click</td>
-	<td>css=span.ui-selectmenu-text</td>
-	<td></td>
-</tr>
-<tr>
-	<td>click</td>
-	<td>id=ui-id-4</td>
-	<td></td>
+	<td>name=displayName</td>
+	<td>HolaMundo2</td>
 </tr>
 <tr>
 	<td>click</td>
 	<td>xpath=(//button[@type='button'])[2]</td>
 	<td></td>
 </tr>
+
 </tbody></table>
 </body>
 </html>

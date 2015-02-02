@@ -12,13 +12,8 @@
 <tr><td rowspan="1" colspan="3">deleteelement</td></tr>
 </thead><tbody>
 <tr>
-	<td>openWindow</td>
+	<td>open</td>
 	<td>/dev/widget/index.html</td>
-	<td></td>
-</tr>
-<tr>
-	<td>windowMaximizeAndWait</td>
-	<td></td>
 	<td></td>
 </tr>
 <tr>
@@ -32,11 +27,20 @@
 	<td></td>
 </tr>
 <tr>
-	<td>clickAt</td>
-	<td>css=canvas</td>
-	<td>520, 163</td>
+	<td>runScript</td>
+	<td>var n = nodes.get({ filter: function (item) { return (item.label == &quot;HolaMundo&quot;); } }); network.selectNodes([n[0].id]);</td>
+	<td></td>
 </tr>
-
+<tr>
+	<td>runScript</td>
+	<td>network._loadManipulationSystem()</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=network-manipulate-delete</td>
+	<td></td>
+</tr>
 </tbody></table>
 </body>
 </html>
