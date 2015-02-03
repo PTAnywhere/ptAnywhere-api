@@ -11,6 +11,7 @@
 <tr><td><a href="setUp.test">setUp</a></td></tr>
 <tr><td><a href="createDevice.test">createDevice</a></td></tr>
 <tr><td><a href="editDeviceName.test">editDeviceName</a></td></tr>
+<tr><td><a href="connectDevice.test">connectDevice</a></td></tr>
 <tr><td><a href="deleteDevice.test">deleteDevice</a></td></tr>
 </tbody></table>
 </body>
