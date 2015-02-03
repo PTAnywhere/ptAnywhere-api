@@ -37,6 +37,11 @@
 	<td>${beforeName}</td>
 </tr>
 <tr>
+	<td>type</td>
+	<td>id=device-type</td>
+	<td>pc</td>
+</tr>
+<tr>
 	<td>click</td>
 	<td>css=span.ui-selectmenu-text</td>
 	<td></td>
