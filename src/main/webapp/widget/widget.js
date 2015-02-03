@@ -139,7 +139,7 @@ function handleModificationSubmit(callback) {
     }
 }
 
-function onDeviceClick() {
+function onDeviceAdd() {
     var dialog = $("#create-device").dialog({
         title: "Create new device",
         autoOpen: false, height: 300, width: 400, modal: true, draggable: false,
@@ -223,7 +223,7 @@ function populateConnectedToSelect(current, nodes) {
     document.forms["modify-device"]["linkInterface"].options[0] = new Option("None", "none", false, false);
 }
 
-function updateOverlay(node) {
+function updateEditForm(node) {
     var current = nodes.get(node);
     var modForm = $("form[name='modify-device']");
     $("input[name='deviceId']", modForm).val(node);
@@ -254,8 +254,8 @@ function updateOverlay(node) {
     });
 }
 
-function overlay(node) {
-    updateOverlay(node);
+function onDeviceEdit(node) {
+    updateEditForm(node);
     var callback = function() {
         dialog.dialog( "close" );
         redrawTopology();
@@ -328,57 +328,16 @@ function loadTopology(responseData) {
         stabilize: false,
         dataManipulation: true,
         onAdd: function(data,callback) {
-          var span = document.getElementById('operation');
-          var idInput = document.getElementById('node-id');
-          var labelInput = document.getElementById('node-label');
-          var saveButton = document.getElementById('saveButton');
-          var cancelButton = document.getElementById('cancelButton');
-          var div = document.getElementById('network-popUp');
-          span.innerHTML = "Add Node";
-          idInput.value = data.id;
-          labelInput.value = data.label;
-          onDeviceClick();
-          //saveButton.onclick = saveData.bind(this,data,callback);
-          //cancelButton.onclick = clearPopUp.bind();
-          //div.style.display = 'block';
+          onDeviceAdd();
         },
         onEdit: function(data,callback) {
-          var span = document.getElementById('operation');
-          var idInput = document.getElementById('node-id');
-          var labelInput = document.getElementById('node-label');
-          var saveButton = document.getElementById('saveButton');
-          var cancelButton = document.getElementById('cancelButton');
-          //var div = document.getElementById('network-popUp');
-          span.innerHTML = "Edit Node";
-          idInput.value = data.id;
-          labelInput.value = data.label;
-          overlay(data.id);
-          //saveButton.onclick = saveData.bind(this,data,callback);
-          //cancelButton.onclick = clearPopUp.bind();
-          //div.style.display = 'block';
+          onDeviceEdit(data.id);
         },
         onDelete: function(data,callback) {
-          var span = document.getElementById('operation');
-          var idInput = document.getElementById('node-id');
-          var labelInput = document.getElementById('node-label');
-          //var div = document.getElementById('network-popUp');
-          idInput.value = data.id;
-          labelInput.value = data.label;
           if (data.nodes.length>0)
             deleteDevice(data.nodes[0])
           else if (data.edges.length>0)
             console.log("The edge deletion has been disabled. Use the dialog.");
-        },
-        onConnect: function(data,callback) {
-          if (data.from == data.to) {
-            var r=confirm("Do you want to connect the node to itself?");
-            if (r==true) {
-              callback(data);
-            }
-          }
-          else {
-            callback(data);
-          }
         }
     };
     network = new vis.Network(container, visData, options);
