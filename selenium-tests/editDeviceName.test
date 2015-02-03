@@ -12,28 +12,18 @@
 <tr><td rowspan="1" colspan="3">editDeviceName</td></tr>
 </thead><tbody>
 <tr>
-	<td>open</td>
-	<td>/dev/widget/index.html</td>
-	<td></td>
-</tr>
-<tr>
-	<td>waitForVisible</td>
-	<td>css=canvas</td>
-	<td></td>
-</tr>
-<tr>
 	<td>click</td>
 	<td>id=network-manipulate-editModeButton</td>
 	<td></td>
 </tr>
 <tr>
 	<td>runScript</td>
-	<td>var n = nodes.get({ filter: function (item) { return (item.label == &quot;HolaMundo&quot;); } }); network.selectNodes([n[0].id]);</td>
+	<td>selectNode(&quot;${testNodeId}&quot;)</td>
 	<td></td>
 </tr>
 <tr>
 	<td>runScript</td>
-	<td>network._loadManipulationSystem()</td>
+	<td>network._loadManipulationSystem();</td>
 	<td></td>
 </tr>
 <tr>
@@ -44,14 +34,18 @@
 <tr>
 	<td>type</td>
 	<td>name=displayName</td>
-	<td>HolaMundo2</td>
+	<td>${afterName}</td>
 </tr>
 <tr>
 	<td>click</td>
-	<td>xpath=(//button[@type='button'])[2]</td>
+	<td>xpath=(//div[@id='modify-dialog']//button[@type='button'])[2]</td>
 	<td></td>
 </tr>
-
+<tr>
+	<td>waitForVisible</td>
+	<td>id=network-manipulate-editModeButton</td>
+	<td></td>
+</tr>
 </tbody></table>
 </body>
 </html>

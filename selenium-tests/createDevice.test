@@ -12,16 +12,6 @@
 <tr><td rowspan="1" colspan="3">createelements</td></tr>
 </thead><tbody>
 <tr>
-	<td>open</td>
-	<td>dev/widget/index.html</td>
-	<td></td>
-</tr>
-<tr>
-	<td>waitForVisible</td>
-	<td>css=canvas</td>
-	<td></td>
-</tr>
-<tr>
 	<td>click</td>
 	<td>css=#network-manipulate-editModeButton &gt; span.network-manipulationLabel</td>
 	<td></td>
@@ -38,18 +28,13 @@
 </tr>
 <tr>
 	<td>waitForVisible</td>
-	<td>css=#device-type-button</td>
-	<td></td>
-</tr>
-<tr>
-	<td>waitForVisible</td>
-	<td>id=create-name</td>
+	<td>css=.ui-dialog</td>
 	<td></td>
 </tr>
 <tr>
 	<td>type</td>
 	<td>id=create-name</td>
-	<td>HolaMundo</td>
+	<td>${beforeName}</td>
 </tr>
 <tr>
 	<td>click</td>
@@ -63,7 +48,22 @@
 </tr>
 <tr>
 	<td>click</td>
-	<td>xpath=(//button[@type='button'])[2]</td>
+	<td>xpath=(//div[@id='create-dialog']//button[@type='button'])[2]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>waitForVisible</td>
+	<td>id=network-manipulate-editModeButton</td>
+	<td></td>
+</tr>
+<tr>
+	<td>storeEval</td>
+	<td>window.getNodeByName(&quot;${beforeName}&quot;).id;</td>
+	<td>testNodeId</td>
+</tr>
+<tr>
+	<td>echo</td>
+	<td>${testNodeId}</td>
 	<td></td>
 </tr>
 </tbody></table>

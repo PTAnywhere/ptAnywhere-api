@@ -8,6 +8,7 @@
 <body>
 <table id="suiteTable" cellpadding="1" cellspacing="1" border="1" class="selenium"><tbody>
 <tr><td><b>Test Suite</b></td></tr>
+<tr><td><a href="setUp.test">setUp</a></td></tr>
 <tr><td><a href="createDevice.test">createDevice</a></td></tr>
 <tr><td><a href="editDeviceName.test">editDeviceName</a></td></tr>
 <tr><td><a href="deleteDevice.test">deleteDevice</a></td></tr>

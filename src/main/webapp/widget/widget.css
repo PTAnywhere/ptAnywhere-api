@@ -84,7 +84,7 @@ pre {
 	text-align: center;
 }
 
-#create-device-dialog fieldset {
+#create-device fieldset {
 	border: 0px none;
 }
 
@@ -155,7 +155,7 @@ select {
 	display: block;
 }
 
-#modify-device-dialog {
+#modify-device {
 	padding: 0;
 }
 

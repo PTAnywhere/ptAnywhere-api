@@ -140,7 +140,7 @@ function handleModificationSubmit(callback) {
 }
 
 function onDeviceClick() {
-    var dialog = $("#create-device-dialog").dialog({
+    var dialog = $("#create-device").dialog({
         title: "Create new device",
         autoOpen: false, height: 300, width: 400, modal: true, draggable: false,
         buttons: {
@@ -156,6 +156,7 @@ function onDeviceClick() {
             }
         }, close: function() { /*console.log("Closing dialog...");*/ }
      });
+    dialog.parent().attr("id", "create-dialog");
     var form = dialog.find( "form" ).on("submit", function( event ) { event.preventDefault(); });
     $("#device-type").iconselectmenu().iconselectmenu("menuWidget").addClass("ui-menu-icons customicons");
     dialog.dialog( "open" );
@@ -260,7 +261,7 @@ function overlay(node) {
         redrawTopology();
     };
     $("#modify-dialog-tabs").tabs();
-    var dialog = $("#modify-device-dialog").dialog({
+    var dialog = $("#modify-device").dialog({
         title: "Modify device",
         autoOpen: false, height: 350, width: 450, modal: true, draggable: false,
         buttons: {
@@ -272,6 +273,7 @@ function overlay(node) {
             }
         }, close: function() { /*console.log("Closing dialog...");*/ }
      });
+    dialog.parent().attr("id", "modify-dialog");
     var form = dialog.find( "form" ).on("submit", function( event ) { event.preventDefault(); });
     dialog.dialog( "open" );
 }
@@ -394,7 +396,26 @@ function redrawTopology() {
     });  // Apparently status code 304 is an error for this method :-S
 }
 
+// From: http://www.jquerybyexample.net/2012/06/get-url-parameters-using-jquery.html
+function getURLParameter(sParam) {
+    var sPageURL = window.location.search.substring(1);
+    var sURLVariables = sPageURL.split('&');
+    for (var i = 0; i < sURLVariables.length; i++) {
+        var sParameterName = sURLVariables[i].split('=');
+        if (sParameterName[0] == sParam) {
+            return sParameterName[1];
+        }
+    }
+}
+
 $(function() {
+    var debugMode = getURLParameter('debug');
+    if (debugMode!=null) {
+        $.getScript("debug.js", function() {
+            console.log("DEBUG MODE ON.");
+        });
+    }
+
     $.widget( "custom.iconselectmenu", $.ui.selectmenu, {
         _renderItem: function( ul, item ) {
             var li = $( "<li>", { text: item.label } );
@@ -408,7 +429,7 @@ $(function() {
              return li.appendTo( ul );
         }
     });
-    $("#create-device-dialog").hide();
-    $("#modify-device-dialog").hide();
+    $("#create-device").hide();
+    $("#modify-device").hide();
     redrawTopology();
 });

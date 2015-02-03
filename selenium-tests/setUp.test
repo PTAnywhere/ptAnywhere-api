@@ -4,36 +4,31 @@
 <head profile="http://selenium-ide.openqa.org/profiles/test-case">
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <link rel="selenium.base" href="http://carre.kmi.open.ac.uk/" />
-<title>deleteelement</title>
+<title>New Test</title>
 </head>
 <body>
 <table cellpadding="1" cellspacing="1" border="1">
 <thead>
-<tr><td rowspan="1" colspan="3">deleteelement</td></tr>
+<tr><td rowspan="1" colspan="3">New Test</td></tr>
 </thead><tbody>
 <tr>
-	<td>click</td>
-	<td>id=network-manipulate-editModeButton</td>
+	<td>open</td>
+	<td>dev/widget/index.html?debug=true</td>
 	<td></td>
 </tr>
 <tr>
-	<td>runScript</td>
-	<td>selectNode(&quot;${testNodeId}&quot;);</td>
-	<td></td>
+	<td>store</td>
+	<td>HolaMundo</td>
+	<td>beforeName</td>
 </tr>
 <tr>
-	<td>runScript</td>
-	<td>network._loadManipulationSystem()</td>
-	<td></td>
-</tr>
-<tr>
-	<td>click</td>
-	<td>id=network-manipulate-delete</td>
-	<td></td>
+	<td>store</td>
+	<td>HolaMundo2</td>
+	<td>afterName</td>
 </tr>
 <tr>
 	<td>waitForVisible</td>
-	<td>id=network-manipulate-editModeButton</td>
+	<td>css=canvas</td>
 	<td></td>
 </tr>
 </tbody></table>
