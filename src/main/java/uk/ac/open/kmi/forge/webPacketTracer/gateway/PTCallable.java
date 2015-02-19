@@ -7,7 +7,15 @@ import org.apache.commons.logging.Log;
 
 public abstract class PTCallable<V> implements Callable<V> {
 
-    final protected PTCommon task = new PTCommon();
+    final protected PTCommon task;
+
+    public PTCallable() {
+        this.task = new PTCommon();
+    }
+
+    public PTCallable(String hostName, int port) {
+        this.task = new PTCommon(hostName, port);
+    }
 
     @Override
     public V call() {

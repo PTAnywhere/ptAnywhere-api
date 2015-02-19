@@ -5,7 +5,15 @@ import org.apache.commons.logging.Log;
 
 public abstract class PTRunnable implements Runnable {
 
-    final protected PTCommon task = new PTCommon();
+    final protected PTCommon task;
+
+    public PTRunnable() {
+        this.task = new PTCommon();
+    }
+
+    public PTRunnable(String hostName, int port) {
+        this.task = new PTCommon(hostName, port);
+    }
 
     @Override
     public void run() {

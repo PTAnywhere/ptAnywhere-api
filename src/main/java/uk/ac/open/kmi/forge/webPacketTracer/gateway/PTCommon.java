@@ -13,9 +13,19 @@ import org.apache.commons.logging.LogFactory;
 public class PTCommon {
     protected PacketTracerSession packetTracerSession;
     protected IPCFactory ipcFactory;
-    protected String hostName = "KMI-APPSVR03";
-    protected int port = 40000;
+    final protected String hostName;
+    final protected int port;
     private static final Log LOGGER = LogFactory.getLog(PTCommon.class);
+
+    public PTCommon() {
+        //this("KMI-APPSVR03", 40000);
+        this("localhost", 39000);
+    }
+
+    public PTCommon(String hostName, int port) {
+        this.hostName = hostName;
+        this.port = port;
+    }
 
     public Log getLog() {
         return LOGGER;
