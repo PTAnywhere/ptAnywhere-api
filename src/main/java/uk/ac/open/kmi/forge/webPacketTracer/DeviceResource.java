@@ -33,27 +33,41 @@ abstract class AbstractDeviceHandler extends PTCallable<Device> {
     protected Device toPOJODevice(com.cisco.pt.ipc.sim.Device d) {
         return Device.fromCiscoObject(d);
     }
+
+    protected Device toPOJODevice(com.cisco.pt.ipc.sim.Device d, boolean loadPorts) {
+        return Device.fromCiscoObject(d, loadPorts);
+    }
 }
 
 class DeviceGetterByName extends AbstractDeviceHandler {
     final String name;
+    final boolean loadPorts;
     public DeviceGetterByName(String name) {
+        this(name, false);
+    }
+    public DeviceGetterByName(String name, boolean loadPorts) {
         this.name = name;
+        this.loadPorts = loadPorts;
     }
     @Override
     public Device internalRun() {
-        return toPOJODevice(getDeviceByName(this.name));
+        return toPOJODevice(getDeviceByName(this.name), this.loadPorts);
     }
 }
 
 class DeviceGetterById extends AbstractDeviceHandler {
     final String dId;
-    public DeviceGetterById(String dId) {
+    final boolean loadPorts;
+    public DeviceGetterById(String dId, boolean loadPorts) {
         this.dId = dId;
+        this.loadPorts = loadPorts;
+    }
+    public DeviceGetterById(String dId) {
+        this(dId, false);
     }
     @Override
     public Device internalRun() {
-        return toPOJODevice(getDeviceById(this.dId));
+        return toPOJODevice(getDeviceById(this.dId), this.loadPorts);
     }
 }
 

@@ -1,13 +1,13 @@
 package uk.ac.open.kmi.forge.webPacketTracer.pojo;
 
-public class LinkCreation {
+public class Link {
     String toDevice;
     String toPort;
 
-    public LinkCreation() {
+    public Link() {
     }
 
-    public LinkCreation(String toDevice, String toPort) {
+    public Link(String toDevice, String toPort) {
         this.toDevice = toDevice;
         this.toPort = toPort;
     }
