@@ -30,7 +30,7 @@ public class Device {
     }
 
     public static Device fromCiscoObject(com.cisco.pt.ipc.sim.Device device) {
-        return fromCiscoObject(device, true);
+        return fromCiscoObject(device, false);
     }
 
     public static Device fromCiscoObject(com.cisco.pt.ipc.sim.Device device, boolean loadPorts) {
