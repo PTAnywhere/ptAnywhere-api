@@ -9,12 +9,18 @@ import java.util.Collection;
 
 class PortsGetter extends PTCallable<Collection<Port>> {
     final String deviceId;
-    public PortsGetter(String deviceId) {
+    final boolean byName;
+    public PortsGetter(String deviceId, boolean isName) {
         this.deviceId = deviceId;
+        this.byName = isName;
     }
     @Override
     public Collection<Port> internalRun() {
-        return new DeviceGetterById(this.deviceId).call().getPorts();
+        if (this.byName) {
+            return new DeviceGetterByName(this.deviceId, true).call().getPorts();
+        } else {
+            return new DeviceGetterById(this.deviceId, true).call().getPorts();
+        }
     }
 }
 
@@ -23,7 +29,8 @@ public class PortsResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Collection<Port> getPorts(
-            @PathParam("device") String deviceId) {
-        return new PortsGetter(deviceId).call();  // Not using a new Thread
+            @PathParam("device") String deviceId,
+            @DefaultValue("false") @QueryParam("byName") boolean byName) {
+        return new PortsGetter(deviceId, byName).call();  // Not using a new Thread
     }
 }
