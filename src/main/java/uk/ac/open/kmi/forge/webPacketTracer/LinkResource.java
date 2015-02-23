@@ -77,8 +77,8 @@ class LinkDeleter extends LinkHandler {
             return null;
         }
         final LogicalWorkspace workspace = this.task.getIPC().appWindow().getActiveWorkspace().getLogicalWorkspace();
-        final Device device = this.portMngr.getDevice();
-        final Port port = this.portMngr.getPort();
+        final Device device = getDevice();
+        final Port port = getPort();
         final boolean success = workspace.deleteLink(device.getLabel(), port.getPortName());
         if (success) {
             return getLink();
