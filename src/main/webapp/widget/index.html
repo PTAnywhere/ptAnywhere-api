@@ -68,19 +68,33 @@
                 Name: <input type="text" name="displayName">
             </div>
             <div id="tabs-2">
-                Name: <select id="interface" name="interface" size="1">
-                    <option value="port0">DefaultPort0</option>
-                </select>
-                <hr>
-                IP address: <input type="text" name="ipAddress"><br>
-                Subnet mask: <input type="text" name="subnetMask">
-                <hr>
-                Connected to:
-                <select id="linkInterface" name="linkInterface" size="1">
-                    <option value="port0">DefaultPort0</option>
-                </select>
-                <input type="hidden" name="linkInterfacePrevious" value="">
-                <input type="hidden" name="linkId" value="">
+                <div class="loading">
+                    Loading info...
+                </div>
+                <div id="loadedPanel" class="loaded">
+                    Name: <select id="interface" name="interface" size="1">
+                        <option value="loading">Loading...</option>
+                    </select>
+                    <div class="loading">
+                        Loading...
+                    </div>
+                    <div class="loaded">
+                        <hr>
+                        IP address: <input type="text" name="ipAddress"><br>
+                        Subnet mask: <input type="text" name="subnetMask">
+                        <hr>
+                        Connected to:
+                        <select id="linkDevice" name="linkDevice" size="1">
+                            <option value="loading">Loading...</option>
+                        </select>
+                        <select id="linkInterface" name="linkInterface" size="1">
+                            <option value="loading">Loading...</option>
+                        </select>
+                    </div>
+                    <input type="hidden" name="linkPreviousDevice" value="">
+                    <input type="hidden" name="linkPreviousInterface" value="">
+                    <input type="hidden" name="linkId" value="">
+                </div>
             </div>
         </form>
     </div>

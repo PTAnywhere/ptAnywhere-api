@@ -1,4 +1,5 @@
-var api_url = "../webapi";
+// var api_url = "../webapi";
+var api_url = "http://localhost:8080/webPacketTracer/webapi";
 // var api_url = "http://localhost:8080/ptsmith-rest/ptsmith";
 // "http://carre.kmi.open.ac.uk/forge/ptsmith"
 
@@ -91,11 +92,10 @@ function deleteLink(deviceId, portName, callback) {
     .fail(function(data) { console.error("Something went wrong in the link deletion.") });
 }
 
-function createLink(fromDeviceId, fromPortName, toDeviceAndPort, callback) {
-    var slices = toDeviceAndPort.split(":"); // FIXME what if the port name or the device label have a ":"
+function createLink(fromDeviceId, fromPortName, toDevice, toPort, callback) {
     var modification = {
-        toDevice: slices[0],
-        toPort: slices[1]
+        toDevice: toDevice,
+        toPort: toPort
     }
     $.postJSON(api_url + "/devices/" + fromDeviceId + "/ports/" + fromPortName + "/link", modification,
         function(result) {
@@ -104,34 +104,38 @@ function createLink(fromDeviceId, fromPortName, toDeviceAndPort, callback) {
     .fail(function(data) { console.error("Something went wrong in the link creation.") });
 }
 
+function createLinkIfNeeded(fromDeviceId, fromPortName, toDeviceId, toPortName, modForm, callback) {
+    if (toDeviceId!="none") {
+        var toDeviceName = $("#linkDevice option:selected", modForm).text();  // To get the name, not the id
+        createLink(fromDeviceId, fromPortName, toDeviceName, toPortName, callback);
+    } else callback();
+}
+
 function handleModificationSubmit(callback) {
     // Check the tab
-    var selectedTab = $("li.ui-state-active").attr("aria-controls");
+    var modForm = $("form[name='modify-device']");
+    var selectedTab = $("li.ui-state-active", modForm).attr("aria-controls");
     var deviceId = getDeviceToModify();
     if (selectedTab=="tabs-1") { // General settings
         modifyDevice(deviceId, callback);
     } else if (selectedTab=="tabs-2") { // Interfaces
-        var selectedPort = $("#interface").val().replace("/", "%20");
+        var selectedFromInterface = $("#interface", modForm).val().replace("/", "%20");
         // Room for improvement: the following request could be avoided when nothing has changed
-        modifyPort(deviceId, selectedPort);
+        modifyPort(deviceId, selectedFromInterface);
         // The following requests can be done simultaneously
         // b. If link has changed
-        var previousLink = document.forms["modify-device"]["linkInterfacePrevious"].value;
-        var selectedConnection = $('#linkInterface').val();
-        if (previousLink!=selectedConnection) {
-            if (previousLink!="none") {
+        var previousToDevice =$("input[name='linkPreviousDevice']", modForm).val();
+        var previousToInterface =$("input[name='linkPreviousInterface']", modForm).val();
+        var selectedToDevice = $("#linkDevice", modForm).val();
+        var selectedToInterface = $("#linkInterface", modForm).val();
+        if (previousToDevice!=selectedToDevice || (previousToDevice!="none" && previousToInterface!=selectedToInterface)) {
+            if (previousToDevice!="none") {
                 // b1. DELETE to /devices/id/ports/id/link
-                deleteLink(deviceId, selectedPort, function() {
-                    if (selectedConnection!="none") {
-                        // b2. If connection is not to "none" => POST to /devices/id/ports/id/link
-                        createLink(deviceId, selectedPort, selectedConnection, callback); // create after delete
-                    } else callback();
+                deleteLink(deviceId, selectedFromInterface, function() {
+                    createLinkIfNeeded(deviceId, selectedFromInterface, selectedToDevice, selectedToInterface, modForm, callback); // create after delete
                 });
             } else {
-                if (selectedConnection!="none") {
-                    // b2. If connection is not to "none" => POST to /devices/id/ports/id/link
-                    createLink(deviceId, selectedPort, selectedConnection, callback);
-                } else callback();
+                createLinkIfNeeded(deviceId, selectedFromInterface, selectedToDevice, selectedToInterface, modForm, callback); // create after delete
             }
         } else callback();  // In case just the port details are modified...
     } else {
@@ -162,95 +166,165 @@ function onDeviceAdd() {
     dialog.dialog( "open" );
 }
 
-function getFullPortNameForLink(linkId, notInThisDevice) {
-    for (var key in nodes._data) {
-        var node = nodes.get(key);
-        if (node.label != notInThisDevice.label) {
-            for (i = 0; i < node.ports.length; i++) {
-                var port = node.ports[i];
-                if ('undefined' != typeof port.link) {
-                    if (port.link==linkId) {
-                        return node.label + ":" + port.portName;
-                    }
-                }
-            }
-        }
-    }
-    return null;
+function setPreviousLink(formToUpdate, toDevice="none", toPort="none") {
+    $("input[name='linkPreviousDevice']", formToUpdate).val(toDevice);
+    $("input[name='linkPreviousInterface']", formToUpdate).val(toPort);
 }
 
-function selectLinkedInterface(device, port) {
+function selectLinkedDevice(device, port, formToUpdate, callback) {
+    var selectInterfaceEl = $("#linkInterface", formToUpdate);
     if ('undefined' == typeof port.link) {
-        // Select last option file
-        //$('#linkInterface').val('none');
-        document.forms["modify-device"]["linkId"].value = "";
-        $('#linkInterface option:contains("None")').prop('selected', true);
-        document.forms["modify-device"]["linkInterfacePrevious"].value = "none";
+        selectInterfaceEl.hide();
+        setPreviousLink(formToUpdate);
+        callback(null);
     } else {
-        document.forms["modify-device"]["linkId"].value = port.link;
-        var connectedToPort = getFullPortNameForLink(port.link, device);
-        if (connectedToPort==null) {
-            console.error("Error. The link " + port.link + " must be connected to a device.")
-        } else {
-            //console.log("Connected to: " + connectedToPort);
-            document.forms["modify-device"]["linkInterfacePrevious"].value = connectedToPort;
-            $('#linkInterface').val(connectedToPort);
-        }
+        // PRE: return more info in /link
+        $.getJSON(api_url + "/devices/" + device.id + "/ports/" + port.portName.replace("/", "%20") + "/link", function(link) {
+            setPreviousLink(formToUpdate, link.toDevice, link.toPort);
+            $.getJSON(api_url + "/devices/" + link.toDevice + "/ports?byName=true", function(ports) {
+                // populate select with iface names
+                loadPortsInSelect(ports, selectInterfaceEl);
+                // select iface
+                selectOptionWithText(selectInterfaceEl, link.toPort);
+                selectInterfaceEl.show();
+                callback(link.toDevice);  // select device
+            }).fail(function() {
+                console.error("Ports for the device " + node + " could not be loaded. Possible timeout.");
+            });
+        }).fail(function() {
+            console.error("Port " + port.portName + " (device " + device + ") could not be loaded. Possible timeout.");
+        });
     }
 }
 
-function updateInterfaceInformation(device, port) {
-    document.forms["modify-device"]["ipAddress"].value = port.portIpAddress;
-    document.forms["modify-device"]["subnetMask"].value = port.portSubnetMask;
-    selectLinkedInterface(device, port);
+function selectOptionWithText(selectEl, text) {
+    $("option", selectEl).filter(function () { return $(this).html() == text; }).prop('selected', true);
 }
 
-function populateConnectedToSelect(current, nodes) {
-    currentLinkCount = 0;
+function updateConnectedDeviceSelect(device, port, formToUpdate, callback) {
+    // Update the info of the link...
+    var selectEl = $("#linkDevice", formToUpdate);
+    selectEl.html('<option value="Loading..."></option>'); // Substitute all elements
+    selectEl.prop('disabled', 'disabled');
+
+    selectEl.append('<option value="none">None</option>');
     for (var key in nodes._data) {
-        if (nodes.get(key).label != current.label) {
-            if ('undefined' !== typeof nodes.get(key).ports) {
-                for (j = 0; j < nodes.get(key).ports.length; j++) {
-                    var port = nodes.get(key).ports[j];
-                    var optionName = nodes.get(key).label + ":" + port.portName;
-                    document.forms["modify-device"]["linkInterface"].options[currentLinkCount + 1] = new Option(
-                        optionName, optionName, false, false);
-                    currentLinkCount++;
+        node = nodes.get(key);
+        if (node.id!=device.id) {
+            selectEl.append('<option value="' + node.id + '">' + node.label + '</option>')
+        }
+    }
+    var selectEl = $("#linkDevice", formToUpdate);
+    selectLinkedDevice(device, port, formToUpdate, function(selectedLabel) {
+        // Remove "Loading..." option
+        $("option:selected", selectEl).each(function(index, element) {
+            // There is only one: the temporary element added at the beginning
+            element.remove();
+        });
+        if (selectedLabel==null) {
+            $("input[name='linkId']", formToUpdate).val("");
+            selectOptionWithText(selectEl, "None");
+
+        } else {
+            $("input[name='linkId']", formToUpdate).val(port.link);
+            selectOptionWithText(selectEl, selectedLabel)
+        }
+        selectEl.prop('disabled', false);
+        callback();
+    });
+
+    selectEl.change(function () {
+        $("option:selected", this).each(function(index, element) { // There is only one selection
+            var selectInterfaceEl = $("#linkInterface", formToUpdate);
+            selectInterfaceEl.hide();
+            var selectedDevice = $(element).val(); // or  $(element).text();
+            if (selectedDevice!="none") {
+                $.getJSON(api_url + "/devices/" + selectedDevice + "/ports", function(ports) {
+                    loadPortsInSelect(ports, selectInterfaceEl); // populate select with device's ifaces
+                    selectInterfaceEl.show();
+                }).fail(function() {
+                    console.error("Ports for the device " + node + " could not be loaded. Possible timeout.");
+                });
+            }
+        });
+    });
+}
+
+function updateInterfaceInformation(device, port, formToUpdate, callback) {
+    $("#loadedPanel>.loading").show();
+    $("#loadedPanel>.loaded").hide();
+    $('input[name="ipAddress"]', formToUpdate).val(port.portIpAddress);
+    $('input[name="subnetMask"]', formToUpdate).val(port.portSubnetMask);
+    updateConnectedDeviceSelect(device, port, formToUpdate, function() {
+        $("#loadedPanel>.loading").hide();
+        $("#loadedPanel>.loaded").show();
+        callback();
+    });
+}
+
+/**
+ * @return Selected port.
+ */
+function loadPortsInSelect(ports, selectElement, defaultSelection=null) {
+    var ret = null;
+    selectElement.html(""); // Remove everything
+    for (var i = 0; i < ports.length; i++) {
+        var portName = ports[i].portName;
+        var htmlAppend = '<option value="' + portName + '"';
+        if (i == defaultSelection) {
+            htmlAppend += ' selected';
+            ret = ports[i];
+        }
+        selectElement.append(htmlAppend + '>' + portName + '</option>');
+    }
+    return ret;
+}
+
+function setInterfaceInformationMode(loading) {
+    if (loading) {
+
+    } else {
+
+    }
+}
+
+function loadPortsForInterface(ports, selectedDevice, formToUpdate) {
+    var selectedPort = loadPortsInSelect(ports, $("#interface", formToUpdate), 0);
+    if (selectedPort!=null) {
+        updateInterfaceInformation(selectedDevice, selectedPort, formToUpdate, function () {
+            $("#tabs-2>.loading").hide();
+            $("#tabs-2>.loaded").show();
+        });
+    }
+    $("#interface", formToUpdate).change(function () {
+        $("option:selected", this).each(function(index, element) { // There is only one selection
+            var selectedIFace = $(element).text();
+            for (var i = 0; i < ports.length; i++) {  // Instead of getting its info again (we save one request)
+                if ( selectedIFace == ports[i].portName ) {
+                    setInterfaceInformationMode(true);
+                    updateInterfaceInformation(selectedDevice, ports[i], formToUpdate, function() {
+                        setInterfaceInformationMode(false);
+                    });
+                    break;
                 }
             }
-        }
-    }
-    document.forms["modify-device"]["linkInterface"].options[0] = new Option("None", "none", false, false);
+        });
+    });
 }
 
 function updateEditForm(node) {
+    $("#tabs-2>.loading").show();
+    $("#tabs-2>.loaded").hide();
+
     var current = nodes.get(node);
     var modForm = $("form[name='modify-device']");
     $("input[name='deviceId']", modForm).val(node);
     $("input[name='displayName']", modForm).val(current.label);
 
-    populateConnectedToSelect(current, nodes);
-
-    document.forms["modify-device"]["interface"].options.length = 0;
-    for (i = 0; i < current.ports.length; i++) {
-        var portName = current.ports[i].portName;
-        var defaultSelected = (i == 0);
-        document.forms["modify-device"]["interface"].options[i] = new Option(
-                portName, portName, defaultSelected, false);
-        if (defaultSelected) {
-            updateInterfaceInformation(current, current.ports[i]);
-        }
-    }
-    $("#interface").change(function () {
-        $("option:selected", this).each(function() { // There is only one selection
-            var selectedIFace = $(this).text();
-            for (i = 0; i < current.ports.length; i++) {
-                if ( selectedIFace == current.ports[i].portName ) {
-                    updateInterfaceInformation(current, current.ports[i]);
-                    break;
-                }
-            }
-        });
+    $.getJSON(api_url + "/devices/" + node + "/ports", function(data) {
+        loadPortsForInterface(data, current, modForm);
+    }).fail(function() {
+        console.error("Ports for the device " + node + " could not be loaded. Possible timeout.");
     });
 }
 
@@ -351,7 +425,7 @@ function toJSON(obj) {
 function redrawTopology() {
     $.getJSON(api_url + "/all", loadTopology).fail(function() {
     //$.getJSON("fake.json", loadTopology).fail(function() {
-        console.log("The topology could not be loaded. Possible timeout.");
+        console.error("The topology could not be loaded. Possible timeout.");
     });  // Apparently status code 304 is an error for this method :-S
 }
 
