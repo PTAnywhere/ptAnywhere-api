@@ -23,22 +23,9 @@ class AllGetter extends PTCallable<Network> {
 
 @Path("all")
 public class AllResource {
-
-    private PtSmith ptSmith = null;
-
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Network getAll() {
         return new AllGetter().call();  // No Threads
-    }
-
-    public String getJson2() {
-        if (ptSmith == null) {
-            ptSmith = new PtSmith();
-        }
-        ptSmith.run();
-        String devices = ptSmith.getDevicesJson();
-        String edges = ptSmith.getEdgesJson();
-        return "{ \n \t\"devices\":" + devices + ",\n \t\"edges\":" + edges + "\n}";
     }
 }
