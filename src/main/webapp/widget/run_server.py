@@ -5,11 +5,13 @@
 import SimpleHTTPServer
 import SocketServer
 
-PORT = 8000
+PORT = 8000  # If you change this, take it into account for widget.js too.
+
 
 Handler = SimpleHTTPServer.SimpleHTTPRequestHandler
-
 httpd = SocketServer.TCPServer(("", PORT), Handler)
 
 print "serving at port", PORT
 httpd.serve_forever()
+
+
