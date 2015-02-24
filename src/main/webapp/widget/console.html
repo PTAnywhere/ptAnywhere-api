@@ -1,10 +1,76 @@
 <!DOCTYPE html>
 <html>
-<head lang="en">
-    <meta charset="UTF-8">
-    <title></title>
-</head>
-<body>
+    <head lang="en">
+        <meta charset="UTF-8">
+        <title>Console</title>
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { font: 13px Helvetica, Arial; }
+            form { padding: 3px; position: fixed; bottom: 0; width: 100%; }
+            form input { border: 0; padding: 10px; width: 95%; }
+            form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
+            #messages { list-style-type: none; margin: 0; padding: 0; }
+            #messages li { padding: 5px 10px; }
+            #messages li:nth-child(odd) { background: #eee; }
+        </style>
+        <script src="jquery/jquery.js"></script>
+    </head>
+    <body>
+        <div id="messages"></div>
+        <div style="height: 8pt; width: 100%">
+            <span id="lastLine" style="float:left;"></span>
+            <span id="current" contentEditable="true" style="display: block;">ping 10.0.0.2</span>
+        </div>
+        <script type="text/javascript">
+             var ws = null;
 
-</body>
+            function setConnected(connected) {
+                $('#current').prop( "disabled", !connected);
+            }
+
+            function connect(target) {
+                if ('WebSocket' in window) {
+                    ws = new WebSocket(target);
+                } else if ('MozWebSocket' in window) {
+                    ws = new MozWebSocket(target);
+                } else {
+                    alert('WebSocket is not supported by this browser.');
+                    return;
+                }
+                ws.onopen = function () {
+                    setConnected(true);
+                    console.log('Info: WebSocket connection opened.');
+                };
+                ws.onmessage = function (event) {
+                    var lines = event.data.split("\n");
+                    console.log(lines);
+                    if (lines.length>1) {
+                        for (var i=0; i<lines.length-1; i++) { // Unnecessary
+                            if (i==0) {
+                                $("#messages").append($("#lastLine").text());
+                                $("#lastLine").text('');
+                            }
+                            $("#messages").append(lines[i] + "<br />");
+                        }
+                    }
+                    $("#lastLine").append(lines[lines.length-1]);
+                };
+                ws.onclose = function (event) {
+                    setConnected(false);
+                    console.log('Info: WebSocket connection closed, Code: ' + event.code + (event.reason == "" ? "" : ", Reason: " + event.reason));
+                };
+            }
+
+            $(document).keypress(function(e) {
+                if(e.which == 13) {
+                    ws.send($("#current").text());
+                    $("#current").text('');
+                }
+            });
+
+            $(function() {
+                connect('ws://localhost:8080/webPacketTracer/devices/RightHandSide/w/console');
+            });
+        </script>
+    </body>
 </html>
