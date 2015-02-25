@@ -6,20 +6,17 @@
         <style>
             * { margin: 0; padding: 0; box-sizing: border-box; }
             body { font: 13px Helvetica, Arial; }
-            form { padding: 3px; position: fixed; bottom: 0; width: 100%; }
-            form input { border: 0; padding: 10px; width: 95%; }
-            form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
             #messages { list-style-type: none; margin: 0; padding: 0; }
             #messages li { padding: 5px 10px; }
             #messages li:nth-child(odd) { background: #eee; }
         </style>
-        <script src="jquery/jquery.js"></script>
+        <script src="/webPacketTracer/widget/jquery/jquery.js"></script>
     </head>
     <body>
         <div id="messages"></div>
         <div style="height: 8pt; width: 100%">
             <span id="lastLine" style="float:left;"></span>
-            <span id="current" contentEditable="true" style="display: block;">ping 10.0.0.2</span>
+            <span id="current" contentEditable="true" style="display: block; height: 100%;">ping 10.0.0.2</span>
         </div>
         <script type="text/javascript">
              var ws = null;
@@ -29,6 +26,8 @@
             }
 
             function connect(target) {
+                console.log('Connecting to websocket endpoint... (' + target + ')');
+
                 if ('WebSocket' in window) {
                     ws = new WebSocket(target);
                 } else if ('MozWebSocket' in window) {
@@ -43,7 +42,6 @@
                 };
                 ws.onmessage = function (event) {
                     var lines = event.data.split("\n");
-                    console.log(lines);
                     if (lines.length>1) {
                         for (var i=0; i<lines.length-1; i++) { // Unnecessary
                             if (i==0) {
@@ -54,6 +52,7 @@
                         }
                     }
                     $("#lastLine").append(lines[lines.length-1]);
+                    $("html, body").animate({ scrollTop: $(document).height() }, "slow");  // Scroll down
                 };
                 ws.onclose = function (event) {
                     setConnected(false);
@@ -69,7 +68,8 @@
             });
 
             $(function() {
-                connect('ws://localhost:8080/webPacketTracer/devices/RightHandSide/w/console');
+                connect( ('ws://'+ window.location.host + window.location.pathname).replace("webapi", "endpoint") );
+                //'ws://localhost:8080/webPacketTracer/devices/RightHandSide/w/console'
             });
         </script>
     </body>
