@@ -65,6 +65,12 @@
             <!-- artifactId>jersey-container-servlet</artifactId -->
         </dependency>
         <dependency>
+            <groupId>org.glassfish.main.extras</groupId>
+            <artifactId>glassfish-embedded-web</artifactId>
+            <scope>provided</scope>
+            <version>4.1</version>
+        </dependency>
+        <dependency>
             <groupId>org.glassfish.jersey.media</groupId>
             <artifactId>jersey-media-moxy</artifactId>
         </dependency>
