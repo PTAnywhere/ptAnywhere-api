@@ -69,4 +69,8 @@ public class PTCommon {
     public IPC getIPC() {
         return this.ipcFactory.getIPC();
     }
+
+    public PacketTracerDAO getDataAccessObject() {
+        return new PacketTracerDAO(getIPC());
+    }
 }

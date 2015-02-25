@@ -35,10 +35,6 @@ public class PTDaemon extends PTCommon {
         }
     }
 
-    public Network getNetwork() {
-        return this.ipcFactory.network(this.getIPC());
-    }
-
     public TerminalLineEventRegistry getTerminalLineEventRegistry() {
         return this.packetTracerSession.getEventManager().getTerminalLineEvents();
     }
