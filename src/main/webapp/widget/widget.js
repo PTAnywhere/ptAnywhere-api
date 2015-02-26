@@ -1,4 +1,4 @@
-var api_url = "../webapi";
+var api_url = "../api";
 
 var nodes, edges, network;
 
@@ -420,7 +420,7 @@ function toJSON(obj) {
 }
 
 function redrawTopology() {
-    $.getJSON(api_url + "/all", loadTopology).fail(function() {
+    $.getJSON(api_url + "/network", loadTopology).fail(function() {
     //$.getJSON("fake.json", loadTopology).fail(function() {
         console.error("The topology could not be loaded. Possible timeout.");
     });  // Apparently status code 304 is an error for this method :-S
@@ -448,7 +448,7 @@ $(function() {
     if (location.port==8000) {
         // If the page is deployed in the port 8000, it assumes that the python simple server is running
         // and the API is working in a different server.
-        api_url = "http://localhost:8080/webPacketTracer/webapi";
+        api_url = "http://localhost:8080/webPacketTracer/api";
         console.log("Using an API deployed in a different HTTP server: " + api_url)
     }
 
