@@ -18,12 +18,7 @@ import java.util.*;
 class DevicesGetter extends PTCallable<Collection<Device>> {
     @Override
     public Collection<Device> internalRun() {
-        final Network network = this.task.getIPC().network();
-        final Set<Device> ret = new HashSet<Device>();
-        for (int i = 0; i < network.getDeviceCount(); i++) {
-            ret.add(Device.fromCiscoObject(network.getDeviceAt(i)));
-        }
-        return ret;
+        return this.task.getDataAccessObject().getDevices();
     }
 }
 

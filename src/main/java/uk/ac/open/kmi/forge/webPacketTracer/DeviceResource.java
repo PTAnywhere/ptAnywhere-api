@@ -4,6 +4,7 @@ import com.cisco.pt.ipc.sim.Network;
 import com.cisco.pt.ipc.sim.port.HostPort;
 import com.cisco.pt.ipc.ui.LogicalWorkspace;
 import uk.ac.open.kmi.forge.webPacketTracer.gateway.PTCallable;
+import uk.ac.open.kmi.forge.webPacketTracer.gateway.PacketTracerDAO;
 import uk.ac.open.kmi.forge.webPacketTracer.pojo.Device;
 import uk.ac.open.kmi.forge.webPacketTracer.pojo.Port;
 
@@ -12,80 +13,40 @@ import javax.ws.rs.core.MediaType;
 import java.util.HashSet;
 import java.util.Set;
 
-
-abstract class AbstractDeviceHandler extends PTCallable<Device> {
-    protected com.cisco.pt.ipc.sim.Device getDeviceByName(String deviceName) {
-        final Network network = this.task.getIPC().network();
-        return network.getDevice(deviceName);
-    }
-
-    protected com.cisco.pt.ipc.sim.Device getDeviceById(String deviceId) {
-        final Network network = this.task.getIPC().network();
-        for (int i = 0; i < network.getDeviceCount(); i++) {
-            final com.cisco.pt.ipc.sim.Device ret = network.getDeviceAt(i);
-            if (deviceId.equals(ret.getObjectUUID().getDecoratedHexString())) {
-                return ret;
-            }
-        }
-        return null;
-    }
-
-    protected Device toPOJODevice(com.cisco.pt.ipc.sim.Device d) {
-        return Device.fromCiscoObject(d);
-    }
-
-    protected Device toPOJODevice(com.cisco.pt.ipc.sim.Device d, boolean loadPorts) {
-        return Device.fromCiscoObject(d, loadPorts);
-    }
-}
-
-class DeviceGetterByName extends AbstractDeviceHandler {
+class DeviceGetterByName extends PTCallable<Device> {
     final String name;
-    final boolean loadPorts;
     public DeviceGetterByName(String name) {
-        this(name, false);
-    }
-    public DeviceGetterByName(String name, boolean loadPorts) {
         this.name = name;
-        this.loadPorts = loadPorts;
     }
     @Override
     public Device internalRun() {
-        return toPOJODevice(getDeviceByName(this.name), this.loadPorts);
+        return this.task.getDataAccessObject().getDeviceByName(this.name);
     }
 }
 
-class DeviceGetterById extends AbstractDeviceHandler {
+class DeviceGetterById extends PTCallable<Device> {
     final String dId;
-    final boolean loadPorts;
-    public DeviceGetterById(String dId, boolean loadPorts) {
-        this.dId = dId;
-        this.loadPorts = loadPorts;
-    }
     public DeviceGetterById(String dId) {
-        this(dId, false);
+        this.dId = dId;
     }
     @Override
     public Device internalRun() {
-        return toPOJODevice(getDeviceById(this.dId), this.loadPorts);
+        return this.task.getDataAccessObject().getDeviceById(this.dId);
     }
 }
 
-class DeviceDeleter extends AbstractDeviceHandler {
+class DeviceDeleter extends PTCallable<Device> {
     final String dId;
     public DeviceDeleter(String dId) {
         this.dId = dId;
     }
     @Override
     public Device internalRun() {
-        final LogicalWorkspace workspace = this.task.getIPC().appWindow().getActiveWorkspace().getLogicalWorkspace();
-        final com.cisco.pt.ipc.sim.Device d = getDeviceById(this.dId);
-        workspace.removeDevice(d.getName());  // It can only be removed by name :-S
-        return toPOJODevice(d);
+        return this.task.getDataAccessObject().removeDevice(this.dId);
     }
 }
 
-class DeviceModifier extends AbstractDeviceHandler {
+class DeviceModifier extends PTCallable<Device> {
     final String dId;
     final Device modification;
     public DeviceModifier(String dId, Device modification) {
@@ -94,10 +55,7 @@ class DeviceModifier extends AbstractDeviceHandler {
     }
     @Override
     public Device internalRun() {
-        final LogicalWorkspace workspace = this.task.getIPC().appWindow().getActiveWorkspace().getLogicalWorkspace();
-        final com.cisco.pt.ipc.sim.Device d = getDeviceById(this.dId);
-        d.setName(this.modification.getLabel());  // Right now, we only allow to change the name of the label!
-        return toPOJODevice(d);
+        return this.task.getDataAccessObject().modifyDevice(this.modification);
     }
 }
 

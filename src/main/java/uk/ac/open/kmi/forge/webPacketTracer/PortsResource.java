@@ -16,11 +16,7 @@ class PortsGetter extends PTCallable<Collection<Port>> {
     }
     @Override
     public Collection<Port> internalRun() {
-        if (this.byName) {
-            return new DeviceGetterByName(this.deviceId, true).call().getPorts();
-        } else {
-            return new DeviceGetterById(this.deviceId, true).call().getPorts();
-        }
+        return this.task.getDataAccessObject().getPorts(this.deviceId, this.byName);
     }
 }
 

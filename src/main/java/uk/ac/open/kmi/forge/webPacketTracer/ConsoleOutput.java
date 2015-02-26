@@ -43,7 +43,7 @@ public class ConsoleOutput implements TerminalLineEventListener {
 
         this.common.start();
         final String deviceId = "{" + session.getPathParameters().get("device") + "}";
-        final Pc pc0 = (Pc) this.common.getDataAccessObject().getDeviceById(deviceId);
+        final Pc pc0 = (Pc) this.common.getDataAccessObject().getSimDeviceById(deviceId);
         this.cmd = pc0.getCommandLine();
         try {
             final TerminalLineEventRegistry registry = this.common.getTerminalLineEventRegistry();

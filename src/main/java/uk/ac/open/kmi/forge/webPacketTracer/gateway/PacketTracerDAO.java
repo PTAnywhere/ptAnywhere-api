@@ -1,8 +1,19 @@
 package uk.ac.open.kmi.forge.webPacketTracer.gateway;
 
-import com.cisco.pt.ipc.sim.Device;
-import com.cisco.pt.ipc.sim.Network;
+
+import com.cisco.pt.IPAddress;
+import com.cisco.pt.impl.IPAddressImpl;
+import com.cisco.pt.ipc.enums.ConnectType;
+import com.cisco.pt.ipc.sim.*;
+import com.cisco.pt.ipc.sim.port.HostPort;
 import com.cisco.pt.ipc.ui.IPC;
+import com.cisco.pt.ipc.ui.LogicalWorkspace;
+import uk.ac.open.kmi.forge.webPacketTracer.pojo.*;
+import uk.ac.open.kmi.forge.webPacketTracer.pojo.Device;
+import uk.ac.open.kmi.forge.webPacketTracer.pojo.Network;
+
+import java.util.*;
+
 
 /**
  * Data access object for PacketTracer.
@@ -10,19 +21,185 @@ import com.cisco.pt.ipc.ui.IPC;
 public class PacketTracerDAO {
 
     final IPC ipc;
+    final com.cisco.pt.ipc.sim.Network network;  // It is used often, so better to put it as attribute.
 
     public PacketTracerDAO(IPC ipc) {
         this.ipc = ipc;
+        this.network = this.ipc.network();
     }
 
-    public Device getDeviceById(String deviceId) {
-        final Network network = this.ipc.network();
-        for (int i=0; i<network.getDeviceCount(); i++) {
-            final com.cisco.pt.ipc.sim.Device ret = network.getDeviceAt(i);
+    public Network getWholeNetwork() {
+        final Network ret = new Network();
+        final Map<String, Edge> edges = new HashMap<String, Edge>();
+        for (int i = 0; i < this.network.getDeviceCount(); i++) {
+            final com.cisco.pt.ipc.sim.Device d = this.network.getDeviceAt(i);
+            ret.getDevices().add(Device.fromCiscoObject(d));
+            for (int j = 0; j < d.getPortCount(); j++) {
+                final com.cisco.pt.ipc.sim.port.Port port = d.getPortAt(j);
+                final com.cisco.pt.ipc.sim.port.Link currentLink = port.getLink();
+                if (currentLink != null) {
+                    final String linkId = currentLink.getObjectUUID().getDecoratedHexString();
+                    final String devId = d.getObjectUUID().getDecoratedHexString();
+                    if (edges.containsKey(linkId)) {
+                        edges.get(linkId).setTo(devId);
+                    } else {
+                        edges.put(linkId, new Edge(linkId, devId, null));
+                    }
+                }
+            }
+        }
+        ret.setEdges(edges.values());
+        return ret;
+    }
+
+    public Set<Device> getDevices() {
+        final Set<Device> ret = new HashSet<uk.ac.open.kmi.forge.webPacketTracer.pojo.Device>();
+        for(int i = 0; i<this.network.getDeviceCount();i++) {
+            ret.add(Device.fromCiscoObject(this.network.getDeviceAt(i)));
+        }
+        return ret;
+    }
+
+    public com.cisco.pt.ipc.sim.Device getSimDeviceById(String deviceId) {
+        for (int i=0; i<this.network.getDeviceCount(); i++) {
+            final com.cisco.pt.ipc.sim.Device ret = this.network.getDeviceAt(i);
             if (deviceId.equals(ret.getObjectUUID().getDecoratedHexString())) {
                 return ret;
             }
         }
         return null;
+    }
+
+    protected com.cisco.pt.ipc.sim.Device getSimDeviceByName(String deviceName) {
+        return this.network.getDevice(deviceName);
+    }
+
+    public Device getDeviceById(String deviceId) {
+        return getDeviceById(deviceId, false);
+    }
+
+    public Device getDeviceById(String deviceId, boolean loadPorts) {
+        final com.cisco.pt.ipc.sim.Device d = getSimDeviceById(deviceId);
+        final Device ret = Device.fromCiscoObject(d);
+        if(loadPorts) ret.setPorts(getPorts(d));
+        return ret;
+    }
+
+    public Device getDeviceByName(String deviceName) {
+        return getDeviceByName(deviceName, false);
+    }
+
+    public Device getDeviceByName(String deviceName, boolean loadPorts) {
+        final com.cisco.pt.ipc.sim.Device d = getSimDeviceByName(deviceName);
+        final Device ret = Device.fromCiscoObject(d);
+        if(loadPorts) ret.setPorts(getPorts(d));
+        return ret;
+    }
+
+    public Device removeDevice(String deviceId) {
+        final Device ret = getDeviceById(deviceId);
+        if (ret!=null) {
+            final LogicalWorkspace workspace = this.ipc.appWindow().getActiveWorkspace().getLogicalWorkspace();
+            workspace.removeDevice(ret.getLabel());  // It can only be removed by name :-S
+        }
+        return ret;
+    }
+
+    public Device modifyDevice(Device modification) {
+        final com.cisco.pt.ipc.sim.Device ret = getSimDeviceById(modification.getId());
+        if (ret!=null) {
+            final LogicalWorkspace workspace = this.ipc.appWindow().getActiveWorkspace().getLogicalWorkspace();
+            ret.setName(modification.getLabel());  // Right now, we only allow to change the name of the label!
+        }
+        return Device.fromCiscoObject(ret);
+    }
+
+    private List<Port> getPorts(com.cisco.pt.ipc.sim.Device device) {
+        final List<Port> ports = new ArrayList<Port>();
+        for(int i=0; i<device.getPortCount(); i++) {
+            com.cisco.pt.ipc.sim.port.Port port = device.getPortAt(i);
+            ports.add(Port.fromCiscoObject(port));
+        }
+        return ports;
+    }
+
+    public List<Port> getPorts(String deviceId) {
+        return getPorts(deviceId, false);
+    }
+
+    public List<Port> getPorts(String deviceId, boolean byName) {
+        if (byName)
+            return getPorts(getSimDeviceByName(deviceId));
+        else
+            return getPorts(getSimDeviceById(deviceId));
+    }
+
+    protected com.cisco.pt.ipc.sim.port.Port getSimPort(com.cisco.pt.ipc.sim.Device device, String portName) {
+        for (int i = 0; i < device.getPortCount(); i++) {
+            final com.cisco.pt.ipc.sim.port.Port port = device.getPortAt(i);
+            if (portName.equals(port.getName())) {
+                return port;
+            }
+        }
+        return null;
+    }
+
+    protected com.cisco.pt.ipc.sim.port.Port getSimPort(String deviceId, String portName) {
+        return getSimPort(getSimDeviceById(deviceId), portName);
+    }
+
+    public Port getPort(String deviceId, String portName) {
+        return Port.fromCiscoObject(getSimPort(deviceId, portName));
+    }
+
+    public Port modifyPort(String deviceId, Port modification) {
+        final com.cisco.pt.ipc.sim.port.Port p = getSimPort(deviceId, modification.getPortName());
+        if (p!=null) {
+            if (p instanceof HostPort) {
+                final IPAddress ip = new IPAddressImpl(modification.getPortIpAddress());
+                final IPAddress subnet = new IPAddressImpl(modification.getPortSubnetMask());
+                ((HostPort) p).setIpSubnetMask(ip, subnet);
+            }
+            return Port.fromCiscoObject(p);
+        }
+        return null;
+    }
+
+    public Link getLink(String deviceId, String portName) {
+        final String linkId = getPort(deviceId, portName).getLink();
+
+        if (linkId!=null) {
+            final Link ret = new Link();
+            ret.setId(linkId);
+            for (int i = 0; i < this.network.getDeviceCount(); i++) {
+                final com.cisco.pt.ipc.sim.Device d = this.network.getDeviceAt(i);
+                final String dId = d.getObjectUUID().getDecoratedHexString();
+                if (!deviceId.equals(dId))
+                    for (int j = 0; j < d.getPortCount(); j++) {
+                        final com.cisco.pt.ipc.sim.port.Port p = d.getPortAt(j);
+                        final String lId = (p.getLink() == null) ? null : p.getLink().getObjectUUID().getDecoratedHexString();
+                        if (lId != null && ret.getId().equals(lId)) {
+                            ret.setToDevice(d.getName());
+                            ret.setToPort(p.getName());
+                            return ret;
+                        }
+                    }
+            }
+        }
+        return null;
+    }
+
+    public boolean createLink(String fromDeviceId, String fromPortName, Link newLink) {
+        final LogicalWorkspace workspace = this.ipc.appWindow().getActiveWorkspace().getLogicalWorkspace();
+        final com.cisco.pt.ipc.sim.Device device = getSimDeviceById(fromDeviceId);
+        if (device==null) return false;
+        return workspace.createLink(device.getName(), fromPortName, newLink.getToDevice(), newLink.getToPort(), ConnectType.ETHERNET_STRAIGHT);
+    }
+
+    public boolean removeLink(String fromDeviceId, String fromPortName) {
+        final LogicalWorkspace workspace = this.ipc.appWindow().getActiveWorkspace().getLogicalWorkspace();
+        final com.cisco.pt.ipc.sim.Device device = getSimDeviceById(fromDeviceId);
+        if (device==null) return false;
+        return workspace.deleteLink(device.getName(), fromPortName);
     }
 }
