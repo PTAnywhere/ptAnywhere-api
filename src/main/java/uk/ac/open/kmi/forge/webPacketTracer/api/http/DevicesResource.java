@@ -7,7 +7,7 @@ import uk.ac.open.kmi.forge.webPacketTracer.gateway.PTCallable;
 import uk.ac.open.kmi.forge.webPacketTracer.pojo.Device;
 
 import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.*;
 import java.util.*;
 
 
@@ -70,6 +70,8 @@ class DevicePoster extends PTCallable<Device> {
 
 @Path("devices")
 public class DevicesResource {
+    @Context
+    UriInfo uri;
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
@@ -81,8 +83,26 @@ public class DevicesResource {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public Collection<Device> getJson() {
-        final DevicesGetter getter = new DevicesGetter();
-        return getter.call();  // Not using a new Thread
+    public Response getJson() {
+        final Collection<Device> d = new DevicesGetter().call();  // Not using a new Thread
+        // To array because otherwise Response does not know how to serialize Collection<Device>
+        return Response.ok(d.toArray(new Device[d.size()])).
+                link(this.uri.getBaseUri() + "network", "network").
+                links(createLinks(d)).build();  // Not using a new Thread
+    }
+
+    private Link.Builder fromRelative(String relativeUrl, String relType) {
+        return Link.fromUri(relativeUrl).baseUri(this.uri.getBaseUri()).rel(relType);
+    }
+
+
+    private Link[] createLinks(Collection<Device> devices) {
+        final Link[] links = new Link[devices.size()];
+        final Iterator<Device> devIt = devices.iterator();
+        final Link.Builder builder = Link.fromUri(this.uri.getBaseUri());
+        for(int i=0; i<links.length; i++) {
+            links[i] = fromRelative("devices/" + Utils.escapeIdentifier(devIt.next().getId()), "item").build();
+        }
+        return links;
     }
 }

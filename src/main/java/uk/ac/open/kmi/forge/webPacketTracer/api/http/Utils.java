@@ -5,6 +5,7 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.net.URLEncoder;
 
 /**
  * Utility class for HTTP API.
@@ -20,6 +21,16 @@ public class Utils {
         try {
             portName = URLDecoder.decode(portName, "UTF-8");
             return portName.replace(" ", "/");
+        } catch (UnsupportedEncodingException e) {
+            LOGGER.error("Apparently UTF-8 does not exist as an encoding :-S", e);
+            return null;
+        }
+    }
+
+    public static String escapeIdentifier(String id) {
+        try {
+
+            return URLEncoder.encode(id.replace("/", " "), "UTF-8");
         } catch (UnsupportedEncodingException e) {
             LOGGER.error("Apparently UTF-8 does not exist as an encoding :-S", e);
             return null;
