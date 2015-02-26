@@ -3,11 +3,15 @@ package uk.ac.open.kmi.forge.webPacketTracer.gateway;
 
 import com.cisco.pt.IPAddress;
 import com.cisco.pt.impl.IPAddressImpl;
+import com.cisco.pt.ipc.IPCConstants;
 import com.cisco.pt.ipc.enums.ConnectType;
+import com.cisco.pt.ipc.enums.DeviceType;
 import com.cisco.pt.ipc.sim.*;
 import com.cisco.pt.ipc.sim.port.HostPort;
 import com.cisco.pt.ipc.ui.IPC;
 import com.cisco.pt.ipc.ui.LogicalWorkspace;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import uk.ac.open.kmi.forge.webPacketTracer.pojo.*;
 import uk.ac.open.kmi.forge.webPacketTracer.pojo.Device;
 import uk.ac.open.kmi.forge.webPacketTracer.pojo.Network;
@@ -20,6 +24,7 @@ import java.util.*;
  */
 public class PacketTracerDAO {
 
+    private static final Log LOGGER = LogFactory.getLog(PacketTracerDAO.class);
     final IPC ipc;
     final com.cisco.pt.ipc.sim.Network network;  // It is used often, so better to put it as attribute.
 
@@ -57,6 +62,45 @@ public class PacketTracerDAO {
         for(int i = 0; i<this.network.getDeviceCount();i++) {
             ret.add(Device.fromCiscoObject(this.network.getDeviceAt(i)));
         }
+        return ret;
+    }
+
+    private DeviceType getType(Device device) {
+        final String g = device.getGroup();
+        if (g.contains("switch")) {
+            return DeviceType.SWITCH;
+        } else if (g.contains("router")) {
+            return DeviceType.ROUTER;
+        } else if (g.contains("pc")) {
+            return DeviceType.PC;
+        } else if (g.contains("cloud")) {
+            return DeviceType.CLOUD;
+        }
+        return null;
+    }
+
+    private String getDefaultModelName(DeviceType type) {
+        switch(type) {
+            case SWITCH: return IPCConstants.DEVICE_NAME_SWITCH_2960_24TT;
+            case ROUTER: return IPCConstants.DEVICE_NAME_ROUTER_2620XM; // "2901";
+            case PC: return IPCConstants.DEVICE_NAME_PC_PT;
+            case CLOUD: return IPCConstants.DEVICE_NAME_CLOUD_PT;
+            default: return null;
+        }
+    }
+
+    public Device createDevice(Device device) {
+        final DeviceType type = getType(device);
+        if (type==null) return null;
+
+        final LogicalWorkspace workspace = this.ipc.appWindow().getActiveWorkspace().getLogicalWorkspace();
+        final String addedDeviceName = workspace.addDevice(type, getDefaultModelName(type));
+        final com.cisco.pt.ipc.sim.Device deviceAdded = getSimDeviceByName(addedDeviceName);
+        final Device ret = Device.fromCiscoObject(deviceAdded);
+        // setName() somehow makes deviceAdded.getObjectUUID() return null.
+        // That's why we set it at the end and without calling to getObjectUUID() afterwards (fromCiscoObject calls it).
+        deviceAdded.setName(device.getLabel());
+        ret.setLabel(device.getLabel());
         return ret;
     }
 

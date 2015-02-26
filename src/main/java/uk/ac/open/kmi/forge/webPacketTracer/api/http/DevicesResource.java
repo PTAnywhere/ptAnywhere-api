@@ -8,6 +8,8 @@ import uk.ac.open.kmi.forge.webPacketTracer.pojo.Device;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.*;
 
 
@@ -20,51 +22,12 @@ class DevicesGetter extends PTCallable<Collection<Device>> {
 
 class DevicePoster extends PTCallable<Device> {
     final Device d;
-    final DeviceType type;
-    final String name;
     public DevicePoster(Device d) {
         this.d = d;
-        this.name = this.d.getLabel();
-        final String g = this.d.getGroup();
-        if (g.contains("switch")) {
-            this.type = DeviceType.SWITCH;
-        } else if (g.contains("router")) {
-            this.type = DeviceType.ROUTER;
-        } else if (g.contains("pc")) {
-            this.type = DeviceType.PC;
-        } else if (g.contains("cloud")) {
-            this.type = DeviceType.CLOUD;
-        } else {
-            this.type = null;
-        }
-    }
-    private String getDefaultModelName() {
-        switch(this.type) {
-            case SWITCH: return "2960-24TT";
-            case ROUTER: return "2901";
-            case PC: return "PC-PT";
-            case CLOUD: return "Cloud-PT";
-            default: return null;
-        }
     }
     @Override
     public Device internalRun() {
-        if(this.type==null) {
-            getLog().error("Device type " + this.d.getGroup() + "not found.");
-            // FIXME throw a more appropriate HTTP ERROR
-            return null;  // This causes a HTTP 404
-        } else {
-            final LogicalWorkspace workspace = this.connection.getIPC().appWindow().getActiveWorkspace().getLogicalWorkspace();
-            final String addedDeviceName = workspace.addDevice(this.type, this.getDefaultModelName());
-            final Network network = this.connection.getIPC().network();
-            final com.cisco.pt.ipc.sim.Device deviceAdded = network.getDevice(addedDeviceName);
-            final Device ret = Device.fromCiscoObject(deviceAdded);
-            // setName() somehow makes deviceAdded.getObjectUUID() return null.
-            // That's why we set it at the end and without calling to getObjectUUID() afterwards (fromCiscoObject calls it).
-            deviceAdded.setName(this.name);
-            ret.setLabel(this.name);
-            return ret;
-        }
+        return this.connection.getDataAccessObject().createDevice(this.d);
     }
 }
 
@@ -76,9 +39,11 @@ public class DevicesResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Device createDevice(Device newDevice) {
-        final DevicePoster poster = new DevicePoster(newDevice);
-        return poster.call();  // Not using a new Thread
+    public Response createDevice(Device newDevice) throws URISyntaxException{
+        final Device device = new DevicePoster(newDevice).call();
+        if (device==null)
+            return Response.status(Response.Status.BAD_REQUEST).entity(newDevice).build();
+        return Response.created(new URI(getDeviceRelativeURI(device.getId()))).entity(device).build();  // Not using a new Thread
     }
 
     @GET
@@ -91,17 +56,19 @@ public class DevicesResource {
                 links(createLinks(d)).build();  // Not using a new Thread
     }
 
-    private Link.Builder fromRelative(String relativeUrl, String relType) {
-        return Link.fromUri(relativeUrl).baseUri(this.uri.getBaseUri()).rel(relType);
+    private Link fromRelative(String deviceId, String relType) {
+        return Link.fromUri(getDeviceRelativeURI(deviceId)).rel(relType).build();
     }
 
+    private String getDeviceRelativeURI(String id) {
+        return this.uri.getRequestUri() + Utils.escapeIdentifier(id);
+    }
 
     private Link[] createLinks(Collection<Device> devices) {
         final Link[] links = new Link[devices.size()];
         final Iterator<Device> devIt = devices.iterator();
-        final Link.Builder builder = Link.fromUri(this.uri.getBaseUri());
         for(int i=0; i<links.length; i++) {
-            links[i] = fromRelative("devices/" + Utils.escapeIdentifier(devIt.next().getId()), "item").build();
+            links[i] = fromRelative(devIt.next().getId(), "item");
         }
         return links;
     }
