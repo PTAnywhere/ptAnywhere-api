@@ -1,17 +1,10 @@
-package uk.ac.open.kmi.forge.webPacketTracer;
+package uk.ac.open.kmi.forge.webPacketTracer.api.http;
 
-import com.cisco.pt.ipc.sim.Network;
-import com.cisco.pt.ipc.sim.port.HostPort;
-import com.cisco.pt.ipc.ui.LogicalWorkspace;
 import uk.ac.open.kmi.forge.webPacketTracer.gateway.PTCallable;
-import uk.ac.open.kmi.forge.webPacketTracer.gateway.PacketTracerDAO;
 import uk.ac.open.kmi.forge.webPacketTracer.pojo.Device;
-import uk.ac.open.kmi.forge.webPacketTracer.pojo.Port;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
-import java.util.HashSet;
-import java.util.Set;
 
 class DeviceGetterByName extends PTCallable<Device> {
     final String name;

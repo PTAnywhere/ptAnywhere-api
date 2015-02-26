@@ -1,4 +1,4 @@
-package uk.ac.open.kmi.forge.webPacketTracer;
+package uk.ac.open.kmi.forge.webPacketTracer.api.http;
 
 import uk.ac.open.kmi.forge.webPacketTracer.gateway.PTCallable;
 import uk.ac.open.kmi.forge.webPacketTracer.pojo.Link;

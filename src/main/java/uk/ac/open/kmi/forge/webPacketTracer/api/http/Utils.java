@@ -1,4 +1,4 @@
-package uk.ac.open.kmi.forge.webPacketTracer;
+package uk.ac.open.kmi.forge.webPacketTracer.api.http;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

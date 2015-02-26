@@ -1,4 +1,4 @@
-package uk.ac.open.kmi.forge.webPacketTracer;
+package uk.ac.open.kmi.forge.webPacketTracer.api.http;
 
 import javax.servlet.ServletContext;
 import javax.ws.rs.*;

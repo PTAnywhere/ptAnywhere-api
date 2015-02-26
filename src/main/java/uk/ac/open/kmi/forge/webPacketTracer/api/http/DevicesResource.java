@@ -1,14 +1,10 @@
-package uk.ac.open.kmi.forge.webPacketTracer;
+package uk.ac.open.kmi.forge.webPacketTracer.api.http;
 
 import com.cisco.pt.ipc.sim.Network;
-import com.cisco.pt.ipc.sim.port.Link;
 import com.cisco.pt.ipc.enums.DeviceType;
 import com.cisco.pt.ipc.ui.LogicalWorkspace;
 import uk.ac.open.kmi.forge.webPacketTracer.gateway.PTCallable;
-import uk.ac.open.kmi.forge.webPacketTracer.gateway.PTRunnable;
 import uk.ac.open.kmi.forge.webPacketTracer.pojo.Device;
-import uk.ac.open.kmi.forge.webPacketTracer.pojo.Edge;
-import uk.ac.open.kmi.forge.webPacketTracer.pojo.Port;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
