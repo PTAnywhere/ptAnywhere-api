@@ -5,7 +5,7 @@ import com.cisco.pt.ipc.events.TerminalLineEventListener;
 import com.cisco.pt.ipc.events.TerminalLineEventRegistry;
 import com.cisco.pt.ipc.sim.Pc;
 import com.cisco.pt.ipc.sim.TerminalLine;
-import uk.ac.open.kmi.forge.webPacketTracer.gateway.PTDaemon;
+import uk.ac.open.kmi.forge.webPacketTracer.gateway.PTConnection;
 import java.io.IOException;
 import javax.websocket.*;
 import javax.websocket.server.ServerEndpoint;
@@ -13,19 +13,19 @@ import javax.websocket.server.ServerEndpoint;
 @ServerEndpoint("/endpoint/devices/{device}/console")
 public class ConsoleEndpoint implements TerminalLineEventListener {
 
-    PTDaemon common;
+    PTConnection common;
     TerminalLine cmd;
     Session session;
 
     public ConsoleEndpoint() {
-        this.common = new PTDaemon();
+        this.common = new PTConnection();
     }
 
     @OnOpen
     public void myOnOpen(final Session session) {
         this.session = session;
 
-        this.common.start();
+        this.common.open();
         final String deviceId = "{" + session.getPathParameters().get("device") + "}";
         final Pc pc0 = (Pc) this.common.getDataAccessObject().getSimDeviceById(deviceId);
         this.cmd = pc0.getCommandLine();
@@ -46,7 +46,7 @@ public class ConsoleEndpoint implements TerminalLineEventListener {
         } catch(IOException e) {
             this.common.getLog().error(e.getMessage(), e);
         } finally {
-            this.common.stop();
+            this.common.close();
         }
     }
 

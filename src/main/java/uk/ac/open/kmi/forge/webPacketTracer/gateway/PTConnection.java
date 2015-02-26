@@ -8,8 +8,17 @@ import com.cisco.pt.ipc.sim.Network;
 /**
  * Class which communicated with PacketTracer but needs to be manually started and stoped (possibly by different threads).
  */
-public class PTDaemon extends PTCommon {
-    public void start() {
+public class PTConnection extends PTCommon {
+
+    public PTConnection() {
+        super();
+    }
+
+    public PTConnection(String hostName, int port) {
+        super(hostName, port);
+    }
+
+    public void open() {
         //System.out.println ("WebSocket opened: "+session.getId());
         try {
             this.before();
@@ -23,7 +32,7 @@ public class PTDaemon extends PTCommon {
         }
     }
 
-    public void stop() {
+    public void close() {
         //System.out.println("Closing a WebSocket due to " + reason.getReasonPhrase());
         try {
             this.after();

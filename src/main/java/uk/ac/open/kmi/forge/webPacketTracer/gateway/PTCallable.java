@@ -7,44 +7,37 @@ import org.apache.commons.logging.Log;
 
 public abstract class PTCallable<V> implements Callable<V> {
 
-    final protected PTCommon task;
+    final protected PTConnection connection;
 
     public PTCallable() {
-        this.task = new PTCommon();
+        this.connection = new PTConnection();
     }
 
     public PTCallable(String hostName, int port) {
-        this.task = new PTCommon(hostName, port);
+        this.connection = new PTConnection(hostName, port);
     }
 
     @Override
     public V call() {
         V ret = null;
         try {
-            this.task.before();
+            this.connection.before();
             ret = internalRun();
         } catch (IPCError ipcError) {
-            this.task.getLog().error("\n\n\nAn IPC error occurred:\n\t" + ipcError.getMessage() + "\n\n\n");
+            this.connection.getLog().error("\n\n\nAn IPC error occurred:\n\t" + ipcError.getMessage() + "\n\n\n");
         } catch (Throwable t) {
             if ((t instanceof ThreadDeath)) {
                 throw ((ThreadDeath) t);
             }
-            this.task.getLog().error(t);
+            this.connection.getLog().error(t);
         } finally {
-            try {
-                this.task.after();
-            } catch (Throwable t) {
-                if ((t instanceof ThreadDeath)) {
-                    throw ((ThreadDeath) t);
-                }
-                this.task.getLog().error(t);
-            }
+            this.connection.close();
             return ret;
         }
     }
 
     public Log getLog() {
-        return this.task.getLog();
+        return this.connection.getLog();
     }
 
     public abstract V internalRun();

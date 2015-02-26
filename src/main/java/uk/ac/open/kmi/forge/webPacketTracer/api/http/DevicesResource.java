@@ -14,7 +14,7 @@ import java.util.*;
 class DevicesGetter extends PTCallable<Collection<Device>> {
     @Override
     public Collection<Device> internalRun() {
-        return this.task.getDataAccessObject().getDevices();
+        return this.connection.getDataAccessObject().getDevices();
     }
 }
 
@@ -54,9 +54,9 @@ class DevicePoster extends PTCallable<Device> {
             // FIXME throw a more appropriate HTTP ERROR
             return null;  // This causes a HTTP 404
         } else {
-            final LogicalWorkspace workspace = this.task.getIPC().appWindow().getActiveWorkspace().getLogicalWorkspace();
+            final LogicalWorkspace workspace = this.connection.getIPC().appWindow().getActiveWorkspace().getLogicalWorkspace();
             final String addedDeviceName = workspace.addDevice(this.type, this.getDefaultModelName());
-            final Network network = this.task.getIPC().network();
+            final Network network = this.connection.getIPC().network();
             final com.cisco.pt.ipc.sim.Device deviceAdded = network.getDevice(addedDeviceName);
             final Device ret = Device.fromCiscoObject(deviceAdded);
             // setName() somehow makes deviceAdded.getObjectUUID() return null.

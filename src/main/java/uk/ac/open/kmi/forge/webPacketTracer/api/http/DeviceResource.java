@@ -13,7 +13,7 @@ class DeviceGetterByName extends PTCallable<Device> {
     }
     @Override
     public Device internalRun() {
-        return this.task.getDataAccessObject().getDeviceByName(this.name);
+        return this.connection.getDataAccessObject().getDeviceByName(this.name);
     }
 }
 
@@ -24,7 +24,7 @@ class DeviceGetterById extends PTCallable<Device> {
     }
     @Override
     public Device internalRun() {
-        return this.task.getDataAccessObject().getDeviceById(this.dId);
+        return this.connection.getDataAccessObject().getDeviceById(this.dId);
     }
 }
 
@@ -35,7 +35,7 @@ class DeviceDeleter extends PTCallable<Device> {
     }
     @Override
     public Device internalRun() {
-        return this.task.getDataAccessObject().removeDevice(this.dId);
+        return this.connection.getDataAccessObject().removeDevice(this.dId);
     }
 }
 
@@ -48,7 +48,7 @@ class DeviceModifier extends PTCallable<Device> {
     }
     @Override
     public Device internalRun() {
-        return this.task.getDataAccessObject().modifyDevice(this.modification);
+        return this.connection.getDataAccessObject().modifyDevice(this.modification);
     }
 }
 

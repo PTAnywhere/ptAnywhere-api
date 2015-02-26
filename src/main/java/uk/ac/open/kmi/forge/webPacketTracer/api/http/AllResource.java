@@ -11,7 +11,7 @@ import javax.ws.rs.core.MediaType;
 class AllGetter extends PTCallable<Network> {
     @Override
     public Network internalRun() {
-        return this.task.getDataAccessObject().getWholeNetwork();
+        return this.connection.getDataAccessObject().getWholeNetwork();
     }
 }
 

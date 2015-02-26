@@ -17,7 +17,7 @@ class PortGetter extends PTCallable<Port> {
     }
     @Override
     public Port internalRun() {
-        return this.task.getDataAccessObject().getPort(this.deviceId, this.portName);
+        return this.connection.getDataAccessObject().getPort(this.deviceId, this.portName);
     }
 }
 
@@ -31,7 +31,7 @@ class PortModifier extends PTCallable<Port> {
 
     @Override
     public Port internalRun() {
-        return this.task.getDataAccessObject().modifyPort(this.deviceId, this.modification);
+        return this.connection.getDataAccessObject().modifyPort(this.deviceId, this.modification);
     }
 }
 

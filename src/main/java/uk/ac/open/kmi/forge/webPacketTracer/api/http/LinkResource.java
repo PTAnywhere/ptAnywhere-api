@@ -17,7 +17,7 @@ class LinkGetter extends  PTCallable<Link> {
     }
     @Override
     public Link internalRun() {
-        return this.task.getDataAccessObject().getLink(this.deviceId, this.portName);
+        return this.connection.getDataAccessObject().getLink(this.deviceId, this.portName);
     }
 }
 
@@ -29,7 +29,7 @@ class LinkDeleter extends PTCallable<Response> {
     }
     @Override
     public Response internalRun() {
-        final boolean success = this.task.getDataAccessObject().removeLink(this.toDelete.getToDevice(), this.toDelete.getToPort());
+        final boolean success = this.connection.getDataAccessObject().removeLink(this.toDelete.getToDevice(), this.toDelete.getToPort());
         if (success)
             return Response.ok().entity(this.toDelete).build();
         else
@@ -48,9 +48,9 @@ class LinkCreator extends PTCallable<Response> {
     }
     @Override
     public Response internalRun() {
-        final boolean success = this.task.getDataAccessObject().createLink(this.deviceId, this.portName, this.linkToCreate);
+        final boolean success = this.connection.getDataAccessObject().createLink(this.deviceId, this.portName, this.linkToCreate);
         if (success)
-            return Response.ok().entity(this.task.getDataAccessObject().getLink(this.deviceId, this.portName)).build();
+            return Response.ok().entity(this.connection.getDataAccessObject().getLink(this.deviceId, this.portName)).build();
         else
             return Response.status(Response.Status.NOT_ACCEPTABLE).entity(this.linkToCreate).build();  // Improvable performance
     }

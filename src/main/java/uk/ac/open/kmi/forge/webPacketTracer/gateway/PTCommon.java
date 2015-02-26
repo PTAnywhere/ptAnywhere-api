@@ -9,8 +9,10 @@ import com.cisco.pt.ptmp.impl.PacketTracerSessionFactoryImpl;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.io.IOException;
 
-public class PTCommon {
+
+public abstract class PTCommon {
     protected PacketTracerSession packetTracerSession;
     protected IPCFactory ipcFactory;
     final protected String hostName;
@@ -31,21 +33,21 @@ public class PTCommon {
         return LOGGER;
     }
 
-    protected void before() throws Exception {
+    protected void before() throws IOException {
         PacketTracerSessionFactory sessionFactory = PacketTracerSessionFactoryImpl.getInstance();
         this.packetTracerSession = createSession(sessionFactory);
         this.ipcFactory = new IPCFactory(this.packetTracerSession);
     }
 
-    protected void after() throws Exception {
+    protected void after() throws IOException {
         if (this.packetTracerSession != null) {
             this.packetTracerSession.close();
         }
     }
 
     protected PacketTracerSession createSession(PacketTracerSessionFactory sessionFactory)
-            throws Exception {
-        ConnectionNegotiationProperties negotiationProperties = getNegotiationProperties();
+            throws IOException {
+        final ConnectionNegotiationProperties negotiationProperties = getNegotiationProperties();
         if (negotiationProperties == null) {
             return createDefaultSession(sessionFactory);
         }
@@ -53,12 +55,12 @@ public class PTCommon {
     }
 
     protected PacketTracerSession createDefaultSession(PacketTracerSessionFactory sessionFactory)
-            throws Exception {
+            throws IOException {
         return sessionFactory.openSession(this.hostName, this.port);
     }
 
     protected PacketTracerSession createSession(PacketTracerSessionFactory sessionFactory, ConnectionNegotiationProperties negotiationProperties)
-            throws Exception {
+            throws IOException {
         return sessionFactory.openSession(this.hostName, this.port, negotiationProperties);
     }
 
