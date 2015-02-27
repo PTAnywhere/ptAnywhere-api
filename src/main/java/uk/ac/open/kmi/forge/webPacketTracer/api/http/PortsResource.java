@@ -39,11 +39,11 @@ public class PortsResource {
     }
 
     private Link getDeviceLink(String deviceId) {
-        return Link.fromUri(this.uri.getBaseUri() + "devices/" + Utils.escapeIdentifier(deviceId)).rel("device").build();
+        return Link.fromUri(this.uri.getBaseUri() + "devices/" + Utils.encodeForURL(deviceId)).rel("device").build();
     }
 
     private Link getPortLink(String portName) {
-        return Link.fromUri(this.uri.getRequestUri() + "/" + Utils.escapeIdentifier(portName)).rel("item").build();
+        return Link.fromUri(this.uri.getRequestUri() + "/" + Utils.escapePort(portName)).rel("item").build();
     }
 
     private Link[] getPortLinks(Collection<Port> ports) {

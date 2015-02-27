@@ -4,6 +4,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.UnsupportedEncodingException;
+import java.net.URI;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 
@@ -27,13 +28,20 @@ public class Utils {
         }
     }
 
-    public static String escapeIdentifier(String id) {
-        try {
+    public static String escapePort(String portName) {
+        return encodeForURL(portName.replace("/", " "));
+    }
 
-            return URLEncoder.encode(id.replace("/", " "), "UTF-8");
+    public static String encodeForURL(String id) {
+        try {
+            return URLEncoder.encode(id, "UTF-8");
         } catch (UnsupportedEncodingException e) {
             LOGGER.error("Apparently UTF-8 does not exist as an encoding :-S", e);
             return null;
         }
+    }
+
+    public static URI getParent(URI uri) {
+        return uri.getPath().endsWith("/") ? uri.resolve("..") : uri.resolve(".");
     }
 }

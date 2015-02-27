@@ -106,7 +106,7 @@ public class LinkResource {
         return javax.ws.rs.core.Link.fromUri(
                     this.uri.getBaseUri() +
                     "devices/" + l.getToDevice() +
-                    "/ports/" + Utils.escapeIdentifier(l.getToPort()) + "?byName=true"
+                    "/ports/" + Utils.escapePort(l.getToPort()) + "?byName=true"
                 ).rel("to").build();  // Rename it to port?
     }
 }

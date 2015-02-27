@@ -61,7 +61,7 @@ public class DevicesResource {
     }
 
     private String getDeviceRelativeURI(String id) {
-        return this.uri.getRequestUri() + Utils.escapeIdentifier(id);
+        return this.uri.getRequestUri() + Utils.encodeForURL(id);
     }
 
     private Link getItemLink(String id) {
