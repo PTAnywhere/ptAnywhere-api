@@ -104,6 +104,7 @@ public class LinkResource {
     }
     private javax.ws.rs.core.Link getToPortLink(Link l) {
         return javax.ws.rs.core.Link.fromUri(
+                    // FIXME This URL does not exist yet (and maybe it's better to return the id based one)
                     this.uri.getBaseUri() +
                     "devices/" + l.getToDevice() +
                     "/ports/" + Utils.escapePort(l.getToPort()) + "?byName=true"
