@@ -39,7 +39,7 @@ public class PortResource {
     @Context
     UriInfo uri;
 
-    // TODO return 'self' links (at least when byName==true)
+    // Consider byName==true (or at least put a redirection or self element)
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response getPort(

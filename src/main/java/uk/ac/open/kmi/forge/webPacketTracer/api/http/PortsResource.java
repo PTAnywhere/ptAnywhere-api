@@ -26,6 +26,7 @@ class PortsGetter extends PTCallable<Collection<Port>> {
 public class PortsResource {
     @Context UriInfo uri;
 
+    // TODO return 'self' links (at least when byName==true)
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response getPorts(
