@@ -95,6 +95,6 @@ public class DeviceResource {
     }
 
     private Link getDeviceLink() {
-        return Link.fromUri(this.uri.getBaseUri() + "devices").rel("collection").build();
+        return Link.fromUri(this.uri.getRequestUri().resolve("..")).rel("collection").build();
     }
 }

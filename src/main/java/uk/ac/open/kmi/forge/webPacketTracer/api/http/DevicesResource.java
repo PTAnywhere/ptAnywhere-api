@@ -40,10 +40,10 @@ public class DevicesResource {
         final Device device = new DevicePoster(newDevice).call();
         if (device==null)
             return Response.status(Response.Status.BAD_REQUEST).entity(newDevice).
-                    links(createNetworkLink()).build();
+                    links(getNetworkLink()).build();
         return Response.created(new URI(getDeviceRelativeURI(device.getId())))
-                .entity(device).links(createNetworkLink()).
-                links(createItemLink(device.getId())).build();  // Not using a new Thread
+                .entity(device).links(getNetworkLink()).
+                links(getItemLink(device.getId())).build();  // Not using a new Thread
     }
 
     @GET
@@ -52,11 +52,11 @@ public class DevicesResource {
         final Collection<Device> d = new DevicesGetter().call();  // Not using a new Thread
         // To array because otherwise Response does not know how to serialize Collection<Device>
         return Response.ok(d.toArray(new Device[d.size()])).
-                links(createNetworkLink()).
+                links(getNetworkLink()).
                 links(createLinks(d)).build();  // Not using a new Thread
     }
 
-    private Link createNetworkLink() {
+    private Link getNetworkLink() {
         return Link.fromUri(this.uri.getBaseUri() + "network").rel("network").build();
     }
 
@@ -64,7 +64,7 @@ public class DevicesResource {
         return this.uri.getRequestUri() + Utils.escapeIdentifier(id);
     }
 
-    private Link createItemLink(String id) {
+    private Link getItemLink(String id) {
         return Link.fromUri(getDeviceRelativeURI(id)).rel("item").build();
     }
 
@@ -72,7 +72,7 @@ public class DevicesResource {
         final Link[] links = new Link[devices.size()];
         final Iterator<Device> devIt = devices.iterator();
         for(int i=0; i<links.length; i++) {
-            links[i] = createItemLink(devIt.next().getId());
+            links[i] = getItemLink(devIt.next().getId());
         }
         return links;
     }
