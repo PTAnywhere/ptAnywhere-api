@@ -4,15 +4,15 @@ var nodes, edges, network;
 
 function requestJSON(verb, url, data, callback) {
     return $.ajax({
-    headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-    },
-    'type': verb,
-    'url': url,
-    'data': JSON.stringify(data),
-    'dataType': 'json',
-    'success': callback
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        },
+        'type': verb,
+        'url': url,
+        'data': JSON.stringify(data),
+        'dataType': 'json',
+        'success': callback
     });
 };
 
@@ -23,6 +23,16 @@ $.postJSON = function(url, data, callback) {
 $.putJSON = function(url, data, callback) {
     return requestJSON('PUT', url, data, callback);
 };
+
+$.deleteHttp = function(url, callback) {
+    return $.ajax({
+        type: 'DELETE',
+        url: url,
+        success: callback
+    });
+};
+
+
 
 function addDevice(callback) {
     var newDevice = {
@@ -38,18 +48,12 @@ function addDevice(callback) {
         .fail(function(data) { console.error("Something went wrong in the device creation.") });
 }
 
-function getDeviceToModify() {
-    return $("form[name='modify-device'] input[name='deviceId']").val();
-}
-
 function deleteDevice(deviceId) {
-    $.ajax({
-        url: api_url + "/devices/" + deviceId,
-        type: 'DELETE',
-        success: function(result) {
-            console.log("The device has been deleted successfully.");
-        }
-    }).done(redrawTopology)
+    $.deleteHttp(api_url + "/devices/" + deviceId,
+                function(result) {
+                    console.log("The device has been deleted successfully.");
+                }
+    ).done(redrawTopology)
     .fail(function(data) { console.error("Something went wrong in the device creation.") });
 }
 
@@ -79,13 +83,11 @@ function modifyPort(deviceId, portName) {
 }
 
 function deleteLink(deviceId, portName, callback) {
-    $.ajax({
-        url: api_url + "/devices/" + deviceId + "/ports/" + portName + "/link",
-        type: 'DELETE',
-        success: function(result) {
-            console.log("The link has been deleted successfully.");
-        }
-    }).done(callback)
+    $.deleteHttp(api_url + "/devices/" + deviceId + "/ports/" + portName + "/link",
+                function(result) {
+                    console.log("The link has been deleted successfully.");
+                }
+    ).done(callback)
     .fail(function(data) { console.error("Something went wrong in the link deletion.") });
 }
 
@@ -112,7 +114,7 @@ function handleModificationSubmit(callback) {
     // Check the tab
     var modForm = $("form[name='modify-device']");
     var selectedTab = $("li.ui-state-active", modForm).attr("aria-controls");
-    var deviceId = getDeviceToModify();
+    var deviceId = $("input[name='deviceId']", modForm).val();
     if (selectedTab=="tabs-1") { // General settings
         modifyDevice(deviceId, callback);
     } else if (selectedTab=="tabs-2") { // Interfaces
