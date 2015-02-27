@@ -1,8 +1,5 @@
 package uk.ac.open.kmi.forge.webPacketTracer.api.http;
 
-import com.cisco.pt.ipc.sim.Network;
-import com.cisco.pt.ipc.enums.DeviceType;
-import com.cisco.pt.ipc.ui.LogicalWorkspace;
 import uk.ac.open.kmi.forge.webPacketTracer.gateway.PTCallable;
 import uk.ac.open.kmi.forge.webPacketTracer.pojo.Device;
 
@@ -42,8 +39,11 @@ public class DevicesResource {
     public Response createDevice(Device newDevice) throws URISyntaxException{
         final Device device = new DevicePoster(newDevice).call();
         if (device==null)
-            return Response.status(Response.Status.BAD_REQUEST).entity(newDevice).build();
-        return Response.created(new URI(getDeviceRelativeURI(device.getId()))).entity(device).build();  // Not using a new Thread
+            return Response.status(Response.Status.BAD_REQUEST).entity(newDevice).
+                    links(createNetworkLink()).build();
+        return Response.created(new URI(getDeviceRelativeURI(device.getId())))
+                .entity(device).links(createNetworkLink()).
+                links(createItemLink(device.getId())).build();  // Not using a new Thread
     }
 
     @GET
@@ -52,23 +52,27 @@ public class DevicesResource {
         final Collection<Device> d = new DevicesGetter().call();  // Not using a new Thread
         // To array because otherwise Response does not know how to serialize Collection<Device>
         return Response.ok(d.toArray(new Device[d.size()])).
-                link(this.uri.getBaseUri() + "network", "network").
+                links(createNetworkLink()).
                 links(createLinks(d)).build();  // Not using a new Thread
     }
 
-    private Link fromRelative(String deviceId, String relType) {
-        return Link.fromUri(getDeviceRelativeURI(deviceId)).rel(relType).build();
+    private Link createNetworkLink() {
+        return Link.fromUri(this.uri.getBaseUri() + "network").rel("network").build();
     }
 
     private String getDeviceRelativeURI(String id) {
         return this.uri.getRequestUri() + Utils.escapeIdentifier(id);
     }
 
+    private Link createItemLink(String id) {
+        return Link.fromUri(getDeviceRelativeURI(id)).rel("item").build();
+    }
+
     private Link[] createLinks(Collection<Device> devices) {
         final Link[] links = new Link[devices.size()];
         final Iterator<Device> devIt = devices.iterator();
         for(int i=0; i<links.length; i++) {
-            links[i] = fromRelative(devIt.next().getId(), "item");
+            links[i] = createItemLink(devIt.next().getId());
         }
         return links;
     }

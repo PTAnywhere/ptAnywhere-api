@@ -4,27 +4,22 @@ import uk.ac.open.kmi.forge.webPacketTracer.gateway.PTCallable;
 import uk.ac.open.kmi.forge.webPacketTracer.pojo.Device;
 
 import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.*;
 
-class DeviceGetterByName extends PTCallable<Device> {
-    final String name;
-    public DeviceGetterByName(String name) {
-        this.name = name;
-    }
-    @Override
-    public Device internalRun() {
-        return this.connection.getDataAccessObject().getDeviceByName(this.name);
-    }
-}
-
-class DeviceGetterById extends PTCallable<Device> {
+class DeviceGetter extends PTCallable<Device> {
     final String dId;
-    public DeviceGetterById(String dId) {
+    final boolean byName;
+    public DeviceGetter(String dId, boolean byName) {
         this.dId = dId;
+        this.byName = byName;
     }
     @Override
     public Device internalRun() {
-        return this.connection.getDataAccessObject().getDeviceById(this.dId);
+        if (this.byName) {
+            return this.connection.getDataAccessObject().getDeviceByName(this.dId);
+        } else {
+            return this.connection.getDataAccessObject().getDeviceById(this.dId);
+        }
     }
 }
 
@@ -40,10 +35,9 @@ class DeviceDeleter extends PTCallable<Device> {
 }
 
 class DeviceModifier extends PTCallable<Device> {
-    final String dId;
     final Device modification;
     public DeviceModifier(String dId, Device modification) {
-        this.dId = dId;
+        modification.setId(dId);
         this.modification = modification;
     }
     @Override
@@ -54,29 +48,53 @@ class DeviceModifier extends PTCallable<Device> {
 
 @Path("devices/{device}")
 public class DeviceResource {
+    @Context
+    UriInfo uri;
+
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public Device getDevice(
+    public Response getDevice(
         @PathParam("device") String deviceId,
         @DefaultValue("false") @QueryParam("byName") boolean byName) {
-        if (byName) {
-            return new DeviceGetterByName(deviceId).call();  // Not using a new Thread
-        } else {
-            return new DeviceGetterById(deviceId).call();  // Not using a new Thread
-        }
+        final Device d = new DeviceGetter(deviceId, byName).call();  // Not using a new Thread
+        if (d==null)
+            return Response.noContent().
+                    links(getDeviceLink()).build();
+        return Response.ok(d).
+                links(getDeviceLink()).
+                links(getPortsLink()).build();
     }
 
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
-    public Device removeDevice(@PathParam("device") String deviceId) {
-        return new DeviceDeleter(deviceId).call();  // Not using a new Thread
+    public Response removeDevice(@PathParam("device") String deviceId) {
+        final Device d = new DeviceDeleter(deviceId).call();  // Not using a new Thread
+        if (d==null)
+            return Response.noContent().
+                    links(getDeviceLink()).build();
+        return Response.ok(d).
+                links(getDeviceLink()).build();
     }
 
     @PUT
     @Produces(MediaType.APPLICATION_JSON)
-    public Device modifyDevice(
+    public Response modifyDevice(
             Device modification,
             @PathParam("device") String deviceId) {
-        return new DeviceModifier(deviceId, modification).call();  // Not using a new Thread
+        final Device d = new DeviceModifier(deviceId, modification).call();  // Not using a new Thread
+        if (d==null)
+            return Response.noContent().
+                    links(getDeviceLink()).build();
+        return Response.ok(d).
+                links(getDeviceLink()).
+                links(getPortsLink()).build();
+    }
+
+    private Link getPortsLink() {
+        return Link.fromUri(this.uri.getRequestUri() + "/ports").rel("ports").build();
+    }
+
+    private Link getDeviceLink() {
+        return Link.fromUri(this.uri.getBaseUri() + "devices").rel("collection").build();
     }
 }
