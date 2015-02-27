@@ -43,7 +43,7 @@ public class PortsResource {
     }
 
     private Link getPortLink(String portName) {
-        return Link.fromUri(this.uri.getRequestUri() + "/" + Utils.escapePort(portName)).rel("item").build();
+        return Link.fromUri(Utils.getURIWithSlashRemovingQuery(this.uri.getRequestUri()) + Utils.escapePort(portName)).rel("item").build();
     }
 
     private Link[] getPortLinks(Collection<Port> ports) {

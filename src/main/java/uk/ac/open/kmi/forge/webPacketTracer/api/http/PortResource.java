@@ -82,6 +82,6 @@ public class PortResource {
 
     private Link getLinkLink() {
         // Should I rename it to "connection" to avoid misunderstandings?
-        return Link.fromUri(this.uri.getRequestUri().resolve("link")).rel("link").build();
+        return Link.fromUri(Utils.getURIWithSlashRemovingQuery(this.uri.getRequestUri()) + "link").rel("link").build();
     }
 }

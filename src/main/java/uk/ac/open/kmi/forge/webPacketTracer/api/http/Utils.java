@@ -44,4 +44,12 @@ public class Utils {
     public static URI getParent(URI uri) {
         return uri.getPath().endsWith("/") ? uri.resolve("..") : uri.resolve(".");
     }
+
+    public static String getURIWithSlashRemovingQuery(URI uri) {
+        String ret = uri.toString();
+        final int i = ret.indexOf("?");
+        if (i!=-1) ret = ret.substring(0, i);
+        if (ret.endsWith("/")) return ret;
+        return ret + "/";
+    }
 }
