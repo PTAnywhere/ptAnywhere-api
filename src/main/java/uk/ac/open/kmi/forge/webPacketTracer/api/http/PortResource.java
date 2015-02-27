@@ -4,8 +4,7 @@ import uk.ac.open.kmi.forge.webPacketTracer.gateway.PTCallable;
 import uk.ac.open.kmi.forge.webPacketTracer.pojo.Port;
 
 import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import javax.ws.rs.core.*;
 
 
 class PortGetter extends PTCallable<Port> {
@@ -37,12 +36,23 @@ class PortModifier extends PTCallable<Port> {
 
 @Path("devices/{device}/ports/{port}")
 public class PortResource {
+    @Context
+    UriInfo uri;
+
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public Port getPort(
+    public Response getPort(
             @PathParam("device") String deviceId,
             @PathParam("port") String portName) {
-        return new PortGetter(deviceId, Utils.unescapePort(portName)).call();  // Not using a new Thread
+        final Port p = new PortGetter(deviceId, Utils.unescapePort(portName)).call();  // Not using a new Thread
+        if (p==null)
+            return Response.noContent().
+                    links(getPortsLink()).build();
+        return Response.ok(p).
+                links(getPortsLink()).
+                // Link resource returned even if it does not exist because
+                // the /link resource is still there and can be used to create a new one.
+                links(getLinkLink()).build();
     }
 
     @PUT
@@ -52,12 +62,25 @@ public class PortResource {
             Port modification,
             @PathParam("device") String deviceId,
             @PathParam("port") String portName) {
+        // The portName should be provided in the URL, not in the body (i.e., JSON sent).
         if (modification.getPortName()==null) {
             modification.setPortName(Utils.unescapePort(portName));
             final Port ret = new PortModifier(deviceId, modification).call();  // Not using a new Thread
-            return Response.ok().entity(ret).build();
-        } else // The portName is provided in the URL, not in the body (i.e., JSON sent).
-            return Response.status(Response.Status.BAD_REQUEST).entity(modification).build();
+            return Response.ok(ret).
+                    links(getPortsLink()).
+                    links(getLinkLink()).build();
+        } else
             // throw new BadRequestException(); //Returns HTML
+            return Response.status(Response.Status.BAD_REQUEST).entity(modification).
+                    links(getPortsLink()).build();  // /link not returned on error because this resource may not exist.
+    }
+
+    private Link getPortsLink() {
+        return Link.fromUri(this.uri.getRequestUri().resolve("..")).rel("collection").build();
+    }
+
+    private Link getLinkLink() {
+        // Should I rename it to "connection" to avoid misunderstandings?
+        return Link.fromUri(this.uri.getRequestUri().resolve("link")).rel("link").build();
     }
 }
