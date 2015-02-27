@@ -39,6 +39,7 @@ public class PortResource {
     @Context
     UriInfo uri;
 
+    // TODO return 'self' links (at least when byName==true)
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response getPort(
@@ -76,7 +77,7 @@ public class PortResource {
     }
 
     private Link getPortsLink() {
-        return Link.fromUri(this.uri.getRequestUri().resolve("..")).rel("collection").build();
+        return Link.fromUri(Utils.getParent(this.uri.getRequestUri())).rel("collection").build();
     }
 
     private Link getLinkLink() {

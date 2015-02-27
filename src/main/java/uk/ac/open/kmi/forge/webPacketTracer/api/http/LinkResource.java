@@ -100,7 +100,7 @@ public class LinkResource {
                 links(getToPortLink(createdLink)).build();
     }
     private javax.ws.rs.core.Link getPortLink() {
-        return javax.ws.rs.core.Link.fromUri(this.uri.getRequestUri().resolve("..")).rel("port").build();  // Rename it to from?
+        return javax.ws.rs.core.Link.fromUri(Utils.getParent(this.uri.getRequestUri())).rel("port").build();  // Rename it to from?
     }
     private javax.ws.rs.core.Link getToPortLink(Link l) {
         return javax.ws.rs.core.Link.fromUri(
