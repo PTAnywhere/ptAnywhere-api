@@ -423,7 +423,11 @@ function toJSON(obj) {
     return JSON.stringify(obj, null, 4);
 }
 
-function redrawTopology(callback=null) {
+function redrawTopology() {
+    redrawTopology(callback);
+}
+
+function redrawTopology(callback) {
     $.getJSON(api_url + "/network", function(data) {
         loadTopology(data);
         if (callback!=null)
