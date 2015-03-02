@@ -34,10 +34,10 @@ $.deleteHttp = function(url, callback) {
 
 
 
-function addDevice(callback) {
+function addDevice(label, type, callback) {
     var newDevice = {
-        "label": document.forms["create-device"]["name"].value,
-        "group": document.forms["create-device"]["type"].value
+        "label": label,
+        "group": type
     }
     console.log("Adding device " + newDevice.label + " of type " + newDevice.group);
 
@@ -152,7 +152,9 @@ function onDeviceAdd() {
                     dialog.dialog( "close" );
                     redrawTopology();
                 };
-                addDevice(callback);
+                name = document.forms["create-device"]["name"].value;
+                type = document.forms["create-device"]["type"].value;
+                addDevice(name, type, callback);
             },
             Cancel:function() {
                 $( this ).dialog( "close" );
@@ -421,8 +423,12 @@ function toJSON(obj) {
     return JSON.stringify(obj, null, 4);
 }
 
-function redrawTopology() {
-    $.getJSON(api_url + "/network", loadTopology).fail(function() {
+function redrawTopology(callback=null) {
+    $.getJSON(api_url + "/network", function(data) {
+        loadTopology(data);
+        if (callback!=null)
+            callback();
+    }).fail(function() {
     //$.getJSON("fake.json", loadTopology).fail(function() {
         console.error("The topology could not be loaded. Possible timeout.");
     });  // Apparently status code 304 is an error for this method :-S
@@ -438,6 +444,67 @@ function getURLParameter(sParam) {
             return sParameterName[1];
         }
     }
+}
+
+// Source: http://stackoverflow.com/questions/5419134/how-to-detect-if-two-divs-touch-with-jquery
+function collisionWithCanvas(element) {
+    var x1 = $("#network").offset().left;
+    var y1 = $("#network").offset().top;
+    var h1 = $("#network").outerHeight(true);
+    var w1 = $("#network").outerWidth(true);
+    var b1 = y1 + h1;
+    var r1 = x1 + w1;
+    var x2 = element.offset().left;
+    var y2 = element.offset().top;
+    var h2 = element.outerHeight(true);
+    var w2 = element.outerWidth(true);
+    var b2 = y2 + h2;
+    var r2 = x2 + w2;
+
+    if (b1 < y2 || y1 > b2 || r1 < x2 || x1 > r2) return false;
+    return true;
+}
+
+function configureDraggableCreationElement(element, creation_function) {
+    element.data({ // Or we could also record it in the 'start' event.
+        'originalLeft': element.css('left'),
+        'originalTop': element.css('top')
+    });
+    element.draggable({
+      /*start: function() {
+        console.log("Start");
+        console.log($(this).position());
+      },
+      drag: function() {
+        console.log("Drag");
+      },*/
+      stop: function() {
+        if (collisionWithCanvas($(this))) {
+            var warning = $("<div>Creating...</div>");
+            $("body").append(warning);
+            var offset = $(this).offset();
+            warning.css({'position': 'absolute',
+                         'left':offset.left,
+                         'top':offset.top});
+            $(this).animate({'opacity':'0.3'}, 1000, function() {
+                warning.css({'position': 'absolute',
+                             'left':offset.left,
+                             'top':offset.top});
+                creation_function();
+                redrawTopology(function() {
+                    element.css({'left':element.data('originalLeft'),
+                                'top':element.data('originalTop'),
+                                'opacity':'1'});
+                    warning.remove();
+                });
+            });
+        } else {
+            // return to original position
+            $(this).css({ 'left': element.data('originalLeft'),
+                           'top': element.data('originalTop') });
+        }
+      }
+    });
 }
 
 $(function() {
@@ -469,5 +536,19 @@ $(function() {
     });
     $("#create-device").hide();
     $("#modify-device").hide();
+
+    configureDraggableCreationElement($("#cloud"), function() {
+        addDevice("Sample Cloud", "cloud");
+    });
+    configureDraggableCreationElement($("#router"), function() {
+        addDevice("Sample Router", "router");
+    });
+    configureDraggableCreationElement($("#switch"), function() {
+        addDevice("Sample Switch", "switch");
+    });
+    configureDraggableCreationElement($("#pc"), function() {
+        addDevice("Sample PC", "pc");
+    });
+
     redrawTopology();
 });

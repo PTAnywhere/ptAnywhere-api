@@ -88,7 +88,9 @@ pre {
 	border: 0px none;
 }
 
+
 /* select with custom icons */
+
 select {
 	width: 200px;
 }
@@ -201,3 +203,42 @@ div.network-manipulationDiv {
 	padding-top: 5px;
 	height: 35px;
 }
+
+
+/* Device creation menu */
+
+ #create-device-dialog fieldset {
+ 	border: 0px none;
+ }
+
+ #creation-fieldset {
+ 	margin-top: 30px;
+ }
+
+ #creation-menu {
+ 	width: 50%;
+ 	margin: 0px auto;
+ }
+
+ #creation-menu figure {
+ 	display:table-cell;
+ 	width: 28%;
+ 	margin: 0;
+ 	text-align: center;
+ }
+
+ #creation-menu figure {
+ 	display:table-cell;
+ 	width: 20%;
+ 	margin: 0;
+ 	text-align: center;
+ }
+
+ #creation-menu figure img {
+ 	width: 120px;
+ }
+
+ #creation-menu figure figcaption {
+ 	margin-top: 5%;
+ 	display: block;
+ }
