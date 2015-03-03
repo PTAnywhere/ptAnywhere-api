@@ -97,10 +97,12 @@ public class PacketTracerDAO {
         final String addedDeviceName = workspace.addDevice(type, getDefaultModelName(type));
         final com.cisco.pt.ipc.sim.Device deviceAdded = getSimDeviceByName(addedDeviceName);
         final Device ret = Device.fromCiscoObject(deviceAdded);
-        // setName() somehow makes deviceAdded.getObjectUUID() return null.
-        // That's why we set it at the end and without calling to getObjectUUID() afterwards (fromCiscoObject calls it).
-        deviceAdded.setName(device.getLabel());
-        ret.setLabel(device.getLabel());
+        if (device.getLabel()!=null) {
+            // setName() somehow makes deviceAdded.getObjectUUID() return null.
+            // That's why we set it at the end and without calling to getObjectUUID() afterwards (fromCiscoObject calls it).
+            deviceAdded.setName(device.getLabel());
+            ret.setLabel(device.getLabel());
+        }
         return ret;
     }
 

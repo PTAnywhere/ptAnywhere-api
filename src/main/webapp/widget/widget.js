@@ -542,16 +542,16 @@ $(function() {
     $("#modify-device").hide();
 
     configureDraggableCreationElement($("#cloud"), function() {
-        addDevice("Sample Cloud", "cloud");
+        addDevice(null, "cloud");
     });
     configureDraggableCreationElement($("#router"), function() {
-        addDevice("Sample Router", "router");
+        addDevice(null, "router");
     });
     configureDraggableCreationElement($("#switch"), function() {
-        addDevice("Sample Switch", "switch");
+        addDevice(null, "switch");
     });
     configureDraggableCreationElement($("#pc"), function() {
-        addDevice("Sample PC", "pc");
+        addDevice(null, "pc");
     });
 
     redrawTopology();

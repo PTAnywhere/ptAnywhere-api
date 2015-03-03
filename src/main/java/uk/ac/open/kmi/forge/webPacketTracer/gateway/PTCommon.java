@@ -20,8 +20,8 @@ public abstract class PTCommon {
     private static final Log LOGGER = LogFactory.getLog(PTCommon.class);
 
     public PTCommon() {
-        this("KMI-APPSVR03", 40000);
-        //this("localhost", 39000);
+        //this("KMI-APPSVR03", 40000);
+        this("localhost", 39000);
     }
 
     public PTCommon(String hostName, int port) {
