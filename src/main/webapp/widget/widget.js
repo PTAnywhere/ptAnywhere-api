@@ -457,16 +457,15 @@ function loadTopology(responseData) {
             }
         },
         onAdd: function(data,callback) {
-          onDeviceAdd(data.x, data.y);
+            onDeviceAdd(data.x, data.y);
         },
         onEdit: function(data,callback) {
-            console.log(data);
             onDeviceEdit(data.id);
         },
         onDelete: function(data,callback) {
-          if (data.nodes.length>0)
+        if (data.nodes.length>0)
             deleteDevice(data.nodes[0])
-          else if (data.edges.length>0)
+        else if (data.edges.length>0)
             console.log("The edge deletion has been disabled. Use the dialog.");
         }
     };
@@ -478,10 +477,9 @@ function toJSON(obj) {
     return JSON.stringify(obj, null, 4);
 }
 
-function redrawTopology() {
-    redrawTopology(callback);
-}
-
+/**
+ * @arg callback If it is null, it is simply ignored.
+ */
 function redrawTopology(callback) {
     $.getJSON(api_url + "/network", function(data) {
         loadTopology(data);
@@ -609,5 +607,5 @@ $(function() {
         addDevicePositioned("pc", $("#pc"), null);
     });
 
-    redrawTopology();
+    redrawTopology(null);
 });
