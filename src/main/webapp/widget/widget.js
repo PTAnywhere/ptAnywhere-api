@@ -71,10 +71,12 @@ function addDevicePositioned(type, element, callback) {
     }, callback);
 }
 
-function addDeviceWithName(label, type, callback) {
+function addDeviceWithName(label, type, x, y, callback) {
     return addDevice({
         "label": label,
-        "group": type
+        "group": type,
+        "x": x,
+        "y": y
     }, callback);
 }
 
@@ -180,7 +182,7 @@ function handleModificationSubmit(callback) {
     }
 }
 
-function onDeviceAdd() {
+function onDeviceAdd(x, y) {
     var dialog = $("#create-device").dialog({
         title: "Create new device",
         autoOpen: false, height: 300, width: 400, modal: true, draggable: false,
@@ -192,7 +194,7 @@ function onDeviceAdd() {
                 };
                 name = document.forms["create-device"]["name"].value;
                 type = document.forms["create-device"]["type"].value;
-                addDeviceWithName(name, type, callback);
+                addDeviceWithName(name, type, x, y, callback);
             },
             Cancel:function() {
                 $( this ).dialog( "close" );
@@ -441,7 +443,7 @@ function loadTopology(responseData) {
             }
         },
         onAdd: function(data,callback) {
-          onDeviceAdd();
+          onDeviceAdd(data.x, data.y);
         },
         onEdit: function(data,callback) {
           onDeviceEdit(data.id);
