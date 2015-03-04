@@ -425,10 +425,12 @@ function loadTopology(responseData) {
         stabilize: true,
         dataManipulation: true,
         edges: {
+            width: 3,
+            widthSelectionMultiplier: 1.4,
             color: {
-                color:'#ffffff',
-                highlight:'#ffffff',
-                hover: '#ffffff'
+                color:'#606060',
+                highlight:'#000000',
+                hover: '#000000'
             }
          },
         groups : {
@@ -453,7 +455,13 @@ function loadTopology(responseData) {
           onDeviceAdd(data.x, data.y);
         },
         onEdit: function(data,callback) {
-          onDeviceEdit(data.id);
+            console.log(data);
+            onDeviceEdit(data.id);
+        },
+        onEditEdge: function(data,callback) {
+            console.log(data);
+            $('span.network-manipulationUI.edit').hide();
+            onDeviceEdit(data.id);
         },
         onDelete: function(data,callback) {
           if (data.nodes.length>0)

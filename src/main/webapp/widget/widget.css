@@ -186,11 +186,7 @@ select {
 
 /* Edit menu */
 
-#network-manipulate-editEdge {
-	display: none;
-}
-
-#network-manipulate-connectNode {
+span.network-manipulationUI.connect {
 	display: none;
 }
 
