@@ -424,6 +424,13 @@ function loadTopology(responseData) {
         //zoomable : false,
         stabilize: true,
         dataManipulation: true,
+        edges: {
+            color: {
+                color:'#ffffff',
+                highlight:'#ffffff',
+                hover: '#ffffff'
+            }
+         },
         groups : {
             cloudDevice : {
                 shape : 'image',
