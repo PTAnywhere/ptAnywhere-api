@@ -97,12 +97,6 @@ public class PacketTracerDAO {
         final String addedDeviceName = workspace.addDevice(type, getDefaultModelName(type));
         final com.cisco.pt.ipc.sim.Device deviceAdded = getSimDeviceByName(addedDeviceName);
         final Device ret = Device.fromCiscoObject(deviceAdded);
-        if (device.getLabel()!=null) {
-            // setName() somehow makes deviceAdded.getObjectUUID() return null.
-            // That's why we set it at the end and without calling to getObjectUUID() afterwards (fromCiscoObject calls it).
-            deviceAdded.setName(device.getLabel());
-            ret.setLabel(device.getLabel());
-        }
         if (device.getX()!=-1 && device.getY()!=-1) { // Bad luck if you choose -1 position :-P
             // After struggling a lot with this, I have discovered that moveToLocation does
             // not move it to the coordinate you pass:
@@ -111,9 +105,21 @@ public class PacketTracerDAO {
             //      + 300, 300 moves to 450, 450
             final double magicFactor = 1.5;
             deviceAdded.moveToLocation((int) (device.getX()/magicFactor),
-                                        (int) (device.getY()/magicFactor) );
+                    (int) (device.getY()/magicFactor) );
             ret.setX(device.getX());
             ret.setY(device.getY());
+        }
+        if (device.getLabel()!=null) {
+            // Problem: setName() makes deviceAdded.getObjectUUID() return null
+            //          and moveToLocation not to work :-S
+            // Cause: I guess that the name is used as an identify a device in all the related IPC
+            //        protocol communications and (at least) these methods use IPC.
+            // That's why we set it at the end and without calling either
+            //   a) getObjectUUID() (fromCiscoObject calls it) or
+            //   b) moveToLocation
+            // afterwards.
+            deviceAdded.setName(device.getLabel());
+            ret.setLabel(device.getLabel());
         }
         return ret;
     }
