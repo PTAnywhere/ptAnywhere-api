@@ -11,12 +11,13 @@ import java.util.List;
 public class Device {
     String id;  // E.g., "{4e70e5d7-4399-485e-b409-6c9d1c9446ea}"
     String label;  // E.g., "MySwitch"
-    int x;  // E.g., 436
-    int y; // E.g.,
+    double x;  // E.g., 436
+    double y; // E.g.,
     String group; // E.g., "switchDevice"
     List<Port> ports;
 
     public Device() {
+        this(null, null, -1, -1, null);
     }
 
     public Device(String id, String label, int x, int y, String group) {
@@ -63,19 +64,19 @@ public class Device {
         this.label = label;
     }
 
-    public int getX() {
+    public double getX() {
         return x;
     }
 
-    public void setX(int x) {
+    public void setX(double x) {
         this.x = x;
     }
 
-    public int getY() {
+    public double getY() {
         return y;
     }
 
-    public void setY(int y) {
+    public void setY(double y) {
         this.y = y;
     }
 
