@@ -33176,7 +33176,7 @@ return /******/ (function(modules) { // webpackBootstrap
         this.manipulationDOM['seperatorLineDiv3'].className = 'network-seperatorLine';
 
         this.manipulationDOM['editEdgeSpan'] = document.createElement('span');
-        this.manipulationDOM['editEdgeSpan'].className = 'network-manipulationUI edit';
+        this.manipulationDOM['editEdgeSpan'].className = 'network-manipulationUI editEdge';
         this.manipulationDOM['editEdgeLabelSpan'] = document.createElement('span');
         this.manipulationDOM['editEdgeLabelSpan'].className = 'network-manipulationLabel';
         this.manipulationDOM['editEdgeLabelSpan'].innerHTML = locale['editEdge'];

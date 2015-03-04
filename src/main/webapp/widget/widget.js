@@ -458,11 +458,6 @@ function loadTopology(responseData) {
             console.log(data);
             onDeviceEdit(data.id);
         },
-        onEditEdge: function(data,callback) {
-            console.log(data);
-            $('span.network-manipulationUI.edit').hide();
-            onDeviceEdit(data.id);
-        },
         onDelete: function(data,callback) {
           if (data.nodes.length>0)
             deleteDevice(data.nodes[0])

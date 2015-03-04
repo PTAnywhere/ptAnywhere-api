@@ -190,6 +190,10 @@ span.network-manipulationUI.connect {
 	display: none;
 }
 
+span.network-manipulationUI.editEdge {
+	display: none;
+}
+
 div.network-seperatorLine {
 	width: 0;
 	margin: 5px 0 0px 0;
