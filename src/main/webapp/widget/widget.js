@@ -207,16 +207,20 @@ function onDeviceAdd(x, y) {
     dialog.dialog( "open" );
 }
 
-function setPreviousLink(formToUpdate, toDevice="none", toPort="none") {
-    $("input[name='linkPreviousDevice']", formToUpdate).val(toDevice);
+function setPreviousLinkToNone(formToUpdate) {
+    setPreviousLink(formToUpdate, "none", "none");
+}
+
+function setPreviousLink(formToUpdate, toDevice, toPort) {
     $("input[name='linkPreviousInterface']", formToUpdate).val(toPort);
 }
+
 
 function selectLinkedDevice(device, port, formToUpdate, callback) {
     var selectInterfaceEl = $("#linkInterface", formToUpdate);
     if ('undefined' == typeof port.link) {
         selectInterfaceEl.hide();
-        setPreviousLink(formToUpdate);
+        setPreviousLinkToNone(formToUpdate);
         callback(null);
     } else {
         // PRE: return more info in /link
@@ -224,7 +228,7 @@ function selectLinkedDevice(device, port, formToUpdate, callback) {
             setPreviousLink(formToUpdate, link.toDevice, link.toPort);
             $.getJSON(api_url + "/devices/" + link.toDevice + "/ports?byName=true", function(ports) {
                 // populate select with iface names
-                loadPortsInSelect(ports, selectInterfaceEl);
+                loadPortsInSelect(ports, selectInterfaceEl, null);
                 // select iface
                 selectOptionWithText(selectInterfaceEl, link.toPort);
                 selectInterfaceEl.show();
@@ -281,7 +285,7 @@ function updateConnectedDeviceSelect(device, port, formToUpdate, callback) {
             var selectedDevice = $(element).val(); // or  $(element).text();
             if (selectedDevice!="none") {
                 $.getJSON(api_url + "/devices/" + selectedDevice + "/ports", function(ports) {
-                    loadPortsInSelect(ports, selectInterfaceEl); // populate select with device's ifaces
+                    loadPortsInSelect(ports, selectInterfaceEl, null); // populate select with device's ifaces
                     selectInterfaceEl.show();
                 }).fail(function() {
                     console.error("Ports for the device " + node + " could not be loaded. Possible timeout.");
@@ -304,9 +308,10 @@ function updateInterfaceInformation(device, port, formToUpdate, callback) {
 }
 
 /**
+ * @param defaultSelection It can be an int with the number of the option to be selected or a "null" (for any choice).
  * @return Selected port.
  */
-function loadPortsInSelect(ports, selectElement, defaultSelection=null) {
+function loadPortsInSelect(ports, selectElement, defaultSelection) {
     var ret = null;
     selectElement.html(""); // Remove everything
     for (var i = 0; i < ports.length; i++) {
