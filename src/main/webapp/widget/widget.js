@@ -34,13 +34,51 @@ $.deleteHttp = function(url, callback) {
 
 
 
-function addDevice(label, type, callback) {
-    var newDevice = {
+
+// Canvas' (0,0) does not correspond with the network map's (0,0) position.
+function toNetworkMapCoordinate(x, y) {
+    var net =$("#network");
+    var htmlElement = {
+        topLeft: [net.offset().left, net.offset().top],
+        width: net.width(),
+        height: net.height()
+    };
+
+    var relativePercentPosition = [];
+    relativePercentPosition[0] = (x - htmlElement.topLeft[0]) / htmlElement.width;
+    relativePercentPosition[1] = (y - htmlElement.topLeft[1]) / htmlElement.height;
+
+    var canvas = {
+        width: network.canvasBottomRight.x - network.canvasTopLeft.x,
+        height: network.canvasBottomRight.y - network.canvasTopLeft.y
+    };
+
+    var ret = [];
+    ret[0] = relativePercentPosition[0] * canvas.width + network.canvasTopLeft.x;
+    ret[1] = relativePercentPosition[1] * canvas.height + network.canvasTopLeft.y;
+
+    return ret;
+}
+
+function addDevicePositioned(type, element, callback) {
+    var x = element.offset().left;
+    var y = element.offset().top;
+    var position = toNetworkMapCoordinate(x, y);
+    return addDevice({
+        "group": type,
+        "x": position[0],
+        "y": position[1]
+    }, callback);
+}
+
+function addDeviceWithName(label, type, callback) {
+    return addDevice({
         "label": label,
         "group": type
-    }
-    console.log("Adding device " + newDevice.label + " of type " + newDevice.group);
+    }, callback);
+}
 
+function addDevice(newDevice, callback) {
     $.postJSON( api_url + "/devices", newDevice,
         function(data) {
             console.log("The device was created successfully.");
@@ -50,9 +88,9 @@ function addDevice(label, type, callback) {
 
 function deleteDevice(deviceId) {
     $.deleteHttp(api_url + "/devices/" + deviceId,
-                function(result) {
-                    console.log("The device has been deleted successfully.");
-                }
+        function(result) {
+            console.log("The device has been deleted successfully.");
+        }
     ).done(redrawTopology)
     .fail(function(data) { console.error("Something went wrong in the device creation.") });
 }
@@ -84,9 +122,9 @@ function modifyPort(deviceId, portName) {
 
 function deleteLink(deviceId, portName, callback) {
     $.deleteHttp(api_url + "/devices/" + deviceId + "/ports/" + portName + "/link",
-                function(result) {
-                    console.log("The link has been deleted successfully.");
-                }
+        function(result) {
+            console.log("The link has been deleted successfully.");
+        }
     ).done(callback)
     .fail(function(data) { console.error("Something went wrong in the link deletion.") });
 }
@@ -154,7 +192,7 @@ function onDeviceAdd() {
                 };
                 name = document.forms["create-device"]["name"].value;
                 type = document.forms["create-device"]["type"].value;
-                addDevice(name, type, callback);
+                addDeviceWithName(name, type, callback);
             },
             Cancel:function() {
                 $( this ).dialog( "close" );
@@ -382,6 +420,8 @@ function loadTopology(responseData) {
         //dragNetwork : false,
         //dragNodes : true,
         //zoomable : false,
+        stabilize: true,
+        dataManipulation: true,
         groups : {
             cloudDevice : {
                 shape : 'image',
@@ -400,8 +440,6 @@ function loadTopology(responseData) {
                 image : "PC.png"
             }
         },
-        stabilize: false,
-        dataManipulation: true,
         onAdd: function(data,callback) {
           onDeviceAdd();
         },
@@ -542,16 +580,16 @@ $(function() {
     $("#modify-device").hide();
 
     configureDraggableCreationElement($("#cloud"), function() {
-        addDevice(null, "cloud");
+        addDevicePositioned("cloud", $("#cloud"), null);
     });
     configureDraggableCreationElement($("#router"), function() {
-        addDevice(null, "router");
+        addDevicePositioned("router", $("#router"), null);
     });
     configureDraggableCreationElement($("#switch"), function() {
-        addDevice(null, "switch");
+        addDevicePositioned("switch", $("#switch"), null);
     });
     configureDraggableCreationElement($("#pc"), function() {
-        addDevice(null, "pc");
+        addDevicePositioned("pc", $("#pc"), null);
     });
 
     redrawTopology();

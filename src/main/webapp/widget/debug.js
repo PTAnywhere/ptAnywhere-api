@@ -25,3 +25,22 @@ function getNodeByName(label) {
 function selectNode(nodeId) {
     network.selectNodes([nodeId,])
 }
+
+
+// FUNCTIONS USED WHEN DEBUGGING CANVAS
+
+function createPointerInHtml(x, y, text) {
+    var pointer = $("<div>" + text + "</div>");
+    $("body").append(pointer);
+    pointer.css({'position': 'absolute',
+                 'left':x,
+                 'top':y});
+}
+
+// This function should be called from the loadTopology() function.
+// Sample points that might be useful to use them as references:
+//      createPointerInCanvas(0, 0, "0");
+//      createPointerInCanvas(100, 100, "1");
+function createPointerInCanvas(x, y, text) {
+    nodes.add({label: text, x:x , y:y});
+}
