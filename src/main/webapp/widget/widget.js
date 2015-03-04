@@ -486,7 +486,6 @@ function redrawTopology(callback) {
         if (callback!=null)
             callback();
     }).fail(function() {
-    //$.getJSON("fake.json", loadTopology).fail(function() {
         console.error("The topology could not be loaded. Possible timeout.");
     });  // Apparently status code 304 is an error for this method :-S
 }
