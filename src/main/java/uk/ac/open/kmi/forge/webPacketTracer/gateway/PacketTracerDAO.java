@@ -103,6 +103,18 @@ public class PacketTracerDAO {
             deviceAdded.setName(device.getLabel());
             ret.setLabel(device.getLabel());
         }
+        if (device.getX()!=-1 && device.getY()!=-1) { // Bad luck if you choose -1 position :-P
+            // After struggling a lot with this, I have discovered that moveToLocation does
+            // not move it to the coordinate you pass:
+            //      + 0, 0 moves to 0, 0
+            //      + 100, 100 moves to 150, 150
+            //      + 300, 300 moves to 450, 450
+            final double magicFactor = 1.5;
+            deviceAdded.moveToLocation((int) (device.getX()/magicFactor),
+                                        (int) (device.getY()/magicFactor) );
+            ret.setX(device.getX());
+            ret.setY(device.getY());
+        }
         return ret;
     }
 
@@ -154,7 +166,6 @@ public class PacketTracerDAO {
     public Device modifyDevice(Device modification) {
         final com.cisco.pt.ipc.sim.Device ret = getSimDeviceById(modification.getId());
         if (ret!=null) {
-            final LogicalWorkspace workspace = this.ipc.appWindow().getActiveWorkspace().getLogicalWorkspace();
             ret.setName(modification.getLabel());  // Right now, we only allow to change the name of the label!
         }
         return Device.fromCiscoObject(ret);
