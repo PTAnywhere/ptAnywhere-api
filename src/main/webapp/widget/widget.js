@@ -48,6 +48,7 @@ function toNetworkMapCoordinate(x, y) {
     relativePercentPosition[0] = (x - htmlElement.topLeft[0]) / htmlElement.width;
     relativePercentPosition[1] = (y - htmlElement.topLeft[1]) / htmlElement.height;
 
+    // FIXME what if network does not exist yet?
     var canvas = {
         width: network.canvasBottomRight.x - network.canvasTopLeft.x,
         height: network.canvasBottomRight.y - network.canvasTopLeft.y
@@ -60,9 +61,9 @@ function toNetworkMapCoordinate(x, y) {
     return ret;
 }
 
-function addDevicePositioned(type, element, callback) {
-    var x = element.offset().left;
-    var y = element.offset().top;
+function addDevicePositioned(type, elOffset, callback) {
+    var x = elOffset.left;
+    var y = elOffset.top;
     var position = toNetworkMapCoordinate(x, y);
     return addDevice({
         "group": type,
@@ -523,45 +524,51 @@ function collisionWithCanvas(element) {
     return true;
 }
 
+function initDraggable(element) {
+    element.animate({'opacity':'1'}, 1000, function() {
+        element.css({ // would be great with an animation too, but it doesn't work
+            'left':element.data('originalLeft'),
+            'top':element.data('originalTop')
+        });
+    });
+}
+
 function configureDraggableCreationElement(element, creation_function) {
     element.data({ // Or we could also record it in the 'start' event.
         'originalLeft': element.css('left'),
         'originalTop': element.css('top')
     });
     element.draggable({
-      /*start: function() {
-        console.log("Start");
-        console.log($(this).position());
-      },
-      drag: function() {
-        console.log("Drag");
-      },*/
-      stop: function() {
-        if (collisionWithCanvas($(this))) {
-            var warning = $("<div>Creating...</div>");
-            $("body").append(warning);
-            var offset = $(this).offset();
-            warning.css({'position': 'absolute',
-                         'left':offset.left,
-                         'top':offset.top});
-            $(this).animate({'opacity':'0.3'}, 1000, function() {
+        helper: "clone",
+        opacity: 0.4,
+        /*revert: true, // It interferes with the position I want to capture in the 'stop' event
+        revertDuration: 2000,*/
+        start: function(event, ui) {
+            $(this).css({'opacity':'0.7'});
+        },
+        /*drag: function(event, ui ) {
+            console.log(event);
+        },*/
+        stop: function(event, ui) {
+            if (collisionWithCanvas(ui.helper)) {
+                var image = $('<img alt="Temporary image" src="' + ui.helper.attr("src") + '">');
+                image.css("width", ui.helper.css("width"));
+                var warning = $('<div class="text-in-image"><span>Creating...</span></div>');
+                warning.prepend(image);
+                $("body").append(warning);
                 warning.css({'position': 'absolute',
-                             'left':offset.left,
-                             'top':offset.top});
-                creation_function();
-                redrawTopology(function() {
-                    element.css({'left':element.data('originalLeft'),
-                                'top':element.data('originalTop'),
-                                'opacity':'1'});
-                    warning.remove();
+                             'left': ui.offset.left,
+                             'top': ui.offset.top});
+                creation_function(ui.offset, function() {
+                    redrawTopology(function() {
+                        initDraggable(element);
+                        warning.remove();
+                    });
                 });
-            });
-        } else {
-            // return to original position
-            $(this).css({ 'left': element.data('originalLeft'),
-                           'top': element.data('originalTop') });
+            } else {
+                initDraggable(element);
+            }
         }
-      }
     });
 }
 
@@ -595,17 +602,17 @@ $(function() {
     $("#create-device").hide();
     $("#modify-device").hide();
 
-    configureDraggableCreationElement($("#cloud"), function() {
-        addDevicePositioned("cloud", $("#cloud"), null);
+    configureDraggableCreationElement($("#cloud"), function(elementOffset, callback) {
+        addDevicePositioned("cloud", elementOffset, callback);
     });
-    configureDraggableCreationElement($("#router"), function() {
-        addDevicePositioned("router", $("#router"), null);
+    configureDraggableCreationElement($("#router"), function(elementOffset, callback) {
+        addDevicePositioned("router", elementOffset, callback);
     });
-    configureDraggableCreationElement($("#switch"), function() {
-        addDevicePositioned("switch", $("#switch"), null);
+    configureDraggableCreationElement($("#switch"), function(elementOffset, callback) {
+        addDevicePositioned("switch", elementOffset, callback);
     });
-    configureDraggableCreationElement($("#pc"), function() {
-        addDevicePositioned("pc", $("#pc"), null);
+    configureDraggableCreationElement($("#pc"), function(elementOffset, callback) {
+        addDevicePositioned("pc",elementOffset, callback);
     });
 
     redrawTopology(null);

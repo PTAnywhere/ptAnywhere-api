@@ -33,7 +33,6 @@ div.view {
 
     background-image: url('pt_background.png');
     background-repeat: no-repeat;
-    //background-attachment: fixed;
     background-position: right bottom;
     background-size: 50%;
 }
@@ -220,4 +219,16 @@ div.network-manipulationDiv {
 #creation-menu figure figcaption {
 	margin-top: 5%;
 	display: block;
+}
+
+.text-in-image>span {
+    position: absolute;
+    top: 30%;
+    left: 0;
+    width: 100%;
+    text-align: center;
+}
+
+.text-in-image>img {
+    opacity: 0.6;
 }
