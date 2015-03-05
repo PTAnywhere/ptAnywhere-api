@@ -3,6 +3,8 @@
 <head>
     <title>Network | DataSet</title>
 
+    <link rel="icon" type="image/png" href="app.png">
+
     <link rel="stylesheet" href="jquery/jquery-ui.min.css">
     <link rel="stylesheet" href="jquery/jquery-ui.structure.min.css">
     <link rel="stylesheet" href="jquery/jquery-ui.theme.min.css">
@@ -18,27 +20,37 @@
 </head>
 
 <body>
-
-<table class="view">
-    <tr>
-        <td colspan=4>
-            <h2>PacketTracer Widget (development version)</h2>
-            <div id="network-popUp" style="display: none;">
-                <span id="operation">node</span> <br>
-                <table style="margin:auto;"><tr>
-                    <td>id</td><td><input id="node-id" value="new value"></td>
-                </tr>
-                    <tr>
-                        <td>label</td><td><input id="node-label" value="new value"> </td>
-                    </tr></table>
-                <input type="button" value="save" id="saveButton"></button>
-                <input type="button" value="cancel" id="cancelButton"></button>
-            </div>
-            <br />
-            <div id="network"></div>
-        </td>
-    </tr>
-</table>
+<div class="widget-header">
+    <h2>
+        <img src="app.png" alt="PacketTracer icon" >
+        PacketTracer Widget (development version)
+    </h2>
+</div>
+<div class="view">
+    <div id="network"></div>
+    <fieldset id="creation-fieldset">
+        <legend>To create a new device, drag it to the network map</legend>
+        <div id="creation-menu">
+            <figure>
+                <img id="cloud" alt="cloud" src="cloud.png" style="width: 120px;">
+                <figcaption>Cloud</figcaption>
+            </figure>
+            <figure>
+                <img id="router" alt="router" src="router.png" style="width: 80px;">
+                <figcaption>Router</figcaption>
+            </figure>
+            <figure>
+                <img id="switch" alt="switch" src="switch.png" style="width: 90px;">
+                <figcaption>Switch</figcaption>
+            </figure>
+            <figure>
+                <img id="pc" alt="PC" src="PC.png" style="width: 90px;">
+                <figcaption>PC</figcaption>
+            </figure>
+        </div>
+    </fieldset>
+</div>
+<img src="Cisco_academy_logo.png" alt="Cisco Logo" class="cisco-logo">
 <div id="create-device" title="Create new device">
     <form name="create-device">
         <fieldset>
@@ -100,34 +112,5 @@
         </form>
     </div>
 </div>
-<!--<div id="create-devices">
-    <img id="cloud" src="cloud.png" alt="" />
-    <>
-    <img id="router" src="router.png" alt="" />
-    <img id="switch" src="switch.png" alt="" />
-    <img id="pc" src="PC.png" alt=""  />
-</div>-->
-
-<fieldset id="creation-fieldset">
-    <legend>To create a new device, drag it to the network map</legend>
-    <div id="creation-menu">
-        <figure>
-            <img id="cloud" alt="cloud" src="cloud.png" style="width: 120px;">
-            <figcaption>Cloud</figcaption>
-        </figure>
-        <figure>
-            <img id="router" alt="router" src="router.png" style="width: 80px;">
-            <figcaption>Router</figcaption>
-        </figure>
-        <figure>
-            <img id="switch" alt="switch" src="switch.png" style="width: 90px;">
-            <figcaption>Switch</figcaption>
-        </figure>
-        <figure>
-            <img id="pc" alt="PC" src="PC.png" style="width: 90px;">
-            <figcaption>PC</figcaption>
-        </figure>
-    </div>
-</fieldset>
 </body>
 </html>
