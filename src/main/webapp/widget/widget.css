@@ -186,11 +186,11 @@ select {
 
 /* Edit menu */
 
-span.network-manipulationUI.connect {
+div.network-manipulationUI.connect {
 	display: none;
 }
 
-span.network-manipulationUI.editEdge {
+div.network-manipulationUI.edit.edge {
 	display: none;
 }
 
