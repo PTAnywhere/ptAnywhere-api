@@ -1,5 +1,6 @@
 html,body {
 	font: 11pt arial;
+	background-color: #eeeeff;
 }
 
 h1 {
@@ -40,10 +41,16 @@ pre {
 	font-size: 10pt;
 }
 
+.mainPanel {
+    background-color: #ffffff;
+    border: 4px solid lightgray;
+    border-radius: 25px;
+}
+
 #network {
 	width: 100%;
 	height: 500px;
-	border: 1px solid lightgray;
+	border-bottom: 4px solid lightgray;
 }
 
 #overlay {
@@ -84,11 +91,6 @@ pre {
 	text-align: center;
 }
 
-#create-device fieldset {
-	border: 0px none;
-}
-
-
 /* select with custom icons */
 
 select {
@@ -125,37 +127,7 @@ select {
 }
 
 
-#creation-fieldset {
-	margin-top: 30px;
-}
-
-#creation-menu {
-	width: 50%;
-	margin: 0px auto;
-}
-
-#creation-menu figure {
-	display:table-cell;
-	width: 28%;
-	margin: 0;
-	text-align: center;
-}
-
-#creation-menu figure {
-	display:table-cell;
-	width: 20%;
-	margin: 0;
-	text-align: center;
-}
-
-#creation-menu figure img {
-	width: 120px;
-}
-
-#creation-menu figure figcaption {
-	margin-top: 5%;
-	display: block;
-}
+/* Modification dialog */
 
 #modify-device {
 	padding: 0;
@@ -205,40 +177,37 @@ div.network-manipulationDiv {
 }
 
 
-/* Device creation menu */
+/* Drag and drop creation menu */
 
- #create-device-dialog fieldset {
- 	border: 0px none;
- }
+#creation-fieldset {
+    border: 0px none;
+	margin-top: 10px;
+}
 
- #creation-fieldset {
- 	margin-top: 30px;
- }
+#creation-menu {
+	width: 50%;
+	margin: 0px auto;
+}
 
- #creation-menu {
- 	width: 50%;
- 	margin: 0px auto;
- }
+#creation-menu figure {
+	display:table-cell;
+	width: 28%;
+	margin: 0;
+	text-align: center;
+}
 
- #creation-menu figure {
- 	display:table-cell;
- 	width: 28%;
- 	margin: 0;
- 	text-align: center;
- }
+#creation-menu figure {
+	display:table-cell;
+	width: 20%;
+	margin: 0;
+	text-align: center;
+}
 
- #creation-menu figure {
- 	display:table-cell;
- 	width: 20%;
- 	margin: 0;
- 	text-align: center;
- }
+#creation-menu figure img {
+	width: 120px;
+}
 
- #creation-menu figure img {
- 	width: 120px;
- }
-
- #creation-menu figure figcaption {
- 	margin-top: 5%;
- 	display: block;
- }
+#creation-menu figure figcaption {
+	margin-top: 5%;
+	display: block;
+}
