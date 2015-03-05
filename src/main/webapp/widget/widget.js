@@ -212,6 +212,7 @@ function setPreviousLinkToNone(formToUpdate) {
 }
 
 function setPreviousLink(formToUpdate, toDevice, toPort) {
+    $("input[name='linkPreviousDevice']", formToUpdate).val(toDevice);
     $("input[name='linkPreviousInterface']", formToUpdate).val(toPort);
 }
 
@@ -234,7 +235,7 @@ function selectLinkedDevice(device, port, formToUpdate, callback) {
                 selectInterfaceEl.show();
                 callback(link.toDevice);  // select device
             }).fail(function() {
-                console.error("Ports for the device " + node + " could not be loaded. Possible timeout.");
+                console.error("Ports for the device " + link.toDevice + " could not be loaded. Possible timeout.");
             });
         }).fail(function() {
             console.error("Port " + port.portName + " (device " + device + ") could not be loaded. Possible timeout.");
@@ -253,6 +254,7 @@ function updateConnectedDeviceSelect(device, port, formToUpdate, callback) {
     selectEl.prop('disabled', 'disabled');
 
     selectEl.append('<option value="none">None</option>');
+    var node;
     for (var key in nodes._data) {
         node = nodes.get(key);
         if (node.id!=device.id) {
@@ -288,7 +290,7 @@ function updateConnectedDeviceSelect(device, port, formToUpdate, callback) {
                     loadPortsInSelect(ports, selectInterfaceEl, null); // populate select with device's ifaces
                     selectInterfaceEl.show();
                 }).fail(function() {
-                    console.error("Ports for the device " + node + " could not be loaded. Possible timeout.");
+                    console.error("Ports for the device " + selectedDevice + " could not be loaded. Possible timeout.");
                 });
             }
         });
