@@ -235,6 +235,28 @@ public class PacketTracerDAO {
         return null;
     }
 
+    public InnerLink getLink(String linkId) {
+        if (linkId!=null) {
+            final InnerLink ret = new InnerLink(linkId);
+            for (int i = 0; i < this.network.getDeviceCount(); i++) {
+                final com.cisco.pt.ipc.sim.Device d = this.network.getDeviceAt(i);
+                for (int j = 0; j < d.getPortCount(); j++) {
+                    final com.cisco.pt.ipc.sim.port.Port p = d.getPortAt(j);
+                    final String lId = (p.getLink() == null) ? null : p.getLink().getObjectUUID().getDecoratedHexString();
+                    if (ret.getId().equals(lId)) {
+                        ret.appendEndpoint( d.getObjectUUID().getDecoratedHexString(),
+                                            p.getObjectUUID().getDecoratedHexString() );
+                        if (ret.areEndpointsSet())
+                            return ret;
+                            // Check in the next device (I am assuming that a device cannot be connected to itself!)
+                        else break;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
     public Link getLink(String deviceId, String portName) {
         final String linkId = getPort(deviceId, portName).getLink();
 
