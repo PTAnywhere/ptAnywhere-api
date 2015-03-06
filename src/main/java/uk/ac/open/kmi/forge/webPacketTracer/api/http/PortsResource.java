@@ -12,13 +12,15 @@ import java.util.Iterator;
 class PortsGetter extends PTCallable<Collection<Port>> {
     final String deviceId;
     final boolean byName;
-    public PortsGetter(String deviceId, boolean byName) {
+    final boolean filterFree;
+    public PortsGetter(String deviceId, boolean byName, boolean filterFree) {
         this.deviceId = deviceId;
         this.byName = byName;
+        this.filterFree = filterFree;
     }
     @Override
     public Collection<Port> internalRun() {
-        return this.connection.getDataAccessObject().getPorts(this.deviceId, this.byName);
+        return this.connection.getDataAccessObject().getPorts(this.deviceId, this.byName, this.filterFree);
     }
 }
 
@@ -31,8 +33,9 @@ public class PortsResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response getPorts(
             @PathParam("device") String deviceId,
-            @DefaultValue("false") @QueryParam("byName") boolean byName) {
-        final Collection<Port> p = new PortsGetter(deviceId, byName).call();  // Not using a new Thread
+            @DefaultValue("false") @QueryParam("byName") boolean byName,
+            @DefaultValue("false") @QueryParam("free") boolean filterFree) {
+        final Collection<Port> p = new PortsGetter(deviceId, byName, filterFree).call();  // Not using a new Thread
         // To array because otherwise Response does not know how to serialize Collection<Device>
         return Response.ok(p.toArray(new Port[p.size()])).
                 links(getDeviceLink(deviceId)).

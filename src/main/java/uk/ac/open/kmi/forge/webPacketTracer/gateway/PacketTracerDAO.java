@@ -178,23 +178,30 @@ public class PacketTracerDAO {
     }
 
     private List<Port> getPorts(com.cisco.pt.ipc.sim.Device device) {
+        return getPorts(device, false);
+    }
+
+    private List<Port> getPorts(com.cisco.pt.ipc.sim.Device device, boolean filterFree) {
         final List<Port> ports = new ArrayList<Port>();
         for(int i=0; i<device.getPortCount(); i++) {
             com.cisco.pt.ipc.sim.port.Port port = device.getPortAt(i);
-            ports.add(Port.fromCiscoObject(port));
+            if(!filterFree || port.getLink()==null) {
+            // If not filter => adds it, if filter, depends if it does not have a link.
+                ports.add(Port.fromCiscoObject(port));
+            }
         }
         return ports;
     }
 
-    public List<Port> getPorts(String deviceId) {
-        return getPorts(deviceId, false);
+    public List<Port> getPorts(String deviceId, boolean filterFree) {
+        return getPorts(deviceId, false, false);
     }
 
-    public List<Port> getPorts(String deviceId, boolean byName) {
+    public List<Port> getPorts(String deviceId, boolean byName, boolean filterFree) {
         if (byName)
-            return getPorts(getSimDeviceByName(deviceId));
+            return getPorts(getSimDeviceByName(deviceId), filterFree);
         else
-            return getPorts(getSimDeviceById(deviceId));
+            return getPorts(getSimDeviceById(deviceId), filterFree);
     }
 
     protected com.cisco.pt.ipc.sim.port.Port getSimPort(com.cisco.pt.ipc.sim.Device device, String portName) {
