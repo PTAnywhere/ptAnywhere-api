@@ -112,5 +112,31 @@
         </form>
     </div>
 </div>
+<div id="link-devices" title="Link two devices">
+    <form name="link-devices">
+        <input type="hidden" name="fromDeviceId" value="">
+        <input type="hidden" name="toDeviceId" value="">
+        <div class="loading">
+                Loading info...
+        </div>
+        <div class="loaded">
+            <p>Please select which ports to connect...</p>
+            <p>Device 1:
+                <select id="linkFromInterface" name="linkFromInterface" size="1">
+                    <option value="loading">Loading...</option>
+                </select>
+            </p>
+            <p>Device 2:
+                <select id="linkToInterface" name="linkToInterface" size="1">
+                    <option value="loading">Loading...</option>
+                </select>
+            </p>
+        </div>
+        <div class="error">
+            <p>Sorry, something went wrong during the link creation.</p>
+            <p class="error-msg"></p>
+        </div>
+    </form>
+</div>
 </body>
 </html>

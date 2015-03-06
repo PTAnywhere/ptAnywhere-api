@@ -164,6 +164,81 @@ function createLinkIfNeeded(fromDeviceId, fromPortName, toDeviceId, toPortName, 
     } else callback();
 }
 
+function getAvailablePorts(deviceId, selectEl, csuccess, cfail) {
+    $.getJSON(api_url + "/devices/" + deviceId + "/ports?free=true", function(ports) {
+        csuccess(selectEl, ports);
+    }).fail(cfail);
+}
+
+function loadAvailablePorts(toDeviceId, fromDeviceId, linkForm, bothLoadedSuccess, bothLoadedFail) {
+    oneLoaded = false; // It must be global for the magic to happen ;)
+    afterLoadingSuccess = function(selectPortsEl, ports) {
+        // TODO Right now it returns a null, but it would be much logical to return an empty array.
+        if (ports==null || ports.length==0) {
+            bothLoadedFail("One of the devices you are trying to link has no available interfaces.");
+        } else {
+            loadPortsInSelect(ports, selectPortsEl, null);
+            if (oneLoaded) { // Check race conditions!
+                bothLoadedSuccess();
+            } else {
+                oneLoaded = true;
+            }
+        }
+    }
+    afterLoadingError = function(data) {
+        console.error("Something went wrong getting this devices' available ports " + deviceId + ".")
+        bothLoadedFail("Unable to get " + deviceId + " device's ports.");
+    }
+
+    getAvailablePorts(toDeviceId, $("#linkFromInterface", linkForm), afterLoadingSuccess, afterLoadingError);
+    getAvailablePorts(fromDeviceId, $("#linkToInterface", linkForm), afterLoadingSuccess, afterLoadingError);
+}
+
+function onLinkCreation(toDeviceId, fromDeviceId) {
+    $("#link-devices .loading").show();
+    $("#link-devices .loaded").hide();
+    $("#link-devices .error").hide();
+
+    var linkForm = $("form[name='link-devices']");
+    $("input[name='toDeviceId']", linkForm).val(toDeviceId);
+    $("input[name='fromDeviceId']", linkForm).val(fromDeviceId);
+
+    var dialog = $("#link-devices").dialog({
+        title: "Connect two devices",
+        autoOpen: false, height: 300, width: 400, modal: true, draggable: false,
+        buttons: {
+            "SUBMIT": function() {
+                var callback = function() {
+                    dialog.dialog( "close" );
+                    redrawTopology();
+                };
+                // TODO get Port URL
+                // TODO create link
+            },
+            Cancel:function() {
+                $( this ).dialog( "close" );
+            }
+        }, close: function() { /*console.log("Closing dialog...");*/ }
+     });
+    var form = dialog.find( "form" ).on("submit", function( event ) { event.preventDefault(); });
+    dialog.dialog( "open" );
+
+    loadAvailablePorts(toDeviceId, fromDeviceId, linkForm,
+        function() {
+            $("#link-devices .loading").hide();
+            $("#link-devices .loaded").show();
+            $("#link-devices .error").hide();
+        },
+        function(errorMessage) {
+            $(".error .error-msg", linkForm).text(errorMessage);
+            // TODO find a less error-prone way to refer to the SUBMIT button (not its ordinal position!).
+            $("button:first", dialog).attr('disabled','disabled');  // Disables the submit button
+            $("#link-devices .loading").hide();
+            $("#link-devices .loaded").hide();
+            $("#link-devices .error").show();
+        });
+}
+
 function handleModificationSubmit(callback) {
     // Check the tab
     var modForm = $("form[name='modify-device']");
@@ -229,7 +304,6 @@ function setPreviousLink(formToUpdate, toDevice, toPort) {
     $("input[name='linkPreviousDevice']", formToUpdate).val(toDevice);
     $("input[name='linkPreviousInterface']", formToUpdate).val(toPort);
 }
-
 
 function selectLinkedDevice(device, port, formToUpdate, callback) {
     var selectInterfaceEl = $("#linkInterface", formToUpdate);
@@ -474,6 +548,9 @@ function loadTopology(responseData) {
         },
         onAdd: function(data,callback) {
             onDeviceAdd(data.x, data.y);
+        },
+        onConnect: function(data,callback) {
+            onLinkCreation(data.from, data.to)
         },
         onEdit: function(data,callback) {
             onDeviceEdit(data.id);
