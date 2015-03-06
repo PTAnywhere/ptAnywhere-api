@@ -1,6 +1,6 @@
 html,body {
 	font: 11pt arial;
-	background-color: #d3d3d3; /* lightgray */
+	background-color: #fff4de;
 }
 
 h1 {
@@ -15,7 +15,7 @@ h2 {
 }
 
 div.widget-header {
-    margin: 12px 10px;
+    margin: 10px;
 }
 
 div.widget-header img {
@@ -29,6 +29,7 @@ div.view {
 	width: 100%;
     background-color: #ffffff;
     border-radius: 20px;
+    border: 2px solid lightgray;
     padding: 3px 0 3px 0;
 
     background-image: url('pt_background.png');
