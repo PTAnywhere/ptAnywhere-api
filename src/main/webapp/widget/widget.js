@@ -94,12 +94,21 @@ function deleteDevice(deviceId) {
         function(result) {
             console.log("The device has been deleted successfully.");
         }
-    ).done(redrawTopology)
-    .fail(function(data) { console.error("Something went wrong in the device creation.") });
+    ).done(function(data) {redrawTopology();})
+    .fail(function(data) { console.error("Something went wrong in the device removal.") });
 }
 
 function deleteEdge(edgeId) {
-    console.log(edgeId);
+    $.getJSON( api_url + "/links/" + edgeId,
+        function(data) {
+            $.deleteHttp(data.endpoints[0] + "/link",
+                function(result) {
+                    console.log("The link has been deleted successfully.");
+                }
+            ).done(function(data) {redrawTopology();})
+            .fail(function(data) { console.error("Something went wrong in the link removal.") });
+        }
+    ).fail(function(data) { console.error("Something went wrong getting this link " + edgeId + ".") });
 }
 
 function modifyDevice(deviceId, callback) {
@@ -483,6 +492,10 @@ function loadTopology(responseData) {
 // convenience method to stringify a JSON object
 function toJSON(obj) {
     return JSON.stringify(obj, null, 4);
+}
+
+function redrawTopology() {
+    redrawTopology(null);
 }
 
 /**
