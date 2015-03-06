@@ -10,10 +10,10 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 
-class LinkGetter extends  PTCallable<Link> {
+class PortLinkGetter extends  PTCallable<Link> {
     final String deviceId;
     final String portName;
-    public LinkGetter(String deviceId, String portName) {
+    public PortLinkGetter(String deviceId, String portName) {
         this.deviceId = deviceId;
         this.portName = portName;
     }
@@ -66,7 +66,7 @@ public class PortLinkResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response getLink(@PathParam("device") String deviceId,
                           @PathParam("port") String portName) {
-        final Link l = new LinkGetter(deviceId, Utils.unescapePort(portName)).call();
+        final Link l = new PortLinkGetter(deviceId, Utils.unescapePort(portName)).call();
         if (l==null)
             return Response.noContent().
                     links(getPortLink()).build();

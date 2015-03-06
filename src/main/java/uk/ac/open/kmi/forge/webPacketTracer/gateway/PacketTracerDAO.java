@@ -245,7 +245,8 @@ public class PacketTracerDAO {
                     final String lId = (p.getLink() == null) ? null : p.getLink().getObjectUUID().getDecoratedHexString();
                     if (ret.getId().equals(lId)) {
                         ret.appendEndpoint( d.getObjectUUID().getDecoratedHexString(),
-                                            p.getObjectUUID().getDecoratedHexString() );
+                                            p.getName() );
+                        //p.getObjectUUID().getDecoratedHexString() );
                         if (ret.areEndpointsSet())
                             return ret;
                             // Check in the next device (I am assuming that a device cannot be connected to itself!)

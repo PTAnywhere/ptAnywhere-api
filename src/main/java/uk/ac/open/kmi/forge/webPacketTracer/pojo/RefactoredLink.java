@@ -2,16 +2,15 @@ package uk.ac.open.kmi.forge.webPacketTracer.pojo;
 
 public class RefactoredLink {
     String id;  // E.g., "{cc57bc49-d73a-42a5-aa6a-1c78066d565c}"
-    String toDevice;
-    String toPort;
+    String[] endpoints;
 
     public RefactoredLink() {
+        this.endpoints = new String[2];
     }
 
-    public RefactoredLink(String id, String toDevice, String toPort) {
+    public RefactoredLink(String id, String end1, String end2) {
         this.id = id;
-        this.toDevice = toDevice;
-        this.toPort = toPort;
+        this.endpoints = new String[] {end1, end2};
     }
 
     public String getId() {
@@ -22,19 +21,18 @@ public class RefactoredLink {
         this.id = id;
     }
 
-    public String getToDevice() {
-        return toDevice;
+    public String[] getEndpoints() {
+        return endpoints;
     }
 
-    public void setToDevice(String toDevice) {
-        this.toDevice = toDevice;
+    public void setEndpoints(String[] endpoints) {
+        this.endpoints = endpoints;
     }
 
-    public String getToPort() {
-        return toPort;
-    }
-
-    public void setToPort(String toPort) {
-        this.toPort = toPort;
+    public void appendEndpoint(String endpointURL) {
+        if (this.endpoints[0]==null)
+            this.endpoints[0] = endpointURL;
+        else
+            this.endpoints[1] = endpointURL;
     }
 }

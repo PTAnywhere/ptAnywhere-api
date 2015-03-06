@@ -17,7 +17,7 @@ public abstract class PTCommon {
     protected IPCFactory ipcFactory;
     final protected String hostName;
     final protected int port;
-    private static final Log LOGGER = LogFactory.getLog(PTCommon.class);
+    public static final Log LOGGER = LogFactory.getLog(PTCommon.class);
 
     public PTCommon() {
         //this("KMI-APPSVR03", 40000);
