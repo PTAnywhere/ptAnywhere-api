@@ -98,6 +98,10 @@ function deleteDevice(deviceId) {
     .fail(function(data) { console.error("Something went wrong in the device creation.") });
 }
 
+function deleteEdge(edgeId) {
+    console.log(edgeId);
+}
+
 function modifyDevice(deviceId, callback) {
     // General settings: PUT to /devices/id
     var modification = {
@@ -466,10 +470,11 @@ function loadTopology(responseData) {
             onDeviceEdit(data.id);
         },
         onDelete: function(data,callback) {
-        if (data.nodes.length>0)
-            deleteDevice(data.nodes[0])
-        else if (data.edges.length>0)
-            console.log("The edge deletion has been disabled. Use the dialog.");
+            if (data.nodes.length>0) {
+                deleteDevice(data.nodes[0])
+            } else if (data.edges.length>0) {
+                deleteEdge(data.edges[0]);
+            }
         }
     };
     network = new vis.Network(container, visData, options);
