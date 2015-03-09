@@ -69,13 +69,13 @@ img.cisco-logo {
 
 div.network-manipulation-editMode {
     margin: 0;
-    padding: 10px 0 0 10px;
+    padding: 0;  /* Sth changes in the dev vis.js css */
     height: 30px;
 }
 
 div.network-manipulationDiv {
     background: none;
-    padding: 0px 0 0 10px;
+    padding: 10px 0 0 10px; /* Sth changes in the dev vis.js css */
     height: 40px;
 }
 
