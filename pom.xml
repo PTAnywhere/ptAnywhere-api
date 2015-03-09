@@ -27,9 +27,9 @@
                 <artifactId>tomcat7-maven-plugin</artifactId>
                 <version>2.2</version>
                 <configuration>
-                    <url>http://localhost:8080/manager/text</url>
-                    <server>deploymentRepo</server>
-                    <path>/webPacketTracer</path>
+                    <url>${tomcat.url}</url>
+                    <server>${tomcat.server}</server>
+                    <path>${tomcat.path}</path>
                 </configuration>
             </plugin>
             <plugin>
@@ -44,6 +44,55 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>env-development</id>
+            <!-- Activated by default or when -Denv=devel is given as parameter. -->
+            <activation>
+                <activeByDefault>true</activeByDefault>
+                <property>
+                    <name>env</name>
+                    <value>devel</value>
+                </property>
+            </activation>
+            <properties>
+                <tomcat.url>http://localhost:8080/manager/text</tomcat.url>
+                <tomcat.server>developmentServer</tomcat.server>
+                <tomcat.path>/webPacketTracer</tomcat.path>
+            </properties>
+        </profile>
+        <profile>
+            <id>env-testing</id>
+            <!-- Activated when -Denv=test is given as parameter. -->
+            <activation>
+                <property>
+                    <name>env</name>
+                    <value>test</value>
+                </property>
+            </activation>
+            <properties>
+                <tomcat.url>http://forge.kmi.open.ac.uk/manager/text</tomcat.url>
+                <tomcat.server>testingServer</tomcat.server>
+                <tomcat.path>/webPacketTracerTest</tomcat.path>
+            </properties>
+        </profile>
+        <profile>
+            <id>env-production</id>
+            <!-- Activated when -Denv=prod is given as parameter. -->
+            <activation>
+                <property>
+                    <name>env</name>
+                    <value>prod</value>
+                </property>
+            </activation>
+            <properties>
+                <tomcat.url>http://forge.kmi.open.ac.uk/manager/text</tomcat.url>
+                <tomcat.server>productionServer</tomcat.server>
+                <tomcat.path>/webPacketTracer</tomcat.path>
+            </properties>
+        </profile>
+    </profiles>
 
     <dependencyManagement>
         <dependencies>
