@@ -31,11 +31,6 @@ div.view {
     border-radius: 20px;
     border: 2px solid lightgray;
     padding: 3px 0 3px 0;
-
-    background-image: url('pt_background.png');
-    background-repeat: no-repeat;
-    background-position: right bottom;
-    background-size: 50%;
 }
 
 img.cisco-logo {
@@ -173,14 +168,6 @@ select {
 
 
 /* Edit menu */
-
-div.network-manipulationUI.connect {
-	display: none;
-}
-
-div.network-manipulationUI.edit.edge {
-	display: none;
-}
 
 div.network-seperatorLine {
 	width: 0;
