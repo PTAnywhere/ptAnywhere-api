@@ -14,6 +14,23 @@ h2 {
 	text-align: right;
 }
 
+input[type=text],pre {
+	border: 1px solid lightgray;
+}
+
+pre {
+	margin: 0;
+	padding: 5px;
+	font-size: 10pt;
+}
+
+input[type=text],pre {
+	border: 1px solid lightgray;
+}
+
+
+/* General Layout */
+
 div.widget-header {
     margin: 10px;
 }
@@ -30,12 +47,6 @@ div.view {
     background-color: #ffffff;
     border-radius: 20px;
     border: 2px solid lightgray;
-    padding: 3px 0 3px 0;
-
-    background-image: url('pt_background.png');
-    background-repeat: no-repeat;
-    background-position: right bottom;
-    background-size: 50%;
 }
 
 img.cisco-logo {
@@ -47,65 +58,88 @@ img.cisco-logo {
     /*float: right;*/
 }
 
-input[type=text],pre {
-	border: 1px solid lightgray;
-}
-
-pre {
-	margin: 0;
-	padding: 5px;
-	font-size: 10pt;
-}
-
-.mainPanel {
-    background-color: #ffffff;
-    border: 4px solid lightgray;
-    border-radius: 25px;
-}
-
 #network {
 	width: 100%;
 	height: 500px;
 	border-bottom: 4px solid lightgray;
 }
 
-#overlay {
-	position: absolute;
-	left: 0px;
-	top: 0px;
-	width: 100%;
-	height: 100%;
-	text-align: center;
-	z-index: 1000;
+
+/* Edit menu */
+
+div.network-manipulation-editMode {
+    margin: 0;
+    padding: 10px 0 0 10px;
+    height: 30px;
 }
 
-#overlay div {
-	width: 300px;
-	margin: 100px auto;
-	background-color: #fff;
-	border: 1px solid #000;
-	padding: 15px;
+div.network-manipulationDiv {
+    background: none;
+    padding: 0px 0 0 10px;
+    height: 40px;
+}
+
+div.network-manipulation-closeDiv {
+    margin: 6px 12px 0 0;
+}
+
+span.network-manipulationUI {
+    margin: 0;
+}
+
+div.network-seperatorLine {
+	width: 0;
+	margin: 5px 0 0px 0;
+}
+
+
+/* Drag and drop creation menu */
+
+#creation-fieldset {
+    border: 0px none;
+	margin-top: 10px;
+}
+
+#creation-menu {
+	width: 50%;
+	margin: 0px auto;
+}
+
+#creation-menu figure {
+	display:table-cell;
+	width: 28%;
+	margin: 0;
 	text-align: center;
 }
 
-#add-device-overlay {
-	position: absolute;
-	left: 0px;
-	top: 0px;
-	width: 100%;
-	height: 100%;
+#creation-menu figure {
+	display:table-cell;
+	width: 20%;
+	margin: 0;
 	text-align: center;
-	z-index: 1000;
 }
 
-#add-device-overlay div {
-	width: 300px;
-	margin: 100px auto;
-	background-color: #fff;
-	border: 1px solid #000;
-	padding: 15px;
-	text-align: center;
+#creation-menu figure img {
+	width: 120px;
 }
+
+#creation-menu figure figcaption {
+	margin-top: 5%;
+	display: block;
+}
+
+.text-in-image>span {
+    position: absolute;
+    top: 30%;
+    left: 0;
+    width: 100%;
+    text-align: center;
+}
+
+.text-in-image>img {
+    opacity: 0.6;
+}
+
 
 /* select with custom icons */
 
@@ -169,73 +203,4 @@ select {
 	border-top-left-radius: 6px;
 	border-top-right-radius: 6px;
 	border-top-width: 1px;
-}
-
-
-/* Edit menu */
-
-div.network-manipulationUI.connect {
-	display: none;
-}
-
-div.network-manipulationUI.edit.edge {
-	display: none;
-}
-
-div.network-seperatorLine {
-	width: 0;
-	margin: 5px 0 0px 0;
-}
-
-div.network-manipulationDiv {
-	padding-top: 5px;
-	height: 35px;
-}
-
-
-/* Drag and drop creation menu */
-
-#creation-fieldset {
-    border: 0px none;
-	margin-top: 10px;
-}
-
-#creation-menu {
-	width: 50%;
-	margin: 0px auto;
-}
-
-#creation-menu figure {
-	display:table-cell;
-	width: 28%;
-	margin: 0;
-	text-align: center;
-}
-
-#creation-menu figure {
-	display:table-cell;
-	width: 20%;
-	margin: 0;
-	text-align: center;
-}
-
-#creation-menu figure img {
-	width: 120px;
-}
-
-#creation-menu figure figcaption {
-	margin-top: 5%;
-	display: block;
-}
-
-.text-in-image>span {
-    position: absolute;
-    top: 30%;
-    left: 0;
-    width: 100%;
-    text-align: center;
-}
-
-.text-in-image>img {
-    opacity: 0.6;
 }
