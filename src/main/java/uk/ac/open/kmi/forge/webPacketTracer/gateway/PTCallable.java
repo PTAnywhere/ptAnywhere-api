@@ -10,11 +10,7 @@ public abstract class PTCallable<V> implements Callable<V> {
     final protected PTConnection connection;
 
     public PTCallable() {
-        this.connection = new PTConnection();
-    }
-
-    public PTCallable(String hostName, int port) {
-        this.connection = new PTConnection(hostName, port);
+        this.connection = PTConnection.createPacketTracerGateway();
     }
 
     @Override
