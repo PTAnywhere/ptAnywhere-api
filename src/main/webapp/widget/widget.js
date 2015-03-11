@@ -694,8 +694,11 @@ $(function() {
              return li.appendTo( ul );
         }
     });
+
+    // Better with CSS?
     $("#create-device").hide();
     $("#modify-device").hide();
+    $("#link-devices").hide();
 
     configureDraggableCreationElement($("#cloud"), function(elementOffset, callback) {
         addDevicePositioned("cloud", elementOffset, callback);
