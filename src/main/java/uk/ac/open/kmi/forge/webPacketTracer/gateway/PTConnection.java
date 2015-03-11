@@ -40,7 +40,6 @@ public class PTConnection {
         } catch(IOException e) {
             LOGGER.error("Host and port of the PT instance could not be read from the properties file, using default values.");
         } finally {
-            //this("KMI-APPSVR03", 40000);
             final String host = props.getProperty("host", "localhost");
             final int port = Integer.parseInt(props.getProperty("port", "39000"));
             return new PTConnection(host, port);
