@@ -18,7 +18,7 @@ public class ConsoleEndpoint implements TerminalLineEventListener {
     Session session;
 
     public ConsoleEndpoint() {
-        this.common = new PTConnection();
+        this.common = PTConnection.createPacketTracerGateway();
     }
 
     @OnOpen
