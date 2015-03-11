@@ -170,7 +170,7 @@ function getAvailablePorts(deviceId, selectEl, csuccess, cfail) {
     }).fail(cfail);
 }
 
-function loadAvailablePorts(toDeviceId, fromDeviceId, linkForm, bothLoadedSuccess, bothLoadedFail) {
+function loadAvailablePorts(fromDeviceId, toDeviceId, linkForm, bothLoadedSuccess, bothLoadedFail) {
     oneLoaded = false; // It must be global for the magic to happen ;)
     afterLoadingSuccess = function(selectPortsEl, ports) {
         // TODO Right now it returns a null, but it would be much logical to return an empty array.
@@ -190,18 +190,24 @@ function loadAvailablePorts(toDeviceId, fromDeviceId, linkForm, bothLoadedSucces
         bothLoadedFail("Unable to get " + deviceId + " device's ports.");
     }
 
-    getAvailablePorts(toDeviceId, $("#linkFromInterface", linkForm), afterLoadingSuccess, afterLoadingError);
-    getAvailablePorts(fromDeviceId, $("#linkToInterface", linkForm), afterLoadingSuccess, afterLoadingError);
+    getAvailablePorts(fromDeviceId, $("#linkFromInterface", linkForm), afterLoadingSuccess, afterLoadingError);
+    getAvailablePorts(toDeviceId, $("#linkToInterface", linkForm), afterLoadingSuccess, afterLoadingError);
 }
 
-function onLinkCreation(toDeviceId, fromDeviceId) {
+function onLinkCreation(fromDeviceId, toDeviceId) {
     $("#link-devices .loading").show();
     $("#link-devices .loaded").hide();
     $("#link-devices .error").hide();
 
     var linkForm = $("form[name='link-devices']");
-    $("input[name='toDeviceId']", linkForm).val(toDeviceId);
-    $("input[name='fromDeviceId']", linkForm).val(fromDeviceId);
+    // Not needed
+    /*$("input[name='toDeviceId']", linkForm).val(toDeviceId);
+    $("input[name='fromDeviceId']", linkForm).val(fromDeviceId);*/
+    var fromDeviceName = nodes.get(fromDeviceId).label;
+    var toDeviceName = nodes.get(toDeviceId).label;
+    $("#fromDeviceName", linkForm).text(fromDeviceName);
+    $("#toDeviceName", linkForm).text(toDeviceName);
+
 
     var dialog = $("#link-devices").dialog({
         title: "Connect two devices",
@@ -214,6 +220,9 @@ function onLinkCreation(toDeviceId, fromDeviceId) {
                 };
                 // TODO get Port URL
                 // TODO create link
+                var fromPortName = $("#linkFromInterface option:selected", linkForm).text();
+                var toPortName = $("#linkToInterface option:selected", linkForm).text();
+                createLink(fromDeviceId, fromPortName, toDeviceName, toPortName, callback);
             },
             Cancel:function() {
                 $( this ).dialog( "close" );
@@ -223,7 +232,7 @@ function onLinkCreation(toDeviceId, fromDeviceId) {
     var form = dialog.find( "form" ).on("submit", function( event ) { event.preventDefault(); });
     dialog.dialog( "open" );
 
-    loadAvailablePorts(toDeviceId, fromDeviceId, linkForm,
+    loadAvailablePorts(fromDeviceId, toDeviceId, linkForm,
         function() {
             $("#link-devices .loading").hide();
             $("#link-devices .loaded").show();

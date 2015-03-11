@@ -92,6 +92,14 @@ div.network-seperatorLine {
 	margin: 5px 0 0px 0;
 }
 
+/*
+ * Until this feature is implemented (if it is ever implemented), the edit edge option is disabled.
+ * Delete and create a new edge instead.
+ */
+span.editEdge {
+    display: none;
+}
+
 
 /* Drag and drop creation menu */
 
