@@ -359,6 +359,19 @@ function onDeviceEdit(node) {
     dialog.dialog( "open" );
 }
 
+$(document).keypress(function(e) {
+    if(e.which == 99) {  // "c" key pressed
+        var selected = network.getSelection();
+        if (selected.nodes.length==1) { // Only if just one is selected
+            // http://domain.com/appName/widget/index.html" // URL type
+            var redirectTo = window.location.href.substr(0, window.location.href.search("/widget/index.html"));
+            redirectTo += "/api/devices/" + selected.nodes[0] + "/console";
+            console.log("Redirecting to " + redirectTo);
+            window.location.href = redirectTo;
+        }
+    }
+});
+
 function loadTopology(responseData) {
     nodesJson = responseData.devices;
     edgesJson = responseData.edges;
