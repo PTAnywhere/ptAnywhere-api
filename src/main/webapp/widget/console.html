@@ -10,15 +10,8 @@
             #messages li { padding: 5px 10px; }
             #messages li:nth-child(odd) { background: #eee; }
         </style>
-        <script src="/webPacketTracer/widget/jquery/jquery.js"></script>
-    </head>
-    <body>
-        <div id="messages"></div>
-        <div style="height: 8pt; width: 100%">
-            <span id="lastLine" style="float:left;"></span>
-            <span id="current" contentEditable="true" style="display: block; height: 100%;">ping 10.0.0.2</span>
-        </div>
-        <script type="text/javascript">
+        <script src="../../../widget/jquery/jquery.js"></script>
+        <script>
              var ws = null;
 
             function setConnected(connected) {
@@ -54,6 +47,10 @@
                     $("#lastLine").append(lines[lines.length-1]);
                     $("html, body").animate({ scrollTop: $(document).height() }, "slow");  // Scroll down
                 };
+                ws.onerror = function (event) {
+                    setConnected(false);
+                    console.log('Info: WebSocket error, Code: ' + event.code + (event.reason == "" ? "" : ", Reason: " + event.reason));
+                };
                 ws.onclose = function (event) {
                     setConnected(false);
                     console.log('Info: WebSocket connection closed, Code: ' + event.code + (event.reason == "" ? "" : ", Reason: " + event.reason));
@@ -71,5 +68,12 @@
                 connect( ('ws://'+ window.location.host + window.location.pathname).replace("api", "endpoint") );
             });
         </script>
+    </head>
+    <body>
+        <div id="messages"></div>
+        <div style="height: 8pt; width: 100%">
+            <span id="lastLine" style="float:left;"></span>
+            <span id="current" contentEditable="true" style="display: block; height: 100%;">ping 10.0.0.2</span>
+        </div>
     </body>
 </html>

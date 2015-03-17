@@ -1,113 +1,66 @@
 package uk.ac.open.kmi.forge.webPacketTracer.api.http;
 
 import uk.ac.open.kmi.forge.webPacketTracer.gateway.PTCallable;
+import uk.ac.open.kmi.forge.webPacketTracer.pojo.InnerLink;
 import uk.ac.open.kmi.forge.webPacketTracer.pojo.Link;
+import uk.ac.open.kmi.forge.webPacketTracer.pojo.RefactoredLink;
 
-import javax.ws.rs.*;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 
-class LinkGetter extends  PTCallable<Link> {
-    final String deviceId;
-    final String portName;
-    public LinkGetter(String deviceId, String portName) {
-        this.deviceId = deviceId;
-        this.portName = portName;
+class LinkGetter extends PTCallable<InnerLink> {
+    final String linkId;
+    public LinkGetter(String linkId) {
+        this.linkId = linkId;
     }
     @Override
-    public Link internalRun() {
-        return this.connection.getDataAccessObject().getLink(this.deviceId, this.portName);
+    public InnerLink internalRun() {
+        getLog().error(this.linkId);
+        return this.connection.getDataAccessObject().getLink(this.linkId);
     }
 }
 
-class LinkDeleter extends PTCallable<Link> {
-    final Link toDelete = new Link();
-    public LinkDeleter(String deviceId, String portName) {
-        this.toDelete.setToDevice(deviceId);
-        this.toDelete.setToPort(portName);
-    }
-    @Override
-    public Link internalRun() {
-        final boolean success = this.connection.getDataAccessObject().removeLink(this.toDelete.getToDevice(), this.toDelete.getToPort());
-        if (success)
-            return this.toDelete;
-        return null;
-    }
-}
 
-class LinkCreator extends PTCallable<Link> {
-    final String deviceId;
-    final String portName;
-    final Link linkToCreate;
-    public LinkCreator(String deviceId, String portName, Link linkToCreate) {
-        this.deviceId = deviceId;
-        this.portName = portName;
-        this.linkToCreate = linkToCreate;
-    }
-    @Override
-    public Link internalRun() {
-        final boolean success = this.connection.getDataAccessObject().createLink(this.deviceId, this.portName, this.linkToCreate);
-        if (success)
-            // Improvable performance
-            return this.connection.getDataAccessObject().getLink(this.deviceId, this.portName);
-        return null;
-    }
-}
-
-@Path("devices/{device}/ports/{port}/link")
+@Path("links/{link}")
 public class LinkResource {
     @Context
     UriInfo uri;
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getLink(@PathParam("device") String deviceId,
-                          @PathParam("port") String portName) {
-        final Link l = new LinkGetter(deviceId, Utils.unescapePort(portName)).call();
+    public Response getLink(@PathParam("link") String linkId) {
+        final InnerLink l = new LinkGetter(linkId).call();  // Same thread
         if (l==null)
-            return Response.noContent().
-                    links(getPortLink()).build();
-        return Response.ok(l).
-                links(getPortLink()).
-                links(getToPortLink(l)).build();
+            return Response.noContent()
+                    .link(this.uri.getBaseUri() + "devices", "devices")
+                    .build();
+
+        final RefactoredLink rl = new RefactoredLink();
+        rl.setId(l.getId());
+
+        Response.ResponseBuilder ret = Response.ok().link(this.uri.getBaseUri() + "devices", "devices");
+        for (String[] endpoint: l.getEndpoints()) {
+            final String e = getPortURL(endpoint);
+            ret = ret.link(e, "endpoint");
+            rl.appendEndpoint(e);
+        }
+
+        return ret.entity(rl).build();
     }
-    @DELETE
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response removeLink(@PathParam("device") String deviceId,
-                             @PathParam("port") String portName) {
-        final Link deletedLink = new LinkDeleter(deviceId, Utils.unescapePort(portName)).call();
-        if (deletedLink==null)
-            return Response.status(Response.Status.NOT_ACCEPTABLE).entity(deletedLink).
-                    links(getPortLink()).build();
-        return Response.ok(deletedLink).
-                links(getPortLink()).build();
-    }
-    @POST
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response createLink(Link newLink,
-                             @PathParam("device") String deviceId,
-                             @PathParam("port") String portName) {
-        final Link createdLink = new LinkCreator(deviceId, Utils.unescapePort(portName), newLink).call();
-        if (createdLink==null)
-            return Response.status(Response.Status.NOT_ACCEPTABLE).entity(newLink).
-                    links(getPortLink()).build();
-        return Response.created(this.uri.getRequestUri()).entity(createdLink).
-                links(getPortLink()).
-                links(getToPortLink(createdLink)).build();
-    }
-    private javax.ws.rs.core.Link getPortLink() {
-        return javax.ws.rs.core.Link.fromUri(Utils.getParent(this.uri.getRequestUri())).rel("port").build();  // Rename it to from?
-    }
-    private javax.ws.rs.core.Link getToPortLink(Link l) {
-        return javax.ws.rs.core.Link.fromUri(
-                    // FIXME This URL does not exist yet (and maybe it's better to return the id based one)
-                    this.uri.getBaseUri() +
-                    "devices/" + l.getToDevice() +
-                    "/ports/" + Utils.escapePort(l.getToPort()) + "?byName=true"
-                ).rel("to").build();  // Rename it to port?
+
+    // From the API perspective, the best thing would be to place the DELETE here.
+    // However, seeing how the PT library (or even the protocol) works, I will keep it in the endpoints.
+
+    private String getPortURL(String[] endpointInfo) {
+        return this.uri.getBaseUri() +
+                "devices/" + endpointInfo[0] +
+                "/ports/" + Utils.escapePort(endpointInfo[1]);
     }
 }

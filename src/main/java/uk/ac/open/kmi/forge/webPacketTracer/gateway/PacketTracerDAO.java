@@ -178,23 +178,30 @@ public class PacketTracerDAO {
     }
 
     private List<Port> getPorts(com.cisco.pt.ipc.sim.Device device) {
+        return getPorts(device, false);
+    }
+
+    private List<Port> getPorts(com.cisco.pt.ipc.sim.Device device, boolean filterFree) {
         final List<Port> ports = new ArrayList<Port>();
         for(int i=0; i<device.getPortCount(); i++) {
             com.cisco.pt.ipc.sim.port.Port port = device.getPortAt(i);
-            ports.add(Port.fromCiscoObject(port));
+            if(!filterFree || port.getLink()==null) {
+            // If not filter => adds it, if filter, depends if it does not have a link.
+                ports.add(Port.fromCiscoObject(port));
+            }
         }
         return ports;
     }
 
-    public List<Port> getPorts(String deviceId) {
-        return getPorts(deviceId, false);
+    public List<Port> getPorts(String deviceId, boolean filterFree) {
+        return getPorts(deviceId, false, false);
     }
 
-    public List<Port> getPorts(String deviceId, boolean byName) {
+    public List<Port> getPorts(String deviceId, boolean byName, boolean filterFree) {
         if (byName)
-            return getPorts(getSimDeviceByName(deviceId));
+            return getPorts(getSimDeviceByName(deviceId), filterFree);
         else
-            return getPorts(getSimDeviceById(deviceId));
+            return getPorts(getSimDeviceById(deviceId), filterFree);
     }
 
     protected com.cisco.pt.ipc.sim.port.Port getSimPort(com.cisco.pt.ipc.sim.Device device, String portName) {
@@ -224,6 +231,29 @@ public class PacketTracerDAO {
                 ((HostPort) p).setIpSubnetMask(ip, subnet);
             }
             return Port.fromCiscoObject(p);
+        }
+        return null;
+    }
+
+    public InnerLink getLink(String linkId) {
+        if (linkId!=null) {
+            final InnerLink ret = new InnerLink(linkId);
+            for (int i = 0; i < this.network.getDeviceCount(); i++) {
+                final com.cisco.pt.ipc.sim.Device d = this.network.getDeviceAt(i);
+                for (int j = 0; j < d.getPortCount(); j++) {
+                    final com.cisco.pt.ipc.sim.port.Port p = d.getPortAt(j);
+                    final String lId = (p.getLink() == null) ? null : p.getLink().getObjectUUID().getDecoratedHexString();
+                    if (ret.getId().equals(lId)) {
+                        ret.appendEndpoint( d.getObjectUUID().getDecoratedHexString(),
+                                            p.getName() );
+                        //p.getObjectUUID().getDecoratedHexString() );
+                        if (ret.areEndpointsSet())
+                            return ret;
+                            // Check in the next device (I am assuming that a device cannot be connected to itself!)
+                        else break;
+                    }
+                }
+            }
         }
         return null;
     }

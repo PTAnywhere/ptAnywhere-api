@@ -8,14 +8,10 @@ public abstract class PTRunnable implements Runnable {
     final protected PTConnection connection;
 
     public PTRunnable() {
-        this.connection = new PTConnection();
+        this.connection = PTConnection.createPacketTracerGateway();
     }
 
-    public PTRunnable(String hostName, int port) {
-        this.connection = new PTConnection(hostName, port);
-    }
-
-    @Override
+   @Override
     public void run() {
         try {
             this.connection.before();
