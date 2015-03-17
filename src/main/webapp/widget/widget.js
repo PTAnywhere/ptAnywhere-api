@@ -444,6 +444,8 @@ function loadTopology(responseData) {
                 } else if (data.edges.length>0) {
                     deleteEdge(data.edges[0]);
                 }
+                // This callback is important, otherwise it received 3 consecutive onDelete events.
+                callback(data);
             }
         };
         network = new vis.Network(container, visData, options);
