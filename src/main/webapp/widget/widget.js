@@ -5,14 +5,14 @@ var nodes, edges, network;
 function requestJSON(verb, url, data, callback) {
     return $.ajax({
         headers: {
-            'Accept': 'application/json',
+            Accept: 'application/json',
             'Content-Type': 'application/json'
         },
-        'type': verb,
-        'url': url,
-        'data': JSON.stringify(data),
-        'dataType': 'json',
-        'success': callback
+        type: verb,
+        url: url,
+        data: JSON.stringify(data),
+        dataType: 'json',
+        success: callback
     });
 };
 
@@ -86,16 +86,16 @@ function addDevice(newDevice, callback) {
         function(data) {
             console.log("The device was created successfully.");
         }).done(callback)
-        .fail(function(data) { console.error("Something went wrong in the device creation.") });
+        .fail(function(data) { console.error("Something went wrong in the device creation."); });
 }
 
 function deleteDevice(deviceId) {
     $.deleteHttp(api_url + "/devices/" + deviceId,
         function(result) {
             console.log("The device has been deleted successfully.");
-        }
-    ).done(function(data) {redrawTopology();})
-    .fail(function(data) { console.error("Something went wrong in the device removal.") });
+        })
+     .done(function(data) { redrawTopology(); })
+     .fail(function(data) { console.error("Something went wrong in the device removal."); });
 }
 
 function deleteEdge(edgeId) {
@@ -105,10 +105,10 @@ function deleteEdge(edgeId) {
                 function(result) {
                     console.log("The link has been deleted successfully.");
                 }
-            ).done(function(data) {redrawTopology();})
-            .fail(function(data) { console.error("Something went wrong in the link removal.") });
+            ).done(function(data) { redrawTopology(); })
+            .fail(function(data) { console.error("Something went wrong in the link removal."); });
         }
-    ).fail(function(data) { console.error("Something went wrong getting this link " + edgeId + ".") });
+    ).fail(function(data) { console.error("Something went wrong getting this link " + edgeId + "."); });
 }
 
 function modifyDevice(deviceId, callback) {
@@ -120,7 +120,7 @@ function modifyDevice(deviceId, callback) {
         function(result) {
             console.log("The device has been modified successfully.");
     }).done(callback)
-    .fail(function(data) { console.error("Something went wrong in the device modification.") });
+    .fail(function(data) { console.error("Something went wrong in the device modification."); });
 }
 
 function modifyPort(deviceId, portName, modForm, callback) {
@@ -133,7 +133,7 @@ function modifyPort(deviceId, portName, modForm, callback) {
         function(result) {
             console.log("The port has been modified successfully.");
     }).done(callback)
-    .fail(function(data) { console.error("Something went wrong in the port modification.") });
+    .fail(function(data) { console.error("Something went wrong in the port modification."); });
 }
 
 function createLink(fromDeviceId, fromPortName, toDevice, toPort, callback) {
@@ -145,7 +145,7 @@ function createLink(fromDeviceId, fromPortName, toDevice, toPort, callback) {
         function(result) {
             console.log("The link has been created successfully.");
     }).done(callback)
-    .fail(function(data) { console.error("Something went wrong in the link creation.") });
+    .fail(function(data) { console.error("Something went wrong in the link creation."); });
 }
 
 function getAvailablePorts(deviceId, selectEl, csuccess, cfail) {
@@ -202,7 +202,7 @@ function onLinkCreation(fromDeviceId, toDeviceId) {
                     dialog.dialog( "close" );
                     redrawTopology();
                 };
-                var fromPortName = $("#linkFromInterface option:selected", linkForm).text();
+                var fromPortName = $("#linkFromInterface option:selected", linkForm).text().replace("/", "%20");
                 var toPortName = $("#linkToInterface option:selected", linkForm).text();
                 createLink(fromDeviceId, fromPortName, toDeviceName, toPortName, callback);
             },
@@ -441,7 +441,7 @@ function loadTopology(responseData) {
         },
         onDelete: function(data,callback) {
             if (data.nodes.length>0) {
-                deleteDevice(data.nodes[0])
+                deleteDevice(data.nodes[0]);
             } else if (data.edges.length>0) {
                 deleteEdge(data.edges[0]);
             }
@@ -463,13 +463,41 @@ function redrawTopology() {
  * @arg callback If it is null, it is simply ignored.
  */
 function redrawTopology(callback) {
-    $.getJSON(api_url + "/network", function(data) {
+    /*$.getJSON(api_url + "/network", function(data) {
         loadTopology(data);
         if (callback!=null)
             callback();
     }).fail(function() {
         console.error("The topology could not be loaded. Possible timeout.");
-    });  // Apparently status code 304 is an error for this method :-S
+    });*/  // Apparently status code 304 is an error for this method :-S
+    $.ajax({
+        url: api_url + "/network",
+        type : 'GET',
+        dataType: 'json',
+        success: function(data) {
+            loadTopology(data);
+            if (callback!=null)
+                callback();
+        },
+        tryCount : 0,
+        retryLimit : 3,
+        timeout: 2000,
+        error : function(xhr, textStatus, errorThrown ) {
+            if (textStatus == 'timeout') {
+                console.error("The topology could not be loaded: timeout.");
+                this.tryCount++;
+                if (this.tryCount <= this.retryLimit) {
+                    //try again
+                    $.ajax(this);
+                    return;
+                }
+                return;
+            } else {
+                console.error("The topology could not be loaded.");
+                console.error(textStatus);
+            }
+        }
+    });
 }
 
 // From: http://www.jquerybyexample.net/2012/06/get-url-parameters-using-jquery.html
