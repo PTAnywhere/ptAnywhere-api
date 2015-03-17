@@ -15,7 +15,7 @@ import javax.websocket.server.ServerEndpoint;
 @ServerEndpoint("/endpoint/devices/{device}/console")
 public class ConsoleEndpoint implements TerminalLineEventListener {
 
-    private static Log logger = LogFactory.getLog(TerminalLineEventListener.class);
+    private static Log logger = LogFactory.getLog(ConsoleEndpoint.class);
     PTConnection common;
     TerminalLine cmd;
     Session session;
