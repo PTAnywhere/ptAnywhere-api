@@ -96,7 +96,7 @@ div.network-seperatorLine {
  * Until this feature is implemented (if it is ever implemented), the edit edge option is disabled.
  * Delete and create a new edge instead.
  */
-span.editEdge {
+div.edit.edge {
     display: none;
 }
 
