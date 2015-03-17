@@ -4,7 +4,7 @@
  *
  * A dynamic, browser-based visualization library.
  *
- * @version 3.10.1-SNAPSHOT
+ * @version 3.11.0
  * @date    2015-03-05
  *
  * @license
@@ -38,41 +38,41 @@
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
-/******/
+
 /******/ 	// The require function
 /******/ 	function __webpack_require__(moduleId) {
-/******/
+
 /******/ 		// Check if module is in cache
 /******/ 		if(installedModules[moduleId])
 /******/ 			return installedModules[moduleId].exports;
-/******/
+
 /******/ 		// Create a new module (and put it into the cache)
 /******/ 		var module = installedModules[moduleId] = {
 /******/ 			exports: {},
 /******/ 			id: moduleId,
 /******/ 			loaded: false
 /******/ 		};
-/******/
+
 /******/ 		// Execute the module function
 /******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
-/******/
+
 /******/ 		// Flag the module as loaded
 /******/ 		module.loaded = true;
-/******/
+
 /******/ 		// Return the exports of the module
 /******/ 		return module.exports;
 /******/ 	}
-/******/
-/******/
+
+
 /******/ 	// expose the modules object (__webpack_modules__)
 /******/ 	__webpack_require__.m = modules;
-/******/
+
 /******/ 	// expose the module cache
 /******/ 	__webpack_require__.c = installedModules;
-/******/
+
 /******/ 	// __webpack_public_path__
 /******/ 	__webpack_require__.p = "";
-/******/
+
 /******/ 	// Load entry module and return exports
 /******/ 	return __webpack_require__(0);
 /******/ })
@@ -825,6 +825,24 @@ return /******/ (function(modules) { // webpackBootstrap
     }
 
     return target;
+  };
+
+  /**
+   * Check if given element contains given parent somewhere in the DOM tree
+   * @param {Element} element
+   * @param {Element} parent
+   */
+  exports.hasParent = function (element, parent) {
+    var e = element;
+
+    while (e) {
+      if (e === parent) {
+        return true;
+      }
+      e = e.parentNode;
+    }
+
+    return false;
   };
 
   exports.option = {};
@@ -6576,6 +6594,16 @@ return /******/ (function(modules) { // webpackBootstrap
     this.itemsData = null;      // DataSet
     this.groupsData = null;     // DataSet
 
+    this.on('tap', function (event) {
+      me.emit('click', me.getEventProperties(event))
+    });
+    this.on('doubletap', function (event) {
+      me.emit('doubleClick', me.getEventProperties(event))
+    });
+    this.dom.root.oncontextmenu = function (event) {
+      me.emit('contextmenu', me.getEventProperties(event))
+    };
+
     // apply options
     if (options) {
       this.setOptions(options);
@@ -6800,6 +6828,49 @@ return /******/ (function(modules) { // webpackBootstrap
     };
   };
 
+  /**
+   * Generate Timeline related information from an event
+   * @param {Event} event
+   * @return {Object} An object with related information, like on which area
+   *                  The event happened, whether clicked on an item, etc.
+   */
+  Timeline.prototype.getEventProperties = function (event) {
+    var item  = this.itemSet.itemFromTarget(event);
+    var group = this.itemSet.groupFromTarget(event);
+    var pageX = event.gesture ? event.gesture.center.pageX : event.pageX;
+    var pageY = event.gesture ? event.gesture.center.pageY : event.pageY;
+    var x = pageX - util.getAbsoluteLeft(this.dom.centerContainer);
+    var y = pageY - util.getAbsoluteTop(this.dom.centerContainer);
+
+    var snap = this.itemSet.options.snap || null;
+    var scale = this.body.util.getScale();
+    var step = this.body.util.getStep();
+    var time = this._toTime(x);
+    var snappedTime = snap ? snap(time, scale, step) : time;
+
+    var element = util.getTarget(event);
+    var what = null;
+    if (item != null)                                                    {what = 'item';}
+    else if (util.hasParent(element, this.timeAxis.dom.foreground))      {what = 'axis';}
+    else if (this.timeAxis2 && util.hasParent(element, this.timeAxis2.dom.foreground)) {what = 'axis';}
+    else if (util.hasParent(element, this.itemSet.dom.labelSet))         {what = 'group-label';}
+    else if (util.hasParent(element, this.customTime.bar))               {what = 'custom-time';} // TODO: fix for multiple custom time bars
+    else if (util.hasParent(element, this.currentTime.bar))              {what = 'current-time';}
+    else if (util.hasParent(element, this.dom.center))                   {what = 'background';}
+
+    return {
+      event: event,
+      item: item ? item.id : null,
+      group: group ? group.groupId : null,
+      what: what,
+      pageX: pageX,
+      pageY: pageY,
+      x: x,
+      y: y,
+      time: time,
+      snappedTime: snappedTime
+    }
+  };
 
   module.exports = Timeline;
 
@@ -6899,6 +6970,16 @@ return /******/ (function(modules) { // webpackBootstrap
 
     this.itemsData = null;      // DataSet
     this.groupsData = null;     // DataSet
+
+    this.on('tap', function (event) {
+      me.emit('click', me.getEventProperties(event))
+    });
+    this.on('doubletap', function (event) {
+      me.emit('doubleClick', me.getEventProperties(event))
+    });
+    this.dom.root.oncontextmenu = function (event) {
+      me.emit('contextmenu', me.getEventProperties(event))
+    };
 
     // apply options
     if (options) {
@@ -7001,7 +7082,7 @@ return /******/ (function(modules) { // webpackBootstrap
     else {
       return "cannot find group:" +  groupId;
     }
-  }
+  };
 
   /**
    * This checks if the visible option of the supplied group (by ID) is true or false.
@@ -7015,7 +7096,7 @@ return /******/ (function(modules) { // webpackBootstrap
     else {
       return false;
     }
-  }
+  };
 
 
   /**
@@ -7048,6 +7129,53 @@ return /******/ (function(modules) { // webpackBootstrap
     };
   };
 
+
+  /**
+   * Generate Timeline related information from an event
+   * @param {Event} event
+   * @return {Object} An object with related information, like on which area
+   *                  The event happened, whether clicked on an item, etc.
+   */
+  Graph2d.prototype.getEventProperties = function (event) {
+    var pageX = event.gesture ? event.gesture.center.pageX : event.pageX;
+    var pageY = event.gesture ? event.gesture.center.pageY : event.pageY;
+    var x = pageX - util.getAbsoluteLeft(this.dom.centerContainer);
+    var y = pageY - util.getAbsoluteTop(this.dom.centerContainer);
+    var time = this._toTime(x);
+
+    var element = util.getTarget(event);
+    var what = null;
+    if (util.hasParent(element, this.timeAxis.dom.foreground))              {what = 'axis';}
+    else if (this.timeAxis2 && util.hasParent(element, this.timeAxis2.dom.foreground)) {what = 'axis';}
+    else if (util.hasParent(element, this.linegraph.yAxisLeft.dom.frame))   {what = 'data-axis';}
+    else if (util.hasParent(element, this.linegraph.yAxisRight.dom.frame))  {what = 'data-axis';}
+    else if (util.hasParent(element, this.linegraph.legendLeft.dom.frame))  {what = 'legend';}
+    else if (util.hasParent(element, this.linegraph.legendRight.dom.frame)) {what = 'legend';}
+    else if (util.hasParent(element, this.customTime.bar))                  {what = 'custom-time';} // TODO: fix for multiple custom time bars
+    else if (util.hasParent(element, this.currentTime.bar))                 {what = 'current-time';}
+    else if (util.hasParent(element, this.dom.center))                      {what = 'background';}
+
+    var value = [];
+    var yAxisLeft = this.linegraph.yAxisLeft;
+    var yAxisRight = this.linegraph.yAxisRight;
+    if (!yAxisLeft.hidden) {
+      value.push(yAxisLeft.screenToValue(y));
+    }
+    if (!yAxisRight.hidden) {
+      value.push(yAxisRight.screenToValue(y));
+    }
+
+    return {
+      event: event,
+      what: what,
+      pageX: pageX,
+      pageY: pageY,
+      x: x,
+      y: y,
+      time: time,
+      value: value
+    }
+  };
 
 
   module.exports = Graph2d;
@@ -11361,6 +11489,10 @@ return /******/ (function(modules) { // webpackBootstrap
     return convertedValue;
   };
 
+  DataAxis.prototype.screenToValue = function (x) {
+    return this.valueAtZero - (x / this.conversionFactor);
+  };
+
   /**
    * Create a label for the axis at position x
    * @private
@@ -13466,7 +13598,7 @@ return /******/ (function(modules) { // webpackBootstrap
    */
   ItemSet.prototype._onTouch = function (event) {
     // store the touched item, used in _onDragStart
-    this.touchParams.item = ItemSet.itemFromTarget(event);
+    this.touchParams.item = this.itemFromTarget(event);
   };
 
   /**
@@ -13791,7 +13923,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
     var oldSelection = this.getSelection();
 
-    var item = ItemSet.itemFromTarget(event);
+    var item = this.itemFromTarget(event);
     var selection = item ? [item.id] : [];
     this.setSelection(selection);
 
@@ -13817,7 +13949,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
     var me = this,
         snap = this.options.snap || null,
-        item = ItemSet.itemFromTarget(event);
+        item = this.itemFromTarget(event);
 
     if (item) {
       // update item
@@ -13875,7 +14007,7 @@ return /******/ (function(modules) { // webpackBootstrap
     if (!this.options.selectable) return;
 
     var selection,
-        item = ItemSet.itemFromTarget(event);
+        item = this.itemFromTarget(event);
 
     if (item) {
       // multi select items
@@ -13963,7 +14095,7 @@ return /******/ (function(modules) { // webpackBootstrap
    * @param {Event} event
    * @return {Item | null} item
    */
-  ItemSet.itemFromTarget = function(event) {
+  ItemSet.prototype.itemFromTarget = function(event) {
     var target = event.target;
     while (target) {
       if (target.hasOwnProperty('timeline-item')) {
@@ -13982,17 +14114,7 @@ return /******/ (function(modules) { // webpackBootstrap
    * @return {Group | null} group
    */
   ItemSet.prototype.groupFromTarget = function(event) {
-    // TODO: cleanup when the new solution is stable (also on mobile)
-    //var target = event.target;
-    //while (target) {
-    //  if (target.hasOwnProperty('timeline-group')) {
-    //    return target['timeline-group'];
-    //  }
-    //  target = target.parentNode;
-    //}
-    //
-
-    var clientY = event.gesture.center.clientY;
+    var clientY = event.gesture ? event.gesture.center.clientY : event.clientY;
     for (var i = 0; i < this.groupIds.length; i++) {
       var groupId = this.groupIds[i];
       var group = this.groups[groupId];
@@ -22629,7 +22751,7 @@ return /******/ (function(modules) { // webpackBootstrap
    * top, bottom, content, and background panel.
    * @param {Element} container  The container element where the Core will
    *                             be attached.
-   * @private
+   * @protected
    */
   Core.prototype._create = function (container) {
     this.dom = {};
@@ -22657,7 +22779,7 @@ return /******/ (function(modules) { // webpackBootstrap
     this.dom.background.className           = 'vispanel background';
     this.dom.backgroundVertical.className   = 'vispanel background vertical';
     this.dom.backgroundHorizontal.className = 'vispanel background horizontal';
-    this.dom.centerContainer.className      = 'vispanel center';
+    this.dom.centerContainer.className      = 'vispanel center jooo';
     this.dom.leftContainer.className        = 'vispanel left';
     this.dom.rightContainer.className       = 'vispanel right';
     this.dom.top.className                  = 'vispanel top';
@@ -23389,7 +23511,7 @@ return /******/ (function(modules) { // webpackBootstrap
    * Convert a position on screen (pixels) to a datetime
    * @param {int}     x    Position on the screen in pixels
    * @return {Date}   time The datetime the corresponds with given position x
-   * @private
+   * @protected
    */
   // TODO: move this function to Range
   Core.prototype._toTime = function(x) {
@@ -23400,7 +23522,7 @@ return /******/ (function(modules) { // webpackBootstrap
    * Convert a position on the global screen (pixels) to a datetime
    * @param {int}     x    Position on the screen in pixels
    * @return {Date}   time The datetime the corresponds with given position x
-   * @private
+   * @protected
    */
   // TODO: move this function to Range
   Core.prototype._toGlobalTime = function(x) {
@@ -23414,7 +23536,7 @@ return /******/ (function(modules) { // webpackBootstrap
    * @param {Date}   time A date
    * @return {int}   x    The position on the screen in pixels which corresponds
    *                      with the given date.
-   * @private
+   * @protected
    */
   // TODO: move this function to Range
   Core.prototype._toScreen = function(time) {
@@ -23429,7 +23551,7 @@ return /******/ (function(modules) { // webpackBootstrap
    * @param {Date}   time A date
    * @return {int}   x    The position on root in pixels which corresponds
    *                      with the given date.
-   * @private
+   * @protected
    */
   // TODO: move this function to Range
   Core.prototype._toGlobalScreen = function(time) {
@@ -28212,7 +28334,7 @@ return /******/ (function(modules) { // webpackBootstrap
           makeGlobal();
       }
   }).call(this);
-  
+
   /* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(71)(module)))
 
 /***/ },
@@ -30387,9 +30509,9 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ function(module, exports, __webpack_require__) {
 
   var util = __webpack_require__(1);
-  var RepulsionMixin = __webpack_require__(68);
-  var HierarchialRepulsionMixin = __webpack_require__(69);
-  var BarnesHutMixin = __webpack_require__(70);
+  var RepulsionMixin = __webpack_require__(67);
+  var HierarchialRepulsionMixin = __webpack_require__(68);
+  var BarnesHutMixin = __webpack_require__(69);
 
   /**
    * Toggling barnes Hut calculation on and off.
@@ -34831,19 +34953,6 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 67 */
 /***/ function(module, exports, __webpack_require__) {
 
-  function webpackContext(req) {
-  	throw new Error("Cannot find module '" + req + "'.");
-  }
-  webpackContext.keys = function() { return []; };
-  webpackContext.resolve = webpackContext;
-  module.exports = webpackContext;
-  webpackContext.id = 67;
-
-
-/***/ },
-/* 68 */
-/***/ function(module, exports, __webpack_require__) {
-
   /**
    * Calculate the forces the nodes apply on each other based on a repulsion field.
    * This field is linearly approximated.
@@ -34911,7 +35020,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 69 */
+/* 68 */
 /***/ function(module, exports, __webpack_require__) {
 
   /**
@@ -35070,7 +35179,7 @@ return /******/ (function(modules) { // webpackBootstrap
   };
 
 /***/ },
-/* 70 */
+/* 69 */
 /***/ function(module, exports, __webpack_require__) {
 
   /**
@@ -35475,6 +35584,19 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
+/* 70 */
+/***/ function(module, exports, __webpack_require__) {
+
+  function webpackContext(req) {
+  	throw new Error("Cannot find module '" + req + "'.");
+  }
+  webpackContext.keys = function() { return []; };
+  webpackContext.resolve = webpackContext;
+  module.exports = webpackContext;
+  webpackContext.id = 70;
+
+
+/***/ },
 /* 71 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -35493,3 +35615,4 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ }
 /******/ ])
 });
+;
