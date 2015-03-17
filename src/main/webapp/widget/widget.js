@@ -206,7 +206,7 @@ function onLinkCreation(fromDeviceId, toDeviceId) {
                 var toPortName = $("#linkToInterface option:selected", linkForm).text();
                 createLink(fromDeviceId, fromPortName, toDeviceName, toPortName, callback);
             },
-            Cancel:function() {
+            Cancel: function() {
                 $( this ).dialog( "close" );
             }
         }, close: function() { /*console.log("Closing dialog...");*/ }
@@ -373,81 +373,81 @@ $(document).keypress(function(e) {
 });
 
 function loadTopology(responseData) {
-    nodesJson = responseData.devices;
-    edgesJson = responseData.edges;
-
-    // create an array with nodes
-    nodes = new vis.DataSet();
-    nodes.subscribe('*', function() {
-        $('#nodes').html(toJSON(nodes.get()));
-    });
-    if (nodesJson != null) {
-        nodes.add(nodesJson);
+    // Initialize data sets if needed
+    if (nodes==null) {
+        nodes = new vis.DataSet();
+    }
+    if (edges==null) {
+        edges = new vis.DataSet();
     }
 
-    // create an array with edges
-    edges = new vis.DataSet();
-    edges.subscribe('*', function() {
-        $('#edges').html(toJSON(edges.get()));
-    });
-    if (edgesJson != null) {
-        edges.add(edgesJson);
+    // Load data
+    if (responseData.devices!=null) {
+        nodes.clear();
+        nodes.add(responseData.devices);
+    }
+    if (responseData.edges!=null) {
+        edges.clear();
+        edges.add(responseData.edges);
     }
 
-    // create a network
-    var container = $('#network').get(0);
-    var visData = { nodes : nodes, edges : edges };
-    var options = {
-        //dragNetwork : false,
-        //dragNodes : true,
-        //zoomable : false,
-        stabilize: true,
-        dataManipulation: true,
-        edges: {
-            width: 3,
-            widthSelectionMultiplier: 1.4,
-            color: {
-                color:'#606060',
-                highlight:'#000000',
-                hover: '#000000'
-            }
-         },
-        groups : {
-            cloudDevice : {
-                shape : 'image',
-                image : "cloud.png"
+    // Create network element if needed (only the first time)
+    if (network==null) {
+        // create a network
+        var container = $('#network').get(0);
+        var visData = { nodes : nodes, edges : edges };
+        var options = {
+            //dragNetwork : false,
+            //dragNodes : true,
+            //zoomable : false,
+            stabilize: true,
+            dataManipulation: true,
+            edges: {
+                width: 3,
+                widthSelectionMultiplier: 1.4,
+                color: {
+                    color:'#606060',
+                    highlight:'#000000',
+                    hover: '#000000'
+                }
+             },
+            groups : {
+                cloudDevice : {
+                    shape : 'image',
+                    image : "cloud.png"
+                },
+                routerDevice : {
+                    shape : 'image',
+                    image : "router.png"
+                },
+                switchDevice : {
+                    shape : 'image',
+                    image : "switch.png"
+                },
+                pcDevice : {
+                    shape : 'image',
+                    image : "PC.png"
+                }
             },
-            routerDevice : {
-                shape : 'image',
-                image : "router.png"
+            onAdd: function(data,callback) {
+                onDeviceAdd(data.x, data.y);
             },
-            switchDevice : {
-                shape : 'image',
-                image : "switch.png"
+            onConnect: function(data,callback) {
+                onLinkCreation(data.from, data.to)
             },
-            pcDevice : {
-                shape : 'image',
-                image : "PC.png"
+            onEdit: function(data,callback) {
+                onDeviceEdit(data.id);
+            },
+            onDelete: function(data,callback) {
+                if (data.nodes.length>0) {
+                    deleteDevice(data.nodes[0]);
+                } else if (data.edges.length>0) {
+                    deleteEdge(data.edges[0]);
+                }
             }
-        },
-        onAdd: function(data,callback) {
-            onDeviceAdd(data.x, data.y);
-        },
-        onConnect: function(data,callback) {
-            onLinkCreation(data.from, data.to)
-        },
-        onEdit: function(data,callback) {
-            onDeviceEdit(data.id);
-        },
-        onDelete: function(data,callback) {
-            if (data.nodes.length>0) {
-                deleteDevice(data.nodes[0]);
-            } else if (data.edges.length>0) {
-                deleteEdge(data.edges[0]);
-            }
-        }
-    };
-    network = new vis.Network(container, visData, options);
+        };
+        network = new vis.Network(container, visData, options);
+    }
 }
 
 // convenience method to stringify a JSON object
