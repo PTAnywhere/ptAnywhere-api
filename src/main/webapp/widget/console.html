@@ -5,10 +5,10 @@
         <title>Console</title>
         <style>
             * { margin: 0; padding: 0; box-sizing: border-box; }
-            body { font: 13px Helvetica, Arial; }
+            body { font: 10pt Helvetica, Arial; }
             #messages { list-style-type: none; margin: 0; padding: 0; }
-            #messages li { padding: 5px 10px; }
-            #messages li:nth-child(odd) { background: #eee; }
+            #lastLine { float: left; margin-right: 4px; }
+            #current { display: block; height: 100%; }
         </style>
         <script src="../../../widget/jquery/jquery.js"></script>
         <script>
@@ -16,6 +16,17 @@
 
             function setConnected(connected) {
                 $('#current').prop( "disabled", !connected);
+            }
+
+            function tabToHtml(line) {
+                var spacesBeginning = 0;
+                for (var i=0; i<line.length; i++) {
+                    if (line[i]==' ') {
+                        spacesBeginning++;
+                    } else break;
+                }
+                if (spacesBeginning==0) return line;
+                return '<span style="margin-left: ' + spacesBeginning*5 + 'pt">' + line.substring(spacesBeginning) + '</span>';
             }
 
             function connect(target) {
@@ -41,7 +52,7 @@
                                 $("#messages").append($("#lastLine").text());
                                 $("#lastLine").text('');
                             }
-                            $("#messages").append(lines[i] + "<br />");
+                            $("#messages").append( tabToHtml(lines[i]) + "<br />");
                         }
                     }
                     $("#lastLine").append(lines[lines.length-1]);
@@ -72,8 +83,8 @@
     <body>
         <div id="messages"></div>
         <div style="height: 8pt; width: 100%">
-            <span id="lastLine" style="float:left;"></span>
-            <span id="current" contentEditable="true" style="display: block; height: 100%;">ping 10.0.0.2</span>
+            <span id="lastLine"></span>
+            <span id="current" contentEditable="true">ping 10.0.0.2</span>
         </div>
     </body>
 </html>
