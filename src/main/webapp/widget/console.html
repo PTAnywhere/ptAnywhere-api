@@ -5,8 +5,8 @@
         <title>Console</title>
         <style>
             * { margin: 0; padding: 0; box-sizing: border-box; }
-            body { font: 10pt Helvetica, Arial; }
-            #messages { list-style-type: none; margin: 0; padding: 0; }
+            body { font: 10pt monospace, Helvetica, Arial; }
+            #messages { margin: 0; padding: 0; white-space: pre; }
             #lastLine { float: left; margin-right: 4px; }
             #current { display: block; height: 100%; }
         </style>
@@ -18,15 +18,10 @@
                 $('#current').prop( "disabled", !connected);
             }
 
-            function tabToHtml(line) {
-                var spacesBeginning = 0;
-                for (var i=0; i<line.length; i++) {
-                    if (line[i]==' ') {
-                        spacesBeginning++;
-                    } else break;
-                }
-                if (spacesBeginning==0) return line;
-                return '<span style="margin-left: ' + spacesBeginning*5 + 'pt">' + line.substring(spacesBeginning) + '</span>';
+            function scrollToBottom() {
+                document.location.replace("#bottom");
+                // Another alternative registering "redirection" in the browser history.
+                // window.location.href = "#bottom"
             }
 
             function connect(target) {
@@ -49,14 +44,17 @@
                     if (lines.length>1) {
                         for (var i=0; i<lines.length-1; i++) { // Unnecessary
                             if (i==0) {
-                                $("#messages").append($("#lastLine").text());
+                                var lastLine = $("#lastLine").text();
+                                if (lastLine.trim()!=="--More--")
+                                    $("#messages").append(lastLine);
                                 $("#lastLine").text('');
                             }
-                            $("#messages").append( tabToHtml(lines[i]) + "<br />");
+                            $("#messages").append(lines[i] + "<br />");
                         }
                     }
                     $("#lastLine").append(lines[lines.length-1]);
-                    $("html, body").animate({ scrollTop: $(document).height() }, "slow");  // Scroll down
+                    scrollToBottom();
+                    $("#current").focus();
                 };
                 ws.onerror = function (event) {
                     setConnected(false);
@@ -86,5 +84,6 @@
             <span id="lastLine"></span>
             <span id="current" contentEditable="true">ping 10.0.0.2</span>
         </div>
+        <a name="bottom"></a>
     </body>
 </html>
