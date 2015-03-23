@@ -2,13 +2,18 @@ package uk.ac.open.kmi.forge.webPacketTracer.api.http;
 
 import com.cisco.pt.ipc.enums.DeviceType;
 import com.cisco.pt.ipc.sim.Device;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import uk.ac.open.kmi.forge.webPacketTracer.gateway.PTCallable;
 
 import javax.servlet.ServletContext;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 import java.io.*;
+import java.net.URLEncoder;
 
 
 class CommandLineGetter extends PTCallable<Boolean> {
@@ -28,19 +33,35 @@ class CommandLineGetter extends PTCallable<Boolean> {
 @Path("devices/{device}/console")
 public class ConsoleResource {
 
+    private static Log logger = LogFactory.getLog(ConsoleResource.class);
+
+    @Context
+    UriInfo uri;
+
     @Context
     ServletContext ctx;
 
-    boolean deviceHasCommandLine(String deviceId) {
+    private boolean deviceHasCommandLine(String deviceId) {
         return new CommandLineGetter(deviceId).call();
+    }
+
+    private String getRelativeEndpointURL(String deviceId) throws UnsupportedEncodingException {
+        return "../endpoint/devices/" + URLEncoder.encode(deviceId, "UTF-8") + "/console";
     }
 
     @GET
     @Produces(MediaType.TEXT_HTML)
-    public InputStream getDevice(@PathParam("device") String deviceId) {
-        if (deviceHasCommandLine(deviceId))
-            return this.ctx.getResourceAsStream("widget/console.html");
-        else
-            throw new InternalServerErrorException("This device does not have command line.");
+    public Response getDevice(@PathParam("device") String deviceId) {
+        if (deviceHasCommandLine(deviceId)) {
+            try {
+                return Response.ok(this.ctx.getResourceAsStream("widget/console.html")).
+                        link(this.uri.getBaseUri().resolve(getRelativeEndpointURL(deviceId)), "endpoint").build();
+            } catch (UnsupportedEncodingException e) {
+                logger.error(e.getMessage(), e);  // UTF-8 should be always supported.
+                return Response.serverError().entity(e.getMessage()).build();
+            }
+        } else {
+            return Response.serverError().entity("This device does not have command line.").build();
+        }
     }
 }
