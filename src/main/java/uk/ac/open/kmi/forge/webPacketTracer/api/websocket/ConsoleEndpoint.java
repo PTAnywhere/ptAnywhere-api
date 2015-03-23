@@ -1,8 +1,11 @@
 package uk.ac.open.kmi.forge.webPacketTracer.api.websocket;
 
+import com.cisco.pt.ipc.enums.DeviceType;
 import com.cisco.pt.ipc.events.TerminalLineEvent;
 import com.cisco.pt.ipc.events.TerminalLineEventListener;
 import com.cisco.pt.ipc.events.TerminalLineEventRegistry;
+import com.cisco.pt.ipc.sim.CiscoDevice;
+import com.cisco.pt.ipc.sim.Device;
 import com.cisco.pt.ipc.sim.Pc;
 import com.cisco.pt.ipc.sim.TerminalLine;
 import org.apache.commons.logging.Log;
@@ -33,18 +36,31 @@ public class ConsoleEndpoint implements TerminalLineEventListener {
         if (logger.isInfoEnabled()) {
             logger.info("Opening communication channel for device " + deviceId + "'s command line.");
         }
-        final Pc pc0 = (Pc) this.common.getDataAccessObject().getSimDeviceById(deviceId);
-        if (pc0 != null) {
-            this.cmd = pc0.getCommandLine();
-            try {
-                final TerminalLineEventRegistry registry = this.common.getTerminalLineEventRegistry();
-                this.session.getBasicRemote().sendText(this.cmd.getPrompt());
-                registry.addListener(this, this.cmd);
-            } catch (IOException e) {
-                logger.error(e.getMessage(), e);
+        final Device dev = this.common.getDataAccessObject().getSimDeviceById(deviceId);
+        if (dev==null) {
+            if(logger.isErrorEnabled()) {
+                logger.error("Device with id " + deviceId + " not found." );
             }
-        } else if(logger.isErrorEnabled()) {
-            logger.error("Device with id " + deviceId + " not found." );
+        } else {
+            if (DeviceType.PC.equals(dev.getType()) || DeviceType.SWITCH.equals(dev.getType()) ||
+                DeviceType.ROUTER.equals(dev.getType())) {
+                if (DeviceType.PC.equals(dev.getType())) {
+                    this.cmd = ((Pc) dev).getCommandLine();
+                } else {
+                    this.cmd = ((CiscoDevice) dev).getConsoleLine();
+                }
+                try {
+                    final TerminalLineEventRegistry registry = this.common.getTerminalLineEventRegistry();
+                    this.session.getBasicRemote().sendText(this.cmd.getPrompt());
+                    registry.addListener(this, this.cmd);
+                } catch (IOException e) {
+                    logger.error(e.getMessage(), e);
+                }
+            } else {
+                if(logger.isErrorEnabled()) {
+                    logger.error("Console could not opened for device type " + dev.getType().name() + ".");
+                }
+            }
         }
     }
 
