@@ -4,10 +4,7 @@ import com.cisco.pt.ipc.enums.DeviceType;
 import com.cisco.pt.ipc.events.TerminalLineEvent;
 import com.cisco.pt.ipc.events.TerminalLineEventListener;
 import com.cisco.pt.ipc.events.TerminalLineEventRegistry;
-import com.cisco.pt.ipc.sim.CiscoDevice;
-import com.cisco.pt.ipc.sim.Device;
-import com.cisco.pt.ipc.sim.Pc;
-import com.cisco.pt.ipc.sim.TerminalLine;
+import com.cisco.pt.ipc.sim.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import uk.ac.open.kmi.forge.webPacketTracer.gateway.PTConnection;
@@ -51,8 +48,13 @@ public class ConsoleEndpoint implements TerminalLineEventListener {
                 }
                 try {
                     final TerminalLineEventRegistry registry = this.common.getTerminalLineEventRegistry();
-                    this.session.getBasicRemote().sendText(this.cmd.getPrompt());
                     registry.addListener(this, this.cmd);
+                    if (this.cmd.getPrompt().equals("")) {
+                        // Switches and router need a "RETURN" to get started.
+                        // Here, we free the client from doing this task.
+                        typeCommand(session, "", false);
+                    } else
+                        this.session.getBasicRemote().sendText(this.cmd.getPrompt());
                 } catch (IOException e) {
                     logger.error(e.getMessage(), e);
                 }
