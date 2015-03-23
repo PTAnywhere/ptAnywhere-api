@@ -359,18 +359,31 @@ function onDeviceEdit(node) {
     dialog.dialog( "open" );
 }
 
-$(document).keypress(function(e) {
-    if(e.which == 99) {  // "c" key pressed
-        var selected = network.getSelection();
-        if (selected.nodes.length==1) { // Only if just one is selected
-            // http://domain.com/appName/widget/index.html" // URL type
-            var redirectTo = window.location.href.substr(0, window.location.href.search("/widget/index.html"));
-            redirectTo += "/api/devices/" + selected.nodes[0] + "/console";
-            console.log("Redirecting to " + redirectTo);
-            window.location.href = redirectTo;
-        }
+function getCommandLineURL(nodeId) {
+    // http://domain.com/appName/widget/index.html" // URL type
+    var ret = window.location.href.substr(0, window.location.href.search("/widget/index.html"));
+    return ret + "/api/devices/" + nodeId + "/console";
+}
+
+function redirectToCommandLine(nodeId) {
+    // http://domain.com/appName/widget/index.html" // URL type
+    var redirectTo = getCommandLineURL(nodeId);
+    console.log("Redirecting to " + redirectTo);
+    window.location.href = redirectTo;
+}
+
+function openCommandLine() {
+    var selected = network.getSelection();
+    if (selected.nodes.length==1) { // Only if just one is selected
+        //redirectToCommandLine(selected.nodes[0]);
+        var dialog = $("#command-line").dialog({
+            autoOpen: false, height: 400, width: 600, modal: true, draggable: false,
+            close: function() { dialog.html(""); }
+        });
+        dialog.html('<iframe class="terminal" src="' + getCommandLineURL(selected.nodes[0]) + '"></iframe>');
+        dialog.dialog( "open" );
     }
-});
+}
 
 function loadTopology(responseData) {
     // Initialize data sets if needed
@@ -449,8 +462,15 @@ function loadTopology(responseData) {
             }
         };
         network = new vis.Network(container, visData, options);
+        network.on('doubleClick', openCommandLine);
     }
 }
+
+$(document).keypress(function(e) {
+    if(e.which == 99) {  // "c" key pressed
+        openCommandLine();
+    }
+});
 
 // convenience method to stringify a JSON object
 function toJSON(obj) {
