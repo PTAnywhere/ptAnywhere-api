@@ -74,7 +74,8 @@
             });
 
             $(function() {
-                connect( ('ws://'+ window.location.host + window.location.pathname).replace("api", "endpoint") );
+                //connect( ('ws://'+ window.location.host + window.location.pathname).replace("api", "endpoint") );
+                connect( '${websocketURL}' );
             });
         </script>
     </head>

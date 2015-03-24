@@ -38,7 +38,7 @@
                 <version>2.2</version>
                 <configuration>
                     <url>http://carre.kmi.open.ac.uk:8080/manager</url>
-                    <server>productionRepo</server>
+                    <server>carreServer</server>
                     <path>/webPacketTracer</path>
                 </configuration>
             </plugin>
@@ -166,6 +166,10 @@
         <dependency>
             <groupId>org.glassfish.jersey.media</groupId>
             <artifactId>jersey-media-moxy</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.ext</groupId>
+            <artifactId>jersey-mvc-freemarker</artifactId>
         </dependency>
         <dependency>
             <groupId>commons-logging</groupId>

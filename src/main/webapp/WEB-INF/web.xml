@@ -5,9 +5,21 @@
     <servlet>
         <servlet-name>Jersey Web Application</servlet-name>
         <servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
-        <init-param>
+        <!-- <init-param>
             <param-name>jersey.config.server.provider.packages</param-name>
             <param-value>uk.ac.open.kmi.forge.webPacketTracer</param-value>
+        </init-param> -->
+        <!-- TODO
+            I would like to get rid of this Application class and simply use the above "package" parameter again.
+            However, I have not found another "cleaner" (i.e., not programmatically) way not to register Freemarker yet.
+        -->
+        <init-param>
+            <param-name>javax.ws.rs.Application</param-name>
+            <param-value>uk.ac.open.kmi.forge.webPacketTracer.api.http.Application</param-value>
+        </init-param>
+        <init-param>
+            <param-name>jersey.config.server.mvc.templateBasePath.freemarker</param-name>
+            <param-value>freemarker</param-value>
         </init-param>
         <load-on-startup>1</load-on-startup>
     </servlet>
