@@ -76,7 +76,7 @@ div.network-manipulation-editMode {
 div.network-manipulationDiv {
     background: none;
     padding: 10px 0 0 10px; /* Sth changes in the dev vis.js css */
-    height: 40px;
+    height: 35px;
 }
 
 div.network-manipulation-closeDiv {
