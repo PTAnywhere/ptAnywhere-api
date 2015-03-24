@@ -8,7 +8,7 @@
             body { font: 10pt monospace, Helvetica, Arial; }
             #messages { margin: 0; padding: 0; white-space: pre; }
             #lastLine { float: left; margin-right: 4px; }
-            #current { display: block; height: 100%; }
+            #current { display: block; height: 10pt; }
         </style>
         <script src="../../../widget/jquery/jquery.js"></script>
         <script>
@@ -66,22 +66,39 @@
                 };
             }
 
-            $(document).keypress(function(e) {
-                if(e.which == 13) {
-                    ws.send($("#current").text());
-                    $("#current").text('');
-                }
-            });
+            function configureEvents() {
+                $("#current").keypress(function(e) {
+                    if (e.which == 13) {
+                        ws.send($("#current").text()); /* It has not '\n' */
+                        $("#current").text('');
+                    }
+                });
+
+                $("#current").keyup(function() {
+                    /* In PT, when '?' is pressed, the command is send as it is. */
+                    var written = $("#current").text();
+                    var lastChar = written.slice(-1).charCodeAt(0);
+                    if (lastChar == 63) {
+                        ws.send(written); /* It has '?' */
+                        $("#current").text('');
+                    }
+                });
+
+                $("#lastLine").click(function() {
+                    $("#current").focus();
+                });
+            }
 
             $(function() {
                 //connect( ('ws://'+ window.location.host + window.location.pathname).replace("api", "endpoint") );
                 connect( '${websocketURL}' );
+                configureEvents();
             });
         </script>
     </head>
     <body>
         <div id="messages"></div>
-        <div style="height: 8pt; width: 100%">
+        <div style="width: 100%">
             <span id="lastLine"></span>
             <span id="current" contentEditable="true">ping 10.0.0.2</span>
         </div>
