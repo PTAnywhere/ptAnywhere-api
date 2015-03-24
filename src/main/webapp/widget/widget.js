@@ -382,7 +382,7 @@ function openCommandLine() {
             autoOpen: false, height: 400, width: 600, modal: true, draggable: false,
             close: function() { dialog.html(""); }
         });
-        dialog.html('<iframe class="terminal" src="' + getCommandLineURL(selected.nodes[0]) + '"></iframe>');
+        dialog.html('<div class="iframeWrapper"><iframe class="terminal" src="' + getCommandLineURL(selected.nodes[0]) + '"></iframe></div>');
         dialog.dialog( "open" );
     }
 }
