@@ -85,6 +85,8 @@ function addDevice(newDevice, callback) {
     $.postJSON( api_url + "/devices", newDevice,
         function(data) {
             console.log("The device was created successfully.");
+            // Predraw before the main redraw function is called.
+            nodes.add(data);
         }).done(callback)
         .fail(function(data) { console.error("Something went wrong in the device creation."); });
 }
@@ -583,10 +585,8 @@ function configureDraggableCreationElement(element, creation_function) {
                              'left': ui.offset.left,
                              'top': ui.offset.top});
                 creation_function(ui.offset, function() {
-                    redrawTopology(function() {
-                        initDraggable(element);
-                        warning.remove();
-                    });
+                    initDraggable(element);
+                    warning.remove();
                 });
             } else {
                 initDraggable(element);
