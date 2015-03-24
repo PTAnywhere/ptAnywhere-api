@@ -466,12 +466,6 @@ function loadTopology(responseData) {
     }
 }
 
-$(document).keypress(function(e) {
-    if(e.which == 99) {  // "c" key pressed
-        openCommandLine();
-    }
-});
-
 // convenience method to stringify a JSON object
 function toJSON(obj) {
     return JSON.stringify(obj, null, 4);
