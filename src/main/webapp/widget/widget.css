@@ -28,6 +28,10 @@ input[type=text],pre {
 	border: 1px solid lightgray;
 }
 
+fieldset {
+    border: 0px none;
+}
+
 
 /* General Layout */
 
@@ -104,7 +108,6 @@ div.edit.edge {
 /* Drag and drop creation menu */
 
 #creation-fieldset {
-    border: 0px none;
 	margin-top: 10px;
 }
 
