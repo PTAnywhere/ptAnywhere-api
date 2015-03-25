@@ -478,13 +478,6 @@ function redrawTopology() {
  * @arg callback If it is null, it is simply ignored.
  */
 function redrawTopology(callback) {
-    /*$.getJSON(api_url + "/network", function(data) {
-        loadTopology(data);
-        if (callback!=null)
-            callback();
-    }).fail(function() {
-        console.error("The topology could not be loaded. Possible timeout.");
-    });*/  // Apparently status code 304 is an error for this method :-S
     $.ajax({
         url: api_url + "/network",
         type : 'GET',
@@ -511,7 +504,7 @@ function redrawTopology(callback) {
                 console.error("The topology could not be loaded.");
                 console.error(textStatus);
             }
-        }
+        }  // Apparently status code 304 is an error for this method :-S
     });
 }
 

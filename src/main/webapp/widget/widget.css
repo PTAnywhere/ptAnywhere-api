@@ -68,6 +68,13 @@ img.cisco-logo {
 	border-bottom: 4px solid lightgray;
 }
 
+#loading {
+	display: block;
+	padding-top: 190px;
+	margin-left: auto;
+	margin-right: auto;
+}
+
 
 /* Edit menu */
 
