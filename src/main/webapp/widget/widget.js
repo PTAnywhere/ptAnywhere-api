@@ -95,9 +95,7 @@ function deleteDevice(deviceId) {
     $.deleteHttp(api_url + "/devices/" + deviceId,
         function(result) {
             console.log("The device has been deleted successfully.");
-        })
-     .done(function(data) { redrawTopology(); })
-     .fail(function(data) { console.error("Something went wrong in the device removal."); });
+        }).fail(function(data) { console.error("Something went wrong in the device removal."); });
 }
 
 function deleteEdge(edgeId) {
@@ -256,7 +254,6 @@ function onDeviceAdd(x, y) {
             "SUBMIT": function() {
                 var callback = function() {
                     dialog.dialog( "close" );
-                    redrawTopology();
                 };
                 name = document.forms["create-device"]["name"].value;
                 type = document.forms["create-device"]["type"].value;
