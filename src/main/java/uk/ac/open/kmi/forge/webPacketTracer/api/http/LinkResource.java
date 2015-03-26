@@ -2,7 +2,6 @@ package uk.ac.open.kmi.forge.webPacketTracer.api.http;
 
 import uk.ac.open.kmi.forge.webPacketTracer.gateway.PTCallable;
 import uk.ac.open.kmi.forge.webPacketTracer.pojo.InnerLink;
-import uk.ac.open.kmi.forge.webPacketTracer.pojo.Link;
 import uk.ac.open.kmi.forge.webPacketTracer.pojo.RefactoredLink;
 
 import javax.ws.rs.GET;
@@ -30,6 +29,7 @@ class LinkGetter extends PTCallable<InnerLink> {
 
 @Path("links/{link}")
 public class LinkResource {
+
     @Context
     UriInfo uri;
 
@@ -60,7 +60,7 @@ public class LinkResource {
 
     private String getPortURL(String[] endpointInfo) {
         return this.uri.getBaseUri() +
-                "devices/" + endpointInfo[0] +
+                "devices/" + Utils.encodeForURL(endpointInfo[0]) +
                 "/ports/" + Utils.escapePort(endpointInfo[1]);
     }
 }
