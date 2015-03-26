@@ -15,7 +15,7 @@ public class WidgetApplication extends ResourceConfig {
     public WidgetApplication() {
         super(new ResourceConfig().
                         register(FreemarkerMvcFeature.class).
-                        packages("uk.ac.open.kmi.forge.webPacketTracer.widget").
+                        packages(WidgetApplication.class.getPackage().getName()).
                         property(MvcFeature.TEMPLATE_BASE_PATH, "templates").
                         property(FreemarkerMvcFeature.CACHE_TEMPLATES, true)
         );

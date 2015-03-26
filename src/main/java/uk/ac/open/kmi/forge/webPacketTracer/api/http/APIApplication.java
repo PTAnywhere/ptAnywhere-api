@@ -7,6 +7,6 @@ import javax.ws.rs.ApplicationPath;
 @ApplicationPath("api")
 public class APIApplication extends ResourceConfig {
     public APIApplication() {
-        packages(this.getClass().getPackage().getName());
+        packages(getClass().getPackage().getName());
     }
 }
