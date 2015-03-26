@@ -153,15 +153,9 @@
     <dependencies>
         <dependency>
             <groupId>org.glassfish.jersey.containers</groupId>
-            <artifactId>jersey-container-servlet-core</artifactId>
+            <!-- <artifactId>jersey-container-servlet-core</artifactId>-->
             <!-- use the following artifactId if you don't need servlet 2.x compatibility -->
-            <!-- artifactId>jersey-container-servlet</artifactId -->
-        </dependency>
-        <dependency>
-            <groupId>org.glassfish.main.extras</groupId>
-            <artifactId>glassfish-embedded-web</artifactId>
-            <scope>provided</scope>
-            <version>4.1</version>
+            <artifactId>jersey-container-servlet</artifactId>
         </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.media</groupId>
@@ -170,6 +164,12 @@
         <dependency>
             <groupId>org.glassfish.jersey.ext</groupId>
             <artifactId>jersey-mvc-freemarker</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.main.extras</groupId>
+            <artifactId>glassfish-embedded-web</artifactId>
+            <scope>provided</scope>
+            <version>4.1</version>
         </dependency>
         <dependency>
             <groupId>commons-logging</groupId>
@@ -189,9 +189,7 @@
         </dependency>
     </dependencies>
     <properties>
-        <!-- I cannot use newer versions if I want the war to be java 1.6 compliant. -->
-        <!-- (the production server runs on top of jre1.6 and I am not allowed to update it :-( ) -->
-        <jersey.version>2.6</jersey.version>
+        <jersey.version>2.17</jersey.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 </project>
