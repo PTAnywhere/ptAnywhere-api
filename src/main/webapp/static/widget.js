@@ -85,7 +85,6 @@ function addDevice(newDevice, callback) {
     $.postJSON( api_url + "/devices", newDevice,
         function(data) {
             console.log("The device was created successfully.");
-            // Predraw before the main redraw function is called.
             nodes.add(data);
         }).done(callback)
         .fail(function(data) { console.error("Something went wrong in the device creation."); });
@@ -119,6 +118,7 @@ function modifyDevice(deviceId, callback) {
     $.putJSON(api_url + "/devices/" + deviceId, modification,
         function(result) {
             console.log("The device has been modified successfully.");
+            nodes.update(result);  // As the device has the same id, it should replace the older one.
     }).done(callback)
     .fail(function(data) { console.error("Something went wrong in the device modification."); });
 }
@@ -260,7 +260,7 @@ function onDeviceAdd(x, y) {
                 addDeviceWithName(name, type, x, y, callback);
             },
             Cancel:function() {
-                $( this ).dialog( "close" );
+                $(this).dialog( "close" );
             }
         }, close: function() { /*console.log("Closing dialog...");*/ }
      });
@@ -336,20 +336,20 @@ function updateEditForm(node) {
 
 function onDeviceEdit(node) {
     updateEditForm(node);
-    var callback = function() {
-        dialog.dialog( "close" );
-        redrawTopology();
-    };
     $("#modify-dialog-tabs").tabs();
     var dialog = $("#modify-device").dialog({
         title: "Modify device",
         autoOpen: false, height: 350, width: 450, modal: true, draggable: false,
         buttons: {
             "SUBMIT": function() {
+                var dialog = $(this);
+                var callback = function() {
+                    dialog.dialog( "close" );
+                };
                 handleModificationSubmit(callback);
             },
-            Cancel:function() {
-                $( this ).dialog( "close" );
+            Cancel: function() {
+                $(this).dialog( "close" );
             }
         }, close: function() { /*console.log("Closing dialog...");*/ }
      });
@@ -361,7 +361,7 @@ function onDeviceEdit(node) {
 function getCommandLineURL(nodeId) {
     // http://domain.com/appName/widget/index.html" // URL type
     var ret = window.location.href.substr(0, window.location.href.search("/widget/index.html"));
-    return ret + "/api/devices/" + nodeId + "/console";
+    return ret + "/widget/devices/" + nodeId + "/console";
 }
 
 function redirectToCommandLine(nodeId) {

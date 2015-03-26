@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Network | DataSet</title>
+    <title>${title}</title>
+
+    <base href="${base}" target="_blank">
 
     <link rel="icon" type="image/png" href="app.png">
 
@@ -23,7 +25,7 @@
 <div class="widget-header">
     <h2>
         <img src="app.png" alt="PacketTracer icon" >
-        PacketTracer Widget (development version)
+        ${title}
     </h2>
 </div>
 <div class="view">

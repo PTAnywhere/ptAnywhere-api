@@ -3,6 +3,9 @@
     <head lang="en">
         <meta charset="UTF-8">
         <title>Console</title>
+
+        <base href="${base}" target="_blank">
+
         <style>
             * { margin: 0; padding: 0; box-sizing: border-box; }
             body { font: 10pt monospace, Helvetica, Arial; }
@@ -10,7 +13,8 @@
             #lastLine { float: left; margin-right: 4px; }
             #current { display: block; height: 10pt; }
         </style>
-        <script src="../../../widget/jquery/jquery.js"></script>
+
+        <script src="jquery/jquery.js"></script>
         <script>
              var ws = null;
 
@@ -19,7 +23,8 @@
             }
 
             function scrollToBottom() {
-                document.location.replace("#bottom");
+                document.location.replace(window.location.pathname + "#bottom");
+                // document.location.replace("#bottom"); // Only works if base property is unset.
                 // Another alternative registering "redirection" in the browser history.
                 // window.location.href = "#bottom"
             }
@@ -90,8 +95,7 @@
             }
 
             $(function() {
-                //connect( ('ws://'+ window.location.host + window.location.pathname).replace("api", "endpoint") );
-                connect( '${websocketURL}' );
+                connect('${websocketURL}');
                 configureEvents();
             });
         </script>
