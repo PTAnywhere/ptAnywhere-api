@@ -104,8 +104,7 @@ function deleteEdge(edgeId) {
                 function(result) {
                     console.log("The link has been deleted successfully.");
                 }
-            ).done(function(data) { redrawTopology(); })
-            .fail(function(data) { console.error("Something went wrong in the link removal."); });
+            ).fail(function(data) { console.error("Something went wrong in the link removal."); });
         }
     ).fail(function(data) { console.error("Something went wrong getting this link " + edgeId + "."); });
 }
