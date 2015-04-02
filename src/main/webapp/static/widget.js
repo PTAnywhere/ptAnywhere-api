@@ -135,15 +135,16 @@ function modifyPort(deviceId, portName, modForm, callback) {
     .fail(function(data) { console.error("Something went wrong in the port modification."); });
 }
 
-function createLink(fromDeviceId, fromPortName, toDevice, toPort, callback) {
+function createLink(fromDeviceId, fromPortName, toDevice, toPort, doneCallback, successCallback) {
     var modification = {
         toDevice: toDevice,
         toPort: toPort
     }
     $.postJSON(api_url + "/devices/" + fromDeviceId + "/ports/" + fromPortName + "/link", modification,
-        function(result) {
+        function(response) {
             console.log("The link has been created successfully.");
-    }).done(callback)
+            successCallback(response.id);
+    }).done(doneCallback)
     .fail(function(data) { console.error("Something went wrong in the link creation."); });
 }
 
@@ -197,13 +198,20 @@ function onLinkCreation(fromDeviceId, toDeviceId) {
         autoOpen: false, height: 300, width: 400, modal: true, draggable: false,
         buttons: {
             "SUBMIT": function() {
-                var callback = function() {
+                var doneCallback = function() {
                     dialog.dialog( "close" );
-                    redrawTopology();
+                };
+                var successfulCreationCallback = function(edgeId) {
+                    edges.add([{
+                        id: edgeId,
+                        from: fromDeviceId,
+                        to: toDeviceId,
+                    }]);
                 };
                 var fromPortName = $("#linkFromInterface option:selected", linkForm).text().replace("/", "%20");
                 var toPortName = $("#linkToInterface option:selected", linkForm).text();
-                createLink(fromDeviceId, fromPortName, toDeviceName, toPortName, callback);
+                createLink(fromDeviceId, fromPortName, toDeviceName, toPortName,
+                            doneCallback, successfulCreationCallback);
             },
             Cancel: function() {
                 $( this ).dialog( "close" );
@@ -440,16 +448,16 @@ function loadTopology(responseData) {
                     image : "PC.png"
                 }
             },
-            onAdd: function(data,callback) {
+            onAdd: function(data, callback) {
                 onDeviceAdd(data.x, data.y);
             },
-            onConnect: function(data,callback) {
-                onLinkCreation(data.from, data.to)
+            onConnect: function(data, callback) {
+                onLinkCreation(data.from, data.to);
             },
-            onEdit: function(data,callback) {
+            onEdit: function(data, callback) {
                 onDeviceEdit(data.id);
             },
-            onDelete: function(data,callback) {
+            onDelete: function(data, callback) {
                 if (data.nodes.length>0) {
                     deleteDevice(data.nodes[0]);
                 } else if (data.edges.length>0) {
