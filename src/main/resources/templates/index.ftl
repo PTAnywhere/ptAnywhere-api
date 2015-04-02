@@ -3,58 +3,56 @@
 <head>
     <title>${title}</title>
 
-    <base href="${base}" target="_blank">
+    <link rel="icon" type="image/png" href="${base}app.png">
 
-    <link rel="icon" type="image/png" href="app.png">
+    <link rel="stylesheet" href="${base}jquery/jquery-ui.min.css">
+    <link rel="stylesheet" href="${base}jquery/jquery-ui.structure.min.css">
+    <link rel="stylesheet" href="${base}jquery/jquery-ui.theme.min.css">
+    <script src="${base}jquery/jquery.js"></script>
+    <script src="${base}jquery/jquery-ui.min.js"></script>
+    <script src="${base}jquery/jquery.ui.touch-punch.min.js"></script>
 
-    <link rel="stylesheet" href="jquery/jquery-ui.min.css">
-    <link rel="stylesheet" href="jquery/jquery-ui.structure.min.css">
-    <link rel="stylesheet" href="jquery/jquery-ui.theme.min.css">
-    <script src="jquery/jquery.js"></script>
-    <script src="jquery/jquery-ui.min.js"></script>
-    <script src="jquery/jquery.ui.touch-punch.min.js"></script>
+    <link href="${base}vis/vis.css" rel="stylesheet" type="text/css"/>
+    <script type="text/javascript" src="${base}vis/vis.js"></script>
 
-    <link href="vis/vis.css" rel="stylesheet" type="text/css"/>
-    <script type="text/javascript" src="vis/vis.js"></script>
-
-    <link href="widget.css" rel="stylesheet" type="text/css"/>
-    <script type="text/javascript" src="widget.js"></script>
+    <link href="${base}widget.css" rel="stylesheet" type="text/css"/>
+    <script type="text/javascript" src="${base}widget.js"></script>
 </head>
 
 <body>
 <div class="widget-header">
     <h2>
-        <img src="app.png" alt="PacketTracer icon" >
+        <img src="${base}app.png" alt="PacketTracer icon" >
         ${title}
     </h2>
 </div>
 <div class="view">
     <div id="network">
-        <img id="loading" src="loading.gif" alt="Loading network topology..." />
+        <img id="loading" src="${base}loading.gif" alt="Loading network topology..." />
     </div>
     <fieldset id="creation-fieldset">
         <legend>To create a new device, drag it to the network map</legend>
         <div id="creation-menu">
             <figure>
-                <img id="cloud" alt="cloud" src="cloud.png" style="width: 120px;">
+                <img id="cloud" alt="cloud" src="${base}cloud.png" style="width: 120px;">
                 <figcaption>Cloud</figcaption>
             </figure>
             <figure>
-                <img id="router" alt="router" src="router.png" style="width: 80px;">
+                <img id="router" alt="router" src="${base}router.png" style="width: 80px;">
                 <figcaption>Router</figcaption>
             </figure>
             <figure>
-                <img id="switch" alt="switch" src="switch.png" style="width: 90px;">
+                <img id="switch" alt="switch" src="${base}switch.png" style="width: 90px;">
                 <figcaption>Switch</figcaption>
             </figure>
             <figure>
-                <img id="pc" alt="PC" src="PC.png" style="width: 90px;">
+                <img id="pc" alt="PC" src="${base}PC.png" style="width: 90px;">
                 <figcaption>PC</figcaption>
             </figure>
         </div>
     </fieldset>
 </div>
-<img src="Cisco_academy_logo.png" alt="Cisco Logo" class="cisco-logo">
+<img src="${base}Cisco_academy_logo.png" alt="Cisco Logo" class="cisco-logo">
 <div id="create-device" title="Create new device">
     <form name="create-device">
         <fieldset style="margin-top: 15px;">

@@ -346,7 +346,8 @@ function onDeviceEdit(node) {
     $("#modify-dialog-tabs").tabs();
     var dialog = $("#modify-device").dialog({
         title: "Modify device",
-        autoOpen: false, height: 350, width: 450, modal: true, draggable: false,
+        height: 350, width: 450,
+        autoOpen: false, modal: true, draggable: false,
         buttons: {
             "SUBMIT": function() {
                 var dialog = $(this);
@@ -431,21 +432,22 @@ function loadTopology(responseData) {
                 }
              },
             groups : {
+                // TODO room for improvement, static URL vs relative URL
                 cloudDevice : {
                     shape : 'image',
-                    image : "cloud.png"
+                    image : "../static/cloud.png"
                 },
                 routerDevice : {
                     shape : 'image',
-                    image : "router.png"
+                    image : "../static/router.png"
                 },
                 switchDevice : {
                     shape : 'image',
-                    image : "switch.png"
+                    image : "../static/switch.png"
                 },
                 pcDevice : {
                     shape : 'image',
-                    image : "PC.png"
+                    image : "../static/PC.png"
                 }
             },
             onAdd: function(data, callback) {
