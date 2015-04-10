@@ -52,7 +52,13 @@
         </div>
     </fieldset>
 </div>
-<img src="${base}Cisco_academy_logo.png" alt="Cisco Logo" class="cisco-logo">
+<div class="footer">
+    <div class="logos">
+        <a href="https://www.netacad.com"><img src="${base}Cisco_academy_logo.png" alt="Cisco logo" class="cisco-logo"></a>
+        <a href="http://www.open.ac.uk"><img src="${base}ou_logo.png" alt="Open University logo" class="ou-logo"></a>
+        <a href="http://kmi.open.ac.uk"><img src="${base}kmi_logo.png" alt="Knowledge Media Institute logo" class="kmi-logo"></a>
+    </div>
+</div>
 <div id="create-device" title="Create new device">
     <form name="create-device">
         <fieldset style="margin-top: 15px;">

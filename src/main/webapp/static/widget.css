@@ -53,13 +53,15 @@ div.view {
     border: 2px solid lightgray;
 }
 
-img.cisco-logo {
-    margin-top:10px;
+div.logos {
+	margin-top:10px;
+	text-align:center;
+}
+
+div.logos img {
+	display: inline-block;
     height: 48px;
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
-    /*float: right;*/
+    margin-right: 20px;
 }
 
 #network {
