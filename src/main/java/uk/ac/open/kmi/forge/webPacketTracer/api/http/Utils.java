@@ -7,6 +7,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.util.Collection;
 
 /**
  * Utility class for HTTP API.
@@ -51,5 +52,30 @@ public class Utils {
         if (i!=-1) ret = ret.substring(0, i);
         if (ret.endsWith("/")) return ret;
         return ret + "/";
+    }
+
+    /**
+     * Utility method to generate an array with Strings.
+     *
+     * (This is needed because, MOXy seems unable to generate them for String collections or arrays.
+     *      return Response.ok(stringArray);  <-- This throws an error!
+     * )
+     * @param stringArray
+     * @return
+     *      A string representing a JSON array which contains String items.
+     */
+    public static String toJsonStringArray(Collection<String> stringArray) {
+        String ret = "[";
+        boolean first = false;
+        for(String s: stringArray) {
+            if (!first) {
+                first = true;
+            } else {
+                ret += ", ";
+            }
+            ret += "\"" + s + "\"";
+        }
+        ret += "]";
+        return ret;
     }
 }
