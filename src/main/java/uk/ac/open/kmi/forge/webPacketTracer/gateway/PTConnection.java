@@ -10,8 +10,11 @@ import com.cisco.pt.ptmp.PacketTracerSessionFactory;
 import com.cisco.pt.ptmp.impl.PacketTracerSessionFactoryImpl;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import uk.ac.open.kmi.forge.webPacketTracer.properties.PacketTracerInstanceProperties;
+import uk.ac.open.kmi.forge.webPacketTracer.properties.PropertyFileManager;
 
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.Properties;
 
 
@@ -34,16 +37,14 @@ public class PTConnection {
     }
 
     public static PTConnection createPacketTracerGateway() {
-        final Properties props = new Properties();
-        try {
-            props.load(PTConnection.class.getClassLoader().getResourceAsStream("environment.properties"));
-        } catch(IOException e) {
-            LOGGER.error("Host and port of the PT instance could not be read from the properties file, using default values.");
-        } finally {
-            final String host = props.getProperty("host", "localhost");
-            final int port = Integer.parseInt(props.getProperty("port", "39000"));
-            return new PTConnection(host, port);
+        final PropertyFileManager pfm = new PropertyFileManager();
+        final Iterator<PacketTracerInstanceProperties> it = pfm.getPacketTracerInstancesDetails().iterator();
+        if(!it.hasNext()) {
+            LOGGER.error("PT instances could not be read from the properties file.");
+            throw new RuntimeException("Backend instance not found.");
         }
+        final PacketTracerInstanceProperties prop = it.next();
+        return new PTConnection(prop.getHostname(), prop.getPort());
     }
 
     public Log getLog() {
