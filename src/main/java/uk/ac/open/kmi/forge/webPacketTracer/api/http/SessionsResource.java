@@ -1,9 +1,9 @@
 package uk.ac.open.kmi.forge.webPacketTracer.api.http;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.*;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -45,5 +45,13 @@ public class SessionsResource {
     public Response getAll() {
         final Set<String> sessions = getSessionIds();
         return Response.ok(Utils.toJsonStringArray(sessions)).links(createLinks(sessions)).build();
+    }
+
+    @POST
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response createSession() throws URISyntaxException {
+        final String id = "id4";
+        return Response.created(new URI(getSessionRelativeURI(id))).
+                links(getItemLink(id)).build();
     }
 }
