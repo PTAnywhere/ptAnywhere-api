@@ -10,14 +10,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 
-@Path("p/{session}")
+@Path("index.html")
 public class ReservationResource extends CustomAbstractResource {
     @GET
     @Produces(MediaType.TEXT_HTML)
     public Response getWidget() {
         final Map<String, Object> map = new HashMap<String, Object>();
         map.put("title", getApplicationTitle());
-        return Response.ok(getPreFilled("/index.ftl", map)).
+        return Response.ok(getPreFilled("/reservation.ftl", map)).
                 link(uri.getBaseUri() + "/", "api").build();
     }
 }

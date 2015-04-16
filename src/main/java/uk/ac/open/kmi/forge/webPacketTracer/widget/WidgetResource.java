@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 
-@Path("index.html")
+@Path("p/{session}")
 public class WidgetResource extends CustomAbstractResource {
     @GET
     @Produces(MediaType.TEXT_HTML)

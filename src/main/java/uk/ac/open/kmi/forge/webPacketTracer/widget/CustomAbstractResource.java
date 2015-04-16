@@ -46,6 +46,7 @@ public abstract class CustomAbstractResource {
 
     public Viewable getPreFilled(String path, Map<String, Object> map) {
         map.put("base", this.uri.getBaseUri().resolve("../").toString() + "static/");
+        map.put("api", this.uri.getBaseUri().resolve("../").toString() + "api/");
         return (new Viewable(path, map));
     }
 }
