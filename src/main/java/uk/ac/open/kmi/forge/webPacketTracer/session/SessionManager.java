@@ -1,15 +1,13 @@
 package uk.ac.open.kmi.forge.webPacketTracer.session;
 
-import oracle.jrockit.jfr.StringConstantPool;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.Transaction;
 import uk.ac.open.kmi.forge.webPacketTracer.properties.PropertyFileManager;
 import uk.ac.open.kmi.forge.webPacketTracer.properties.RedisConnectionProperties;
 
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 
 
@@ -28,17 +26,20 @@ public class SessionManager {
     private static final int RESERVATION_TIME = 2;
 
     private static final String AVAILABLE_INSTANCES = "available";
-    private static final String INSTANCE_PREFIX = "instance_";
+    // TODO use subscriptions to ensure that after deleting a busy-instance-key it is inserted again in the list of available ones.
+    private static final String USED_INSTANCES = "used";
+    private static final String INSTANCE_PREFIX = "instance:";
     private static final String INSTANCE_HOSTNAME = "hostname";
     private static final String INSTANCE_PORT = "port";
-    private static final String INSTANCE_SESSION = "session";
-    private static final String UNASSIGNED_VALUE = "none";
 
-    private static final String CURRENT_SESSIONS = "current";
-    private static final String EXPIRED_SESSIONS = "expired";
-    private static final String SESSION_PREFIX = "session_";
-    private static final String SESSION_CREATION = "creation";
-    private static final String SESSION_EXPIRATION = "expiration";
+    private static final String INSTANCE_BUSY_POSTFIX= "busy";
+    private static final String INSTANCE_SESSION = "session";
+
+    /**
+     * List of IDs of session that ever existed
+     */
+    private static final String SESSIONS_ARCHIVE = "archive";
+    private static final String SESSION_PREFIX = "session:";
     private static final String SESSION_INSTANCE = "instance";
 
 
@@ -71,12 +72,11 @@ public class SessionManager {
      */
     public void addAvailableInstance(String hostname, int port) {
         final String instanceId = getInstanceId(hostname, port);
-        this.jedis.sadd(AVAILABLE_INSTANCES, instanceId);
-        final Map<String, String> instanceDetails = new HashMap<String, String>();
-        instanceDetails.put(INSTANCE_HOSTNAME, hostname);
-        instanceDetails.put(INSTANCE_PORT, String.valueOf(port));
-        instanceDetails.put(INSTANCE_SESSION, UNASSIGNED_VALUE);
-        this.jedis.hmset(instanceId, instanceDetails);
+        final Transaction t = this.jedis.multi();
+        t.sadd(AVAILABLE_INSTANCES, instanceId);
+        t.hset(instanceId, INSTANCE_HOSTNAME, hostname);
+        t.hset(instanceId, INSTANCE_PORT, String.valueOf(port));
+        t.exec();
     }
 
     /**
@@ -84,17 +84,20 @@ public class SessionManager {
      *      The instance allocated for the new session.
      * @return The new session id.
      */
-    private String createSessionManager(String instanceId) {
+    private String createSession(String instanceId) {
         final Long session = this.jedis.incr(NUMBER_SESSIONS);
         final String sessionId = SESSION_PREFIX + session;
+        final String busyInstanceId = instanceId + INSTANCE_BUSY_POSTFIX;
+        final int expirationAfter = RESERVATION_TIME * 60;
 
-        final long current = System.currentTimeMillis();
-        final long expiration = System.currentTimeMillis() + (RESERVATION_TIME * 60000);
-        this.jedis.hset(sessionId, SESSION_CREATION, String.valueOf(current));
-        this.jedis.hset(sessionId, SESSION_EXPIRATION, String.valueOf(expiration));
-        this.jedis.hset(sessionId, SESSION_INSTANCE, instanceId);
+        final Transaction t = this.jedis.multi();
+        // Use hset if more details are needed
+        t.set(sessionId, instanceId);
+        t.expire(sessionId, expirationAfter);
+        t.set(busyInstanceId, sessionId);
+        t.expire(busyInstanceId, expirationAfter);
+        t.exec();
 
-        this.jedis.sadd(CURRENT_SESSIONS, sessionId);
         return sessionId;
     }
 
@@ -103,37 +106,25 @@ public class SessionManager {
      * @param sessionId
      */
     public void expireSession(String sessionId) {
-        final Long remRet = this.jedis.srem(CURRENT_SESSIONS, sessionId);
-        if (remRet==1) {
-            this.jedis.sadd(EXPIRED_SESSIONS, sessionId);
-            final String assignedInstanceId = jedis.hget(sessionId, SESSION_INSTANCE);
-            // Mark it as unassigned only if the instance has not already been marked as unassigned.
-            if (!assignedInstanceId.equals(UNASSIGNED_VALUE)) {
-                this.jedis.hset(sessionId, SESSION_INSTANCE, UNASSIGNED_VALUE);
+        final String assignedInstanceId = this.jedis.get(sessionId);
+        final String assignedSessionId = this.jedis.get(assignedInstanceId + INSTANCE_BUSY_POSTFIX);
 
-                // Checking that the instance has not already been assigned to a different session.
-                // Otherwise, it would not make sense to mark it as unassigned.
-                final String assignedSessionId = jedis.hget(assignedInstanceId, INSTANCE_SESSION);
-                if (assignedSessionId.equals(sessionId)) {
-                    this.jedis.hset(sessionId, INSTANCE_SESSION, UNASSIGNED_VALUE);
-                }
-            }
-        }
-    }
-
-    /**
-     * @param sessionId
-     * @return Has the session expired? In other words, there is no instance assigned to this session anymore.
-     */
-    public boolean hasExpired(String sessionId) {
-        long expiresAt = Long.valueOf(this.jedis.hget(sessionId, SESSION_EXPIRATION));
-        return expiresAt < System.currentTimeMillis();
+        final Transaction t = this.jedis.multi();
+        if (assignedSessionId!=null)  // Delete only if it exists.
+            t.del(sessionId);
+        if (sessionId.equals(assignedSessionId)) // Delete only is the session using the instance is the same.
+            t.del(assignedInstanceId + INSTANCE_BUSY_POSTFIX);
+        t.exec();
     }
 
     private void freeInstancesAssignedToExpiredSessions() {
-        for(String sessionId: this.jedis.smembers(CURRENT_SESSIONS)) {
-            if(hasExpired(sessionId))
-                expireSession(sessionId);
+        for(String instanceId: this.jedis.smembers(USED_INSTANCES)) {
+            if( !jedis.exists(instanceId + INSTANCE_BUSY_POSTFIX)) {
+                final Transaction t = jedis.multi();
+                t.srem(USED_INSTANCES, instanceId);
+                t.sadd(AVAILABLE_INSTANCES, instanceId);
+                t.exec();
+            }
         }
     }
 
@@ -141,7 +132,7 @@ public class SessionManager {
      * Assigns an available PT instance to a new session.
      * @return The new session id.
      */
-    public String createSession(String sessionId) throws BusyInstancesException {
+    public String createSession() throws BusyInstancesException {
         freeInstancesAssignedToExpiredSessions();
         final String instanceId = this.jedis.spop(AVAILABLE_INSTANCES);
         if (instanceId==null) throw new BusyInstancesException();
