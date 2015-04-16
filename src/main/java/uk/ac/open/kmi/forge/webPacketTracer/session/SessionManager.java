@@ -97,22 +97,6 @@ public class SessionManager {
         return sessionId;
     }
 
-    /**
-     * Mark this session as expired.
-     * @param sessionId
-     */
-    public void expireSession(String sessionId) {
-        final String assignedInstanceId = this.jedis.get(sessionId);
-        final String assignedSessionId = this.jedis.get(assignedInstanceId + INSTANCE_BUSY_POSTFIX);
-
-        final Transaction t = this.jedis.multi();
-        if (assignedSessionId!=null)  // Delete only if it exists.
-            t.del(sessionId);
-        if (sessionId.equals(assignedSessionId)) // Delete only is the session using the instance is the same.
-            t.del(assignedInstanceId + INSTANCE_BUSY_POSTFIX);
-        t.exec();
-    }
-
     private void freeInstancesAssignedToExpiredSessions() {
         for(String instanceId: this.jedis.smembers(USED_INSTANCES)) {
             if( !jedis.exists(instanceId + INSTANCE_BUSY_POSTFIX)) {
@@ -141,5 +125,25 @@ public class SessionManager {
 
     public boolean doesExist(String sessionId) {
         return this.jedis.exists(sessionId);
+    }
+
+    /**
+     * Delete session from DB and marks the used instance as available.
+     * @param sessionId
+     */
+    public void deleteSession(String sessionId) {
+        final String assignedInstanceId = this.jedis.get(sessionId);
+        final String assignedSessionId = this.jedis.get(assignedInstanceId + INSTANCE_BUSY_POSTFIX);
+
+        final Transaction t = this.jedis.multi();
+        if (assignedSessionId!=null)  // Delete only if it exists.
+            t.del(sessionId);
+        if (sessionId.equals(assignedSessionId)) { // Delete only is the session using the instance is the same.
+            t.del(assignedInstanceId + INSTANCE_BUSY_POSTFIX);
+            // Move to the available list.
+            t.srem(USED_INSTANCES, assignedInstanceId);
+            t.sadd(AVAILABLE_INSTANCES, assignedInstanceId);
+        }
+        t.exec();
     }
 }
