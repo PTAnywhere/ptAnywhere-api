@@ -57,15 +57,17 @@ class LinkCreator extends PTCallable<Link> {
     }
 }
 
-@Path("devices/{device}/ports/{port}/link")
 public class PortLinkResource {
-    @Context
-    UriInfo uri;
+
+    final UriInfo uri;
+    public PortLinkResource(UriInfo uri) {
+        this.uri = uri;
+    }
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getLink(@PathParam("device") String deviceId,
-                          @PathParam("port") String portName) {
+    public Response getLink(@PathParam(DeviceResource.DEVICE_PARAM) String deviceId,
+                          @PathParam(PortResource.PORT_PARAM) String portName) {
         final Link l = new PortLinkGetter(deviceId, Utils.unescapePort(portName)).call();
         if (l==null)
             return Response.noContent().
@@ -76,8 +78,8 @@ public class PortLinkResource {
     }
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
-    public Response removeLink(@PathParam("device") String deviceId,
-                             @PathParam("port") String portName) {
+    public Response removeLink(@PathParam(DeviceResource.DEVICE_PARAM) String deviceId,
+                             @PathParam(PortResource.PORT_PARAM) String portName) {
         final Link deletedLink = new LinkDeleter(deviceId, Utils.unescapePort(portName)).call();
         if (deletedLink==null)
             return Response.status(Response.Status.NOT_ACCEPTABLE).entity(deletedLink).
@@ -89,8 +91,8 @@ public class PortLinkResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response createLink(Link newLink,
-                             @PathParam("device") String deviceId,
-                             @PathParam("port") String portName) {
+                             @PathParam(DeviceResource.DEVICE_PARAM) String deviceId,
+                             @PathParam(PortResource.PORT_PARAM) String portName) {
         final Link createdLink = new LinkCreator(deviceId, Utils.unescapePort(portName), newLink).call();
         if (createdLink==null)
             return Response.status(Response.Status.NOT_ACCEPTABLE).entity(newLink).

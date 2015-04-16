@@ -5,7 +5,7 @@ import uk.ac.open.kmi.forge.webPacketTracer.pojo.Device;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
-import java.net.URI;
+
 
 class DeviceGetter extends PTCallable<Device> {
     final String dId;
@@ -47,15 +47,24 @@ class DeviceModifier extends PTCallable<Device> {
     }
 }
 
-@Path("devices/{device}")
 public class DeviceResource {
-    @Context
-    UriInfo uri;
+
+    static final public String DEVICE_PARAM = "device";
+
+    final UriInfo uri;
+    public DeviceResource(UriInfo uri) {
+        this.uri = uri;
+    }
+
+    @Path("ports")
+    public PortsResource getResource(@Context UriInfo u) {
+        return new PortsResource(u);
+    }
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response getDevice(
-        @PathParam("device") String deviceId,
+        @PathParam(DEVICE_PARAM) String deviceId,
         @DefaultValue("false") @QueryParam("byName") boolean byName) {
         final Device d = new DeviceGetter(deviceId, byName).call();  // Not using a new Thread
         if (d==null)
@@ -66,6 +75,7 @@ public class DeviceResource {
                 links(getDevicesLink()).
                 links(getPortsLink(d)).build();
     }
+
     // FIXME DELETE and PUT should also consider the 'byName' parameter.
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
@@ -77,11 +87,12 @@ public class DeviceResource {
         return Response.ok(d).
                 links(getDevicesLink()).build();
     }
+
     @PUT
     @Produces(MediaType.APPLICATION_JSON)
     public Response modifyDevice(
             Device modification,
-            @PathParam("device") String deviceId) {
+            @PathParam(DEVICE_PARAM) String deviceId) {
         final Device d = new DeviceModifier(deviceId, modification).call();  // Not using a new Thread
         if (d==null)
             return Response.noContent().

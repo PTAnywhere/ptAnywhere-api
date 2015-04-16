@@ -33,6 +33,11 @@ public class DevicesResource {
     @Context
     UriInfo uri;
 
+    @Path("{" + DeviceResource.DEVICE_PARAM + "}")
+    public DeviceResource getResource(@Context UriInfo u) {
+        return new DeviceResource(u);
+    }
+
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)

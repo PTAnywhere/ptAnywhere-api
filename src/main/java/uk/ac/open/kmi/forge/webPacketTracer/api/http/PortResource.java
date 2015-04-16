@@ -34,17 +34,26 @@ class PortModifier extends PTCallable<Port> {
     }
 }
 
-@Path("devices/{device}/ports/{port}")
 public class PortResource {
-    @Context
-    UriInfo uri;
+
+    static final public String PORT_PARAM = "port";
+
+    final UriInfo uri;
+    public PortResource(UriInfo uri) {
+        this.uri = uri;
+    }
+
+    @Path("link")
+    public PortLinkResource getResource(@Context UriInfo u) {
+        return new PortLinkResource(u);
+    }
 
     // Consider byName==true (or at least put a redirection or self element)
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response getPort(
-            @PathParam("device") String deviceId,
-            @PathParam("port") String portName) {
+            @PathParam(DeviceResource.DEVICE_PARAM) String deviceId,
+            @PathParam(PORT_PARAM) String portName) {
         final Port p = new PortGetter(deviceId, Utils.unescapePort(portName)).call();  // Not using a new Thread
         if (p==null)
             return Response.noContent().
@@ -61,8 +70,8 @@ public class PortResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response modifyPort(
             Port modification,
-            @PathParam("device") String deviceId,
-            @PathParam("port") String portName) {
+            @PathParam(DeviceResource.DEVICE_PARAM) String deviceId,
+            @PathParam(PORT_PARAM) String portName) {
         // The portName should be provided in the URL, not in the body (i.e., JSON sent).
         if (modification.getPortName()==null) {
             modification.setPortName(Utils.unescapePort(portName));

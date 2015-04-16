@@ -1,7 +1,6 @@
 package uk.ac.open.kmi.forge.webPacketTracer.api.http;
 
 import uk.ac.open.kmi.forge.webPacketTracer.gateway.PTCallable;
-import uk.ac.open.kmi.forge.webPacketTracer.pojo.Device;
 import uk.ac.open.kmi.forge.webPacketTracer.pojo.Port;
 
 import javax.ws.rs.*;
@@ -24,15 +23,23 @@ class PortsGetter extends PTCallable<Collection<Port>> {
     }
 }
 
-@Path("devices/{device}/ports")
 public class PortsResource {
-    @Context UriInfo uri;
+
+    final UriInfo uri;
+    public PortsResource(UriInfo uri) {
+        this.uri = uri;
+    }
+
+    @Path("{" + PortResource.PORT_PARAM + "}")
+    public PortResource getResource(@Context UriInfo u) {
+        return new PortResource(u);
+    }
 
     // TODO return 'self' links (at least when byName==true)
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response getPorts(
-            @PathParam("device") String deviceId,
+            @PathParam(DeviceResource.DEVICE_PARAM) String deviceId,
             @DefaultValue("false") @QueryParam("byName") boolean byName,
             @DefaultValue("false") @QueryParam("free") boolean filterFree) {
         final Collection<Port> p = new PortsGetter(deviceId, byName, filterFree).call();  // Not using a new Thread
