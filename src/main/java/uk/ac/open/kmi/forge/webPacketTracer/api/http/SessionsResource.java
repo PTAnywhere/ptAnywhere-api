@@ -17,21 +17,9 @@ public class SessionsResource {
     @Context
     UriInfo uri;
 
-    private String getSessionRelativeURI(String id) {
-        return Utils.getURIWithSlashRemovingQuery(this.uri.getRequestUri()) + Utils.encodeForURL(id);
-    }
-
-    private Link getItemLink(String id) {
-        return Link.fromUri(getSessionRelativeURI(id)).rel("item").build();
-    }
-
-    private Link[] createLinks(Collection<String> sessionIds) {
-        final Link[] links = new Link[sessionIds.size()];
-        final Iterator<String> devIt = sessionIds.iterator();
-        for(int i=0; i<links.length; i++) {
-            links[i] = getItemLink(devIt.next());
-        }
-        return links;
+    @Path("{" + SessionResource.SESSION_PARAM + "}")
+    public SessionResource getResource(@Context UriInfo u) {
+        return new SessionResource(u);
     }
 
     @GET
@@ -53,5 +41,22 @@ public class SessionsResource {
         } catch(BusyInstancesException e) {
             return Response.serverError().build();
         }
+    }
+
+    private String getSessionRelativeURI(String id) {
+        return Utils.getURIWithSlashRemovingQuery(this.uri.getRequestUri()) + Utils.encodeForURL(id);
+    }
+
+    private Link getItemLink(String id) {
+        return Link.fromUri(getSessionRelativeURI(id)).rel("item").build();
+    }
+
+    private Link[] createLinks(Collection<String> sessionIds) {
+        final Link[] links = new Link[sessionIds.size()];
+        final Iterator<String> devIt = sessionIds.iterator();
+        for(int i=0; i<links.length; i++) {
+            links[i] = getItemLink(devIt.next());
+        }
+        return links;
     }
 }

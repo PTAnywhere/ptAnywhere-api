@@ -1,0 +1,23 @@
+package uk.ac.open.kmi.forge.webPacketTracer.widget;
+
+
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import java.util.HashMap;
+import java.util.Map;
+
+
+@Path("p/{session}")
+public class ReservationResource extends CustomAbstractResource {
+    @GET
+    @Produces(MediaType.TEXT_HTML)
+    public Response getWidget() {
+        final Map<String, Object> map = new HashMap<String, Object>();
+        map.put("title", getApplicationTitle());
+        return Response.ok(getPreFilled("/index.ftl", map)).
+                link(uri.getBaseUri() + "/", "api").build();
+    }
+}

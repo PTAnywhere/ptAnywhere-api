@@ -28,10 +28,12 @@ class DevicePoster extends PTCallable<Device> {
     }
 }
 
-@Path("devices")
 public class DevicesResource {
-    @Context
-    UriInfo uri;
+
+    final UriInfo uri;
+    public DevicesResource(UriInfo uri) {
+        this.uri = uri;
+    }
 
     @Path("{" + DeviceResource.DEVICE_PARAM + "}")
     public DeviceResource getResource(@Context UriInfo u) {

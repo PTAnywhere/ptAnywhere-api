@@ -5,15 +5,24 @@ import uk.ac.open.kmi.forge.webPacketTracer.session.SessionManager;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
 
-@Path("sessions/{session}")
+
 public class SessionResource {
 
-    @Context
-    UriInfo uri;
+    static final public String SESSION_PARAM = "session";
+
+    final UriInfo uri;
+    public SessionResource(UriInfo uri) {
+        this.uri = uri;
+    }
+
+    @Path("devices")
+    public DevicesResource getResource(@Context UriInfo u) {
+        return new DevicesResource(u);
+    }
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getSession(@PathParam("session") String sessionId) {
+    public Response getSession(@PathParam(SESSION_PARAM) String sessionId) {
         final String requestUri = Utils.getURIWithSlashRemovingQuery(this.uri.getRequestUri());
         final SessionManager sm = SessionManager.create();
         if (sm.doesExist(sessionId)) {
@@ -28,7 +37,7 @@ public class SessionResource {
 
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
-    public Response removeDevice(@PathParam("session") String sessionId) {
+    public Response removeDevice(@PathParam(SESSION_PARAM) String sessionId) {
         final String requestUri = Utils.getURIWithSlashRemovingQuery(this.uri.getRequestUri());
         final SessionManager sm = SessionManager.create();
         if (sm.doesExist(sessionId)) {
