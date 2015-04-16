@@ -52,7 +52,6 @@ public class PropertyFileManager {
     public Set<PacketTracerInstanceProperties> getPacketTracerInstancesDetails() {
         final Set<PacketTracerInstanceProperties> instances = new HashSet<PacketTracerInstanceProperties>();
         final String unparsed = this.props.getProperty("pt-instances", PropertyFileManager.defaultHostname + ":" + PropertyFileManager.defaultPTPort);
-        LOGGER.error(unparsed);
         if (unparsed.contains(",")) {
             for(String instance: unparsed.split(",")) {
                 try {
