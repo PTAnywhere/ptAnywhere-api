@@ -1,6 +1,6 @@
 package uk.ac.open.kmi.forge.webPacketTracer.api.http;
 
-import uk.ac.open.kmi.forge.webPacketTracer.pojo.Device;
+import uk.ac.open.kmi.forge.webPacketTracer.session.SessionManager;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
@@ -15,10 +15,18 @@ public class SessionResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response getSession(@PathParam("session") String sessionId) {
         final String requestUri = Utils.getURIWithSlashRemovingQuery(this.uri.getRequestUri());
-        return Response.ok("Sample return").
-                links(getSessionsLink()).
-                link(requestUri + "devices", "devices").
-                link(requestUri + "network", "network").build();
+        final SessionManager sm = SessionManager.create();
+        if (sm.doesExist(sessionId)) {
+            return Response.ok(sessionId).
+                    links(getSessionsLink()).
+                    link(requestUri + "devices", "devices").
+                    link(requestUri + "network", "network").build();
+        } else {
+            return Response.status(Response.Status.NOT_FOUND).
+                    links(getSessionsLink()).
+                    link(requestUri + "devices", "devices").
+                    link(requestUri + "network", "network").build();
+        }
     }
 
     @DELETE

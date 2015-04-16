@@ -138,4 +138,8 @@ public class SessionManager {
     public Set<String> getCurrentSessions() {
         return this.jedis.keys(SESSION_PREFIX + "*");
     }
+
+    public boolean doesExist(String sessionId) {
+        return this.jedis.exists(sessionId);
+    }
 }
