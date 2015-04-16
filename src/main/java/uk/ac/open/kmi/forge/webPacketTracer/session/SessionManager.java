@@ -6,9 +6,7 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Transaction;
 import uk.ac.open.kmi.forge.webPacketTracer.properties.PropertyFileManager;
 import uk.ac.open.kmi.forge.webPacketTracer.properties.RedisConnectionProperties;
-
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Set;
 
 
 /**
@@ -31,16 +29,12 @@ public class SessionManager {
     private static final String INSTANCE_PREFIX = "instance:";
     private static final String INSTANCE_HOSTNAME = "hostname";
     private static final String INSTANCE_PORT = "port";
-
-    private static final String INSTANCE_BUSY_POSTFIX= "busy";
-    private static final String INSTANCE_SESSION = "session";
+    private static final String INSTANCE_BUSY_POSTFIX= ":busy";
 
     /**
      * List of IDs of session that ever existed
      */
-    private static final String SESSIONS_ARCHIVE = "archive";
     private static final String SESSION_PREFIX = "session:";
-    private static final String SESSION_INSTANCE = "instance";
 
 
     final Jedis jedis;
@@ -51,6 +45,7 @@ public class SessionManager {
     }
 
     public static SessionManager create() {
+        // FIXME should we cache these values to avoid reading the file over and over again???
         final PropertyFileManager pfm = new PropertyFileManager();
         final RedisConnectionProperties rcp = pfm.getRedisConnectionDetails();
         return new SessionManager(rcp.getHostname(), rcp.getPort(), rcp.getDbNumber());
@@ -96,6 +91,7 @@ public class SessionManager {
         t.expire(sessionId, expirationAfter);
         t.set(busyInstanceId, sessionId);
         t.expire(busyInstanceId, expirationAfter);
+        t.sadd(USED_INSTANCES, instanceId);
         t.exec();
 
         return sessionId;
@@ -137,5 +133,9 @@ public class SessionManager {
         final String instanceId = this.jedis.spop(AVAILABLE_INSTANCES);
         if (instanceId==null) throw new BusyInstancesException();
         return createSession(instanceId);
+    }
+
+    public Set<String> getCurrentSessions() {
+        return this.jedis.keys(SESSION_PREFIX + "*");
     }
 }
