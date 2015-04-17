@@ -1,8 +1,6 @@
 package uk.ac.open.kmi.forge.webPacketTracer.widget;
 
 
-import uk.ac.open.kmi.forge.webPacketTracer.api.http.Utils;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -27,7 +25,7 @@ public class WidgetResource extends CustomAbstractResource {
         final Map<String, Object> map = new HashMap<String, Object>();
         map.put("title", getApplicationTitle());
         map.put("session_api", getAPIURL() + "sessions/" + sessionId);
-        return Response.ok(getPreFilled("/index.ftl", map)).
+        return Response.ok(getPreFilled("/widget.ftl", map)).
                 link(getAPIURL(), "api").build();
     }
 }
