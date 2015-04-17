@@ -8,11 +8,14 @@ import com.cisco.pt.ipc.sim.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import uk.ac.open.kmi.forge.webPacketTracer.gateway.PTConnection;
+import uk.ac.open.kmi.forge.webPacketTracer.session.PTInstanceDetails;
+import uk.ac.open.kmi.forge.webPacketTracer.session.SessionsManager;
+
 import java.io.IOException;
 import javax.websocket.*;
 import javax.websocket.server.ServerEndpoint;
 
-@ServerEndpoint("/endpoint/devices/{device}/console")
+@ServerEndpoint("/endpoint/sessions/{session}/devices/{device}/console")
 public class ConsoleEndpoint implements TerminalLineEventListener {
 
     private static Log logger = LogFactory.getLog(ConsoleEndpoint.class);
@@ -20,14 +23,17 @@ public class ConsoleEndpoint implements TerminalLineEventListener {
     TerminalLine cmd;
     Session session;
 
-    public ConsoleEndpoint() {
-        this.common = PTConnection.createPacketTracerGateway();
-    }
+    public ConsoleEndpoint() {}
 
     @OnOpen
     public void myOnOpen(final Session session) {
         this.session = session;
 
+        final String sessionId = session.getPathParameters().get("session");
+        final PTInstanceDetails details = SessionsManager.create().getInstance(sessionId);
+        if (details==null) return; // Is it better to throw an exception?
+
+        this.common = PTConnection.createPacketTracerGateway(details.getHost(), details.getPort());
         this.common.open();
         final String deviceId = "{" + session.getPathParameters().get("device") + "}";
         if (logger.isInfoEnabled()) {

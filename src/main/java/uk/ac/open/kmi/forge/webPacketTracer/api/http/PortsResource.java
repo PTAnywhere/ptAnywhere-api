@@ -2,6 +2,7 @@ package uk.ac.open.kmi.forge.webPacketTracer.api.http;
 
 import uk.ac.open.kmi.forge.webPacketTracer.gateway.PTCallable;
 import uk.ac.open.kmi.forge.webPacketTracer.pojo.Port;
+import uk.ac.open.kmi.forge.webPacketTracer.session.SessionManager;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
@@ -12,7 +13,8 @@ class PortsGetter extends PTCallable<Collection<Port>> {
     final String deviceId;
     final boolean byName;
     final boolean filterFree;
-    public PortsGetter(String deviceId, boolean byName, boolean filterFree) {
+    public PortsGetter(SessionManager sm, String deviceId, boolean byName, boolean filterFree) {
+        super(sm);
         this.deviceId = deviceId;
         this.byName = byName;
         this.filterFree = filterFree;
@@ -26,13 +28,15 @@ class PortsGetter extends PTCallable<Collection<Port>> {
 public class PortsResource {
 
     final UriInfo uri;
-    public PortsResource(UriInfo uri) {
+    final SessionManager sm;
+    public PortsResource(UriInfo uri, SessionManager sm) {
         this.uri = uri;
+        this.sm = sm;
     }
 
     @Path("{" + PortResource.PORT_PARAM + "}")
     public PortResource getResource(@Context UriInfo u) {
-        return new PortResource(u);
+        return new PortResource(u, this.sm);
     }
 
     // TODO return 'self' links (at least when byName==true)
@@ -42,7 +46,7 @@ public class PortsResource {
             @PathParam(DeviceResource.DEVICE_PARAM) String deviceId,
             @DefaultValue("false") @QueryParam("byName") boolean byName,
             @DefaultValue("false") @QueryParam("free") boolean filterFree) {
-        final Collection<Port> p = new PortsGetter(deviceId, byName, filterFree).call();  // Not using a new Thread
+        final Collection<Port> p = new PortsGetter(this.sm, deviceId, byName, filterFree).call();  // Not using a new Thread
         // To array because otherwise Response does not know how to serialize Collection<Device>
         return Response.ok(p.toArray(new Port[p.size()])).
                 links(getDeviceLink(deviceId)).

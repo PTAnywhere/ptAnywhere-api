@@ -2,6 +2,7 @@ package uk.ac.open.kmi.forge.webPacketTracer.api.http;
 
 import uk.ac.open.kmi.forge.webPacketTracer.gateway.PTCallable;
 import uk.ac.open.kmi.forge.webPacketTracer.pojo.Device;
+import uk.ac.open.kmi.forge.webPacketTracer.session.SessionManager;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
@@ -10,7 +11,8 @@ import javax.ws.rs.core.*;
 class DeviceGetter extends PTCallable<Device> {
     final String dId;
     final boolean byName;
-    public DeviceGetter(String dId, boolean byName) {
+    public DeviceGetter(SessionManager sm, String dId, boolean byName) {
+        super(sm);
         this.dId = dId;
         this.byName = byName;
     }
@@ -26,7 +28,8 @@ class DeviceGetter extends PTCallable<Device> {
 
 class DeviceDeleter extends PTCallable<Device> {
     final String dId;
-    public DeviceDeleter(String dId) {
+    public DeviceDeleter(SessionManager sm, String dId) {
+        super(sm);
         this.dId = dId;
     }
     @Override
@@ -37,7 +40,8 @@ class DeviceDeleter extends PTCallable<Device> {
 
 class DeviceModifier extends PTCallable<Device> {
     final Device modification;
-    public DeviceModifier(String dId, Device modification) {
+    public DeviceModifier(SessionManager sm, String dId, Device modification) {
+        super(sm);
         modification.setId(dId);
         this.modification = modification;
     }
@@ -48,17 +52,17 @@ class DeviceModifier extends PTCallable<Device> {
 }
 
 public class DeviceResource {
-
     static final public String DEVICE_PARAM = "device";
-
     final UriInfo uri;
-    public DeviceResource(UriInfo uri) {
+    final SessionManager sm;
+    public DeviceResource(UriInfo uri, SessionManager sm) {
         this.uri = uri;
+        this.sm = sm;
     }
 
     @Path("ports")
     public PortsResource getResource(@Context UriInfo u) {
-        return new PortsResource(u);
+        return new PortsResource(u, this.sm);
     }
 
     @GET
@@ -66,7 +70,7 @@ public class DeviceResource {
     public Response getDevice(
         @PathParam(DEVICE_PARAM) String deviceId,
         @DefaultValue("false") @QueryParam("byName") boolean byName) {
-        final Device d = new DeviceGetter(deviceId, byName).call();  // Not using a new Thread
+        final Device d = new DeviceGetter(this.sm, deviceId, byName).call();  // Not using a new Thread
         if (d==null)
             return Response.noContent().
                     links(getDevicesLink()).build();
@@ -80,7 +84,7 @@ public class DeviceResource {
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     public Response removeDevice(@PathParam("device") String deviceId) {
-        final Device d = new DeviceDeleter(deviceId).call();  // Not using a new Thread
+        final Device d = new DeviceDeleter(this.sm, deviceId).call();  // Not using a new Thread
         if (d==null)
             return Response.noContent().
                     links(getDevicesLink()).build();
@@ -93,7 +97,7 @@ public class DeviceResource {
     public Response modifyDevice(
             Device modification,
             @PathParam(DEVICE_PARAM) String deviceId) {
-        final Device d = new DeviceModifier(deviceId, modification).call();  // Not using a new Thread
+        final Device d = new DeviceModifier(this.sm, deviceId, modification).call();  // Not using a new Thread
         if (d==null)
             return Response.noContent().
                     links(getDevicesLink()).build();

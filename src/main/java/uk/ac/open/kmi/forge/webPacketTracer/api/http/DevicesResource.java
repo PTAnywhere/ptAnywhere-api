@@ -2,15 +2,22 @@ package uk.ac.open.kmi.forge.webPacketTracer.api.http;
 
 import uk.ac.open.kmi.forge.webPacketTracer.gateway.PTCallable;
 import uk.ac.open.kmi.forge.webPacketTracer.pojo.Device;
+import uk.ac.open.kmi.forge.webPacketTracer.session.SessionManager;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.*;
 
 
 class DevicesGetter extends PTCallable<Collection<Device>> {
+
+    public DevicesGetter(SessionManager sm) {
+        super(sm);
+    }
+
     @Override
     public Collection<Device> internalRun() {
         return this.connection.getDataAccessObject().getDevices();
@@ -19,9 +26,12 @@ class DevicesGetter extends PTCallable<Collection<Device>> {
 
 class DevicePoster extends PTCallable<Device> {
     final Device d;
-    public DevicePoster(Device d) {
+
+    public DevicePoster(SessionManager sm, Device d) {
+        super(sm);
         this.d = d;
     }
+
     @Override
     public Device internalRun() {
         return this.connection.getDataAccessObject().createDevice(this.d);
@@ -31,40 +41,41 @@ class DevicePoster extends PTCallable<Device> {
 public class DevicesResource {
 
     final UriInfo uri;
-    public DevicesResource(UriInfo uri) {
+    final SessionManager sm;
+    public DevicesResource(UriInfo uri, SessionManager sm) {
         this.uri = uri;
+        this.sm = sm;
     }
 
     @Path("{" + DeviceResource.DEVICE_PARAM + "}")
     public DeviceResource getResource(@Context UriInfo u) {
-        return new DeviceResource(u);
+        return new DeviceResource(u, this.sm);
     }
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response createDevice(Device newDevice) throws URISyntaxException{
-        final Device device = new DevicePoster(newDevice).call();
+        final Device device = new DevicePoster(this.sm, newDevice).call();
         if (device==null)
-            return Response.status(Response.Status.BAD_REQUEST).entity(newDevice).
-                    links(getNetworkLink()).build();
-        return Response.created(new URI(getDeviceRelativeURI(device.getId())))
-                .entity(device).links(getNetworkLink()).
+            return addDefaultLinks(Response.status(Response.Status.BAD_REQUEST).entity(newDevice)).build();
+        return addDefaultLinks(Response.created(new URI(getDeviceRelativeURI(device.getId())))).
+                entity(device).
                 links(getItemLink(device.getId())).build();  // Not using a new Thread
     }
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response getJson() {
-        final Collection<Device> d = new DevicesGetter().call();  // Not using a new Thread
+        final Collection<Device> d = new DevicesGetter(this.sm).call();  // Not using a new Thread
         // To array because otherwise Response does not know how to serialize Collection<Device>
-        return Response.ok(d.toArray(new Device[d.size()])).
-                links(getNetworkLink()).
+        return addDefaultLinks(Response.ok(d.toArray(new Device[d.size()]))).
                 links(createLinks(d)).build();  // Not using a new Thread
     }
 
-    private Link getNetworkLink() {
-        return Link.fromUri(this.uri.getBaseUri() + "network").rel("network").build();
+    private Response.ResponseBuilder addDefaultLinks(Response.ResponseBuilder rb) {
+        final URI sessionURL = Utils.getParent(this.uri.getRequestUri());
+        return rb.link(sessionURL, "session").link(sessionURL + "network", "network");
     }
 
     private String getDeviceRelativeURI(String id) {

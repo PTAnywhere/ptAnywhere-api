@@ -10,7 +10,7 @@ public class SessionNotFoundException extends WebApplicationException {
         super(Response.status(Response.Status.NOT_FOUND).
                 entity(new ErrorBean(
                         Response.Status.NOT_FOUND.getStatusCode(),
-                        "No session was found with the id " + sessionId)).
+                        "No session was found with id \"" + sessionId + "\"")).
                 links(link).build()); // is it better to use GONE???
     }
 }

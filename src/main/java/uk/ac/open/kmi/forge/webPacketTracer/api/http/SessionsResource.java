@@ -1,7 +1,7 @@
 package uk.ac.open.kmi.forge.webPacketTracer.api.http;
 
 import uk.ac.open.kmi.forge.webPacketTracer.session.BusyInstancesException;
-import uk.ac.open.kmi.forge.webPacketTracer.session.SessionManager;
+import uk.ac.open.kmi.forge.webPacketTracer.session.SessionsManager;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
@@ -17,25 +17,25 @@ public class SessionsResource {
     @Context
     UriInfo uri;
 
+    final SessionsManager sm = SessionsManager.create();
+
     @Path("{" + SessionResource.SESSION_PARAM + "}")
     public SessionResource getResource(@Context UriInfo u) {
-        return new SessionResource(u);
+        return new SessionResource(u, sm);
     }
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response getAll() {
-        final SessionManager sm = SessionManager.create();
-        final Set<String> sessions = sm.getCurrentSessions();
+        final Set<String> sessions = this.sm.getCurrentSessions();
         return Response.ok(Utils.toJsonStringArray(sessions)).links(createLinks(sessions)).build();
     }
 
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     public Response createSession() throws URISyntaxException {
-        final SessionManager sm = SessionManager.create();
         try {
-            final String id = sm.createSession();
+            final String id = this.sm.createSession();
             return Response.created(new URI(getSessionRelativeURI(id))).
                     links(getItemLink(id)).build();
         } catch(BusyInstancesException e) {

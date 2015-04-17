@@ -21,7 +21,7 @@ public class RedisInitializer implements ServletContextListener {
     public void contextInitialized(ServletContextEvent arg0) {
         try {
             final Set<PacketTracerInstanceProperties> instances = new PropertyFileManager().getPacketTracerInstancesDetails();
-            final SessionManager session = SessionManager.create();
+            final SessionsManager session = SessionsManager.create();
             session.clear();
             for(PacketTracerInstanceProperties instance: instances) {
                 session.addAvailableInstance(instance.getHostname(), instance.getPort());

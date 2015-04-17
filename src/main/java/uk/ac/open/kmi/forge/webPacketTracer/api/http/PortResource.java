@@ -2,6 +2,7 @@ package uk.ac.open.kmi.forge.webPacketTracer.api.http;
 
 import uk.ac.open.kmi.forge.webPacketTracer.gateway.PTCallable;
 import uk.ac.open.kmi.forge.webPacketTracer.pojo.Port;
+import uk.ac.open.kmi.forge.webPacketTracer.session.SessionManager;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
@@ -10,7 +11,8 @@ import javax.ws.rs.core.*;
 class PortGetter extends PTCallable<Port> {
     final String deviceId;
     final String portName;
-    public PortGetter(String deviceId, String portName) {
+    public PortGetter(SessionManager sm, String deviceId, String portName) {
+        super(sm);
         this.deviceId = deviceId;
         this.portName = portName;
     }
@@ -23,7 +25,8 @@ class PortGetter extends PTCallable<Port> {
 class PortModifier extends PTCallable<Port> {
     final String deviceId;
     final Port modification;
-    public PortModifier(String deviceId, Port modification) {
+    public PortModifier(SessionManager sm, String deviceId, Port modification) {
+        super(sm);
         this.deviceId = deviceId;
         this.modification = modification;
     }
@@ -39,13 +42,15 @@ public class PortResource {
     static final public String PORT_PARAM = "port";
 
     final UriInfo uri;
-    public PortResource(UriInfo uri) {
+    final SessionManager sm;
+    public PortResource(UriInfo uri, SessionManager sm) {
         this.uri = uri;
+        this.sm = sm;
     }
 
     @Path("link")
     public PortLinkResource getResource(@Context UriInfo u) {
-        return new PortLinkResource(u);
+        return new PortLinkResource(u, this.sm);
     }
 
     // Consider byName==true (or at least put a redirection or self element)
@@ -54,7 +59,7 @@ public class PortResource {
     public Response getPort(
             @PathParam(DeviceResource.DEVICE_PARAM) String deviceId,
             @PathParam(PORT_PARAM) String portName) {
-        final Port p = new PortGetter(deviceId, Utils.unescapePort(portName)).call();  // Not using a new Thread
+        final Port p = new PortGetter(this.sm, deviceId, Utils.unescapePort(portName)).call();  // Not using a new Thread
         if (p==null)
             return Response.noContent().
                     links(getPortsLink()).build();
@@ -75,7 +80,7 @@ public class PortResource {
         // The portName should be provided in the URL, not in the body (i.e., JSON sent).
         if (modification.getPortName()==null) {
             modification.setPortName(Utils.unescapePort(portName));
-            final Port ret = new PortModifier(deviceId, modification).call();  // Not using a new Thread
+            final Port ret = new PortModifier(this.sm, deviceId, modification).call();  // Not using a new Thread
             return Response.ok(ret).
                     links(getPortsLink()).
                     links(getLinkLink()).build();

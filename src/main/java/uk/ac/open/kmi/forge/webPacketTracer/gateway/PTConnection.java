@@ -12,6 +12,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import uk.ac.open.kmi.forge.webPacketTracer.properties.PacketTracerInstanceProperties;
 import uk.ac.open.kmi.forge.webPacketTracer.properties.PropertyFileManager;
+import uk.ac.open.kmi.forge.webPacketTracer.session.PTInstanceDetails;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -36,7 +37,7 @@ public class PTConnection {
         this.port = port;
     }
 
-    public static PTConnection createPacketTracerGateway() {
+    public static PTConnection createDefaultPacketTracerGateway() {
         final PropertyFileManager pfm = new PropertyFileManager();
         final Iterator<PacketTracerInstanceProperties> it = pfm.getPacketTracerInstancesDetails().iterator();
         if(!it.hasNext()) {
@@ -45,6 +46,10 @@ public class PTConnection {
         }
         final PacketTracerInstanceProperties prop = it.next();
         return new PTConnection(prop.getHostname(), prop.getPort());
+    }
+
+    public static PTConnection createPacketTracerGateway(String hostName, int port) {
+        return new PTConnection(hostName, port);
     }
 
     public Log getLog() {

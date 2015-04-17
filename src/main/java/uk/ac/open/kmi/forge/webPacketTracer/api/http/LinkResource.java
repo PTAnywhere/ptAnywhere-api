@@ -3,6 +3,7 @@ package uk.ac.open.kmi.forge.webPacketTracer.api.http;
 import uk.ac.open.kmi.forge.webPacketTracer.gateway.PTCallable;
 import uk.ac.open.kmi.forge.webPacketTracer.pojo.InnerLink;
 import uk.ac.open.kmi.forge.webPacketTracer.pojo.RefactoredLink;
+import uk.ac.open.kmi.forge.webPacketTracer.session.SessionManager;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -12,40 +13,45 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
+import java.net.URI;
 
 
 class LinkGetter extends PTCallable<InnerLink> {
     final String linkId;
-    public LinkGetter(String linkId) {
+    public LinkGetter(SessionManager sm, String linkId) {
+        super(sm);
         this.linkId = linkId;
     }
     @Override
     public InnerLink internalRun() {
-        getLog().error(this.linkId);
         return this.connection.getDataAccessObject().getLink(this.linkId);
     }
 }
 
 
-@Path("links/{link}")
 public class LinkResource {
 
-    @Context
+    static final public String LINK_PARAM = "link";
+
     UriInfo uri;
+    SessionManager sm;
+    public LinkResource(UriInfo uri, SessionManager sm) {
+        this.uri = uri;
+        this.sm = sm;
+    }
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getLink(@PathParam("link") String linkId) {
-        final InnerLink l = new LinkGetter(linkId).call();  // Same thread
-        if (l==null)
-            return Response.noContent()
-                    .link(this.uri.getBaseUri() + "devices", "devices")
-                    .build();
+    public Response getLink(@PathParam(LINK_PARAM) String linkId) {
+        final InnerLink l = new LinkGetter(this.sm, linkId).call();  // Same thread
+        if (l==null) {
+            return addDefaultLinks(Response.noContent()).build();
+        }
 
         final RefactoredLink rl = new RefactoredLink();
         rl.setId(l.getId());
 
-        Response.ResponseBuilder ret = Response.ok().link(this.uri.getBaseUri() + "devices", "devices");
+        Response.ResponseBuilder ret = addDefaultLinks(Response.ok());
         for (String[] endpoint: l.getEndpoints()) {
             final String e = getPortURL(endpoint);
             ret = ret.link(e, "endpoint");
@@ -55,11 +61,20 @@ public class LinkResource {
         return ret.entity(rl).build();
     }
 
+    private URI getSessionURL() {
+        return Utils.getParent(Utils.getParent(this.uri.getRequestUri()));
+    }
+
+    private Response.ResponseBuilder addDefaultLinks(Response.ResponseBuilder rb) {
+        final URI sessionURL = getSessionURL();
+        return rb.link(sessionURL, "session").link(sessionURL + "devices", "devices");
+    }
+
     // From the API perspective, the best thing would be to place the DELETE here.
     // However, seeing how the PT library (or even the protocol) works, I will keep it in the endpoints.
 
     private String getPortURL(String[] endpointInfo) {
-        return this.uri.getBaseUri() +
+        return getSessionURL() +
                 "devices/" + Utils.encodeForURL(endpointInfo[0]) +
                 "/ports/" + Utils.escapePort(endpointInfo[1]);
     }

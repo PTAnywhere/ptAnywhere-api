@@ -5,6 +5,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import uk.ac.open.kmi.forge.webPacketTracer.api.websocket.ConsoleEndpoint;
 import uk.ac.open.kmi.forge.webPacketTracer.gateway.PTCallable;
+import uk.ac.open.kmi.forge.webPacketTracer.session.SessionManager;
+import uk.ac.open.kmi.forge.webPacketTracer.session.SessionsManager;
 
 import javax.websocket.server.ServerEndpoint;
 import javax.ws.rs.*;
@@ -19,7 +21,8 @@ import java.util.Map;
 
 class CommandLineGetter extends PTCallable<Boolean> {
     final String dId;
-    public CommandLineGetter(String dId) {
+    public CommandLineGetter(String sId, String dId) {
+        super(new SessionManager(sId, SessionsManager.create()));
         this.dId = dId;
     }
     @Override
@@ -31,13 +34,13 @@ class CommandLineGetter extends PTCallable<Boolean> {
     }
 }
 
-@Path("devices/{device}/console")
+@Path("sessions/{session}/devices/{device}/console")
 public class ConsoleResource extends CustomAbstractResource {
 
     private static Log logger = LogFactory.getLog(ConsoleResource.class);
 
-    private boolean deviceHasCommandLine(String deviceId) {
-        return new CommandLineGetter(deviceId).call();
+    private boolean deviceHasCommandLine(String sessionId, String deviceId) {
+        return new CommandLineGetter(sessionId, deviceId).call();
     }
 
     // To avoid pointing to Apache's reverse proxy in the URL (this creates problems with Websockets)
@@ -61,8 +64,9 @@ public class ConsoleResource extends CustomAbstractResource {
 
     @GET
     @Produces(MediaType.TEXT_HTML)
-    public Response getDevice(@PathParam("device") String deviceId) {
-        if (deviceHasCommandLine(deviceId)) {
+    public Response getDevice(@PathParam("session") String sessionId,
+                              @PathParam("device") String deviceId) {
+        if (deviceHasCommandLine(sessionId, deviceId)) {
             try {
                 final String wsu = getWebSocketURL(deviceId);
                 final Map<String, Object> map = new HashMap<String, Object>();
