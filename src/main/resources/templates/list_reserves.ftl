@@ -14,8 +14,8 @@
     <link href="${base}widget.css" rel="stylesheet" type="text/css"/>
     <script>
         function createSession(event) {
-            $.post( "${api}sessions", function(data, status, xhr) {
-                window.location.href = xhr.getResponseHeader('Location');
+            $.post( "${api}sessions", function(data) {
+                console.log("Cool " + data);
             }).fail(function(data) {
                 $( "#dialog-message" ).dialog({
                     modal: true,
