@@ -30,14 +30,13 @@ public class SessionResource {
     public Response getSession(@PathParam(SESSION_PARAM) String sessionId) {
         final String requestUri = Utils.getURIWithSlashRemovingQuery(this.uri.getRequestUri());
         final SessionManager sm = SessionManager.create();
-        if (sm.doesExist(sessionId)) {
-            return Response.ok("\"" + sessionId + "\"").
-                    links(getSessionsLink()).
-                    link(requestUri + "devices", "devices").
-                    link(requestUri + "network", "network").build();
-        }
-        return Response.status(Response.Status.NOT_FOUND).
-                links(getSessionsLink()).build();
+        if (!sm.doesExist(sessionId))
+            throw new SessionNotFoundException(sessionId, getSessionsLink());
+
+        return Response.ok("\"" + sessionId + "\"").
+                links(getSessionsLink()).
+                link(requestUri + "devices", "devices").
+                link(requestUri + "network", "network").build();
     }
 
     @DELETE
