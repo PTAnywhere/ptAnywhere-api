@@ -15,7 +15,17 @@
 
     <script>
         $(function() {
-            $("button").button().click(function () {
+            $("button.goto").button().click(function () {
+                var url = $(this).attr("formaction");
+                $.get(url, function() {
+                    // We could do this directly without $.get(), but this way we can capture the error.
+                    window.location.href =  url;
+                })
+                .fail(function() {
+                    console.log("The session has probably expired.");
+                });
+            });
+            $("button.release").button().click(function () {
                 var liEl = $(this).parent();
                 var url = $(this).attr("formaction");
                 $.ajax({
@@ -34,8 +44,9 @@
     <ul>
         <#list sessions as session>
             <li>
-                <a href="${api}sessions/${session}">${session}</a>
-                <button formaction="${api}sessions/${session}">Release</button>
+                <a href="${api}sessions/${session}">Session ${session}</a>
+                <button formaction="p/${session}" class="goto">Go to widget</button>
+                <button formaction="${api}sessions/${session}" class="release">Release</button>
             </li>
         </#list>
     </ul>
