@@ -1,6 +1,8 @@
 package uk.ac.open.kmi.forge.webPacketTracer.widget;
 
 
+import uk.ac.open.kmi.forge.webPacketTracer.session.SessionManager;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -10,14 +12,15 @@ import java.util.HashMap;
 import java.util.Map;
 
 
-@Path("index.html")
+@Path("reservations.html")
 public class ReservationsResource extends CustomAbstractResource {
     @GET
     @Produces(MediaType.TEXT_HTML)
     public Response getWidget() {
+        final SessionManager sm = SessionManager.create();
         final Map<String, Object> map = new HashMap<String, Object>();
-        map.put("title", getApplicationTitle());
-        return Response.ok(getPreFilled("/reservation.ftl", map)).
+        map.put("sessions", sm.getCurrentSessions());
+        return Response.ok(getPreFilled("/list_reserves.ftl", map)).
                 link(uri.getBaseUri() + "/", "api").build();
     }
 }
