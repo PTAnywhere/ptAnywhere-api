@@ -16,8 +16,6 @@ public class WidgetResource extends CustomAbstractResource {
 
     static String RELATIVE_ROOT_PATH = "../";
 
-
-
     @GET
     @Produces(MediaType.TEXT_HTML)
     public Response getWidget(@PathParam("session") String sessionId) {

@@ -6,6 +6,9 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Transaction;
 import uk.ac.open.kmi.forge.webPacketTracer.properties.PropertyFileManager;
 import uk.ac.open.kmi.forge.webPacketTracer.properties.RedisConnectionProperties;
+
+import java.util.HashSet;
+import java.util.Random;
 import java.util.Set;
 
 
@@ -74,22 +77,37 @@ public class SessionManager {
         t.exec();
     }
 
+    private String generateSessionId() {
+        final Long session = this.jedis.incr(NUMBER_SESSIONS);  // Unique part of the id
+        // Random number from 0 to 999 to avoid any user from guessing other users' session ids.
+        final int rnd = new Random().nextInt(1000);
+        return session + "s" + rnd;
+    }
+
+    private String toRedisSessionId(String sessionId) {
+        return SESSION_PREFIX + sessionId;
+    }
+
+    private String fromRedisSessionId(String redisSessionId) {
+        return redisSessionId.substring(SESSION_PREFIX.length());
+    }
+
     /**
      * @param instanceId
      *      The instance allocated for the new session.
      * @return The new session id.
      */
     private String createSession(String instanceId) {
-        final Long session = this.jedis.incr(NUMBER_SESSIONS);
-        final String sessionId = SESSION_PREFIX + session;
+        final String sessionId  = generateSessionId();
+        final String rSessionId = toRedisSessionId(sessionId);
         final String busyInstanceId = instanceId + INSTANCE_BUSY_POSTFIX;
         final int expirationAfter = RESERVATION_TIME * 60;
 
         final Transaction t = this.jedis.multi();
         // Use hset if more details are needed
-        t.set(sessionId, instanceId);
-        t.expire(sessionId, expirationAfter);
-        t.set(busyInstanceId, sessionId);
+        t.set(rSessionId, instanceId);
+        t.expire(rSessionId, expirationAfter);
+        t.set(busyInstanceId, rSessionId);
         t.expire(busyInstanceId, expirationAfter);
         t.sadd(USED_INSTANCES, instanceId);
         t.exec();
@@ -120,11 +138,16 @@ public class SessionManager {
     }
 
     public Set<String> getCurrentSessions() {
-        return this.jedis.keys(SESSION_PREFIX + "*");
+        final Set<String> ret = new HashSet<String>();
+        for (String rSessionId: this.jedis.keys(SESSION_PREFIX + "*")) {
+            ret.add(fromRedisSessionId(rSessionId));
+        }
+        return ret;
     }
 
     public boolean doesExist(String sessionId) {
-        return this.jedis.exists(sessionId);
+        final String rSessionId = toRedisSessionId(sessionId);
+        return this.jedis.exists(rSessionId);
     }
 
     /**
@@ -132,13 +155,14 @@ public class SessionManager {
      * @param sessionId
      */
     public void deleteSession(String sessionId) {
-        final String assignedInstanceId = this.jedis.get(sessionId);
+        final String rSessionId = toRedisSessionId(sessionId);
+        final String assignedInstanceId = this.jedis.get(rSessionId);
         final String assignedSessionId = this.jedis.get(assignedInstanceId + INSTANCE_BUSY_POSTFIX);
 
         final Transaction t = this.jedis.multi();
         if (assignedSessionId!=null)  // Delete only if it exists.
-            t.del(sessionId);
-        if (sessionId.equals(assignedSessionId)) { // Delete only is the session using the instance is the same.
+            t.del(rSessionId);
+        if (rSessionId.equals(assignedSessionId)) { // Delete only is the session using the instance is the same.
             t.del(assignedInstanceId + INSTANCE_BUSY_POSTFIX);
             // Move to the available list.
             t.srem(USED_INSTANCES, assignedInstanceId);
