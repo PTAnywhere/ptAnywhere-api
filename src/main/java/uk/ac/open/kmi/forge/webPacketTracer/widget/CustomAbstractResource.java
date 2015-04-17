@@ -17,6 +17,8 @@ public abstract class CustomAbstractResource {
     private static Log logger;
     private static Properties properties;
 
+    static String RELATIVE_ROOT_PATH = "../";
+
     static {
         logger = LogFactory.getLog(WidgetResource.class);
         properties = new Properties();  // It does not change once the app has been deployed.
@@ -37,7 +39,11 @@ public abstract class CustomAbstractResource {
     }
 
     URI getAppRootURL() {
-        return this.uri.getBaseUri().resolve("../");  // to remove "widget part"
+        return this.uri.getBaseUri().resolve(RELATIVE_ROOT_PATH);  // to remove "widget part"
+    }
+
+    String getAPIURL() {
+        return getAppRootURL().toString() + "api/";
     }
 
     public Viewable getPreFilled(String path) {
@@ -45,8 +51,8 @@ public abstract class CustomAbstractResource {
     }
 
     public Viewable getPreFilled(String path, Map<String, Object> map) {
-        map.put("base", this.uri.getBaseUri().resolve("../").toString() + "static/");
-        map.put("api", this.uri.getBaseUri().resolve("../").toString() + "api/");
+        map.put("base", getAppRootURL().toString() + "static/");
+        map.put("api", getAPIURL());
         return (new Viewable(path, map));
     }
 }

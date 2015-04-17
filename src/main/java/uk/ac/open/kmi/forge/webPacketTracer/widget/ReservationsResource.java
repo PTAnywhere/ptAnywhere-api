@@ -21,6 +21,6 @@ public class ReservationsResource extends CustomAbstractResource {
         final Map<String, Object> map = new HashMap<String, Object>();
         map.put("sessions", sm.getCurrentSessions());
         return Response.ok(getPreFilled("/list_reserves.ftl", map)).
-                link(uri.getBaseUri() + "/", "api").build();
+                link(getAPIURL(), "api").build();
     }
 }

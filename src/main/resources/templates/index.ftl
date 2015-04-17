@@ -17,6 +17,9 @@
 
     <link href="${base}widget.css" rel="stylesheet" type="text/css"/>
     <script type="text/javascript" src="${base}widget.js"></script>
+    <script>
+        api_url = "${session_api}";
+    </script>
 </head>
 
 <body>

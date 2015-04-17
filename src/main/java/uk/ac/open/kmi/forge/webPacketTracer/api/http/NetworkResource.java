@@ -4,9 +4,7 @@ import uk.ac.open.kmi.forge.webPacketTracer.gateway.PTCallable;
 import uk.ac.open.kmi.forge.webPacketTracer.pojo.Network;
 
 import javax.ws.rs.GET;
-import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
@@ -18,10 +16,12 @@ class NetworkGetter extends PTCallable<Network> {
     }
 }
 
-@Path("network")
 public class NetworkResource {
-    @Context
-    UriInfo uri;
+
+    final UriInfo uri;
+    public NetworkResource(UriInfo uri) {
+        this.uri = uri;
+    }
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)

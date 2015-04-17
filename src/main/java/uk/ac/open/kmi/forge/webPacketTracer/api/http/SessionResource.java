@@ -16,8 +16,13 @@ public class SessionResource {
     }
 
     @Path("devices")
-    public DevicesResource getResource(@Context UriInfo u) {
+    public DevicesResource getDeviceResource(@Context UriInfo u) {
         return new DevicesResource(u);
+    }
+
+    @Path("network")
+    public NetworkResource getNetworkResource(@Context UriInfo u) {
+        return new NetworkResource(u);
     }
 
     @GET
@@ -26,7 +31,7 @@ public class SessionResource {
         final String requestUri = Utils.getURIWithSlashRemovingQuery(this.uri.getRequestUri());
         final SessionManager sm = SessionManager.create();
         if (sm.doesExist(sessionId)) {
-            return Response.ok(sessionId).
+            return Response.ok("\"" + sessionId + "\"").
                     links(getSessionsLink()).
                     link(requestUri + "devices", "devices").
                     link(requestUri + "network", "network").build();

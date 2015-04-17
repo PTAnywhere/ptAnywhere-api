@@ -1,5 +1,3 @@
-var api_url = "../api";
-
 var nodes, edges, network;
 
 function requestJSON(verb, url, data, callback) {
@@ -435,19 +433,19 @@ function loadTopology(responseData) {
                 // TODO room for improvement, static URL vs relative URL
                 cloudDevice : {
                     shape : 'image',
-                    image : "../static/cloud.png"
+                    image : "../../static/cloud.png"
                 },
                 routerDevice : {
                     shape : 'image',
-                    image : "../static/router.png"
+                    image : "../../static/router.png"
                 },
                 switchDevice : {
                     shape : 'image',
-                    image : "../static/switch.png"
+                    image : "../../static/switch.png"
                 },
                 pcDevice : {
                     shape : 'image',
-                    image : "../static/PC.png"
+                    image : "../../static/PC.png"
                 }
             },
             onAdd: function(data, callback) {

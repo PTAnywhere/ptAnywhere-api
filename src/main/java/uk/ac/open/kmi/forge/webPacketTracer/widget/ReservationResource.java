@@ -18,6 +18,6 @@ public class ReservationResource extends CustomAbstractResource {
         final Map<String, Object> map = new HashMap<String, Object>();
         map.put("title", getApplicationTitle());
         return Response.ok(getPreFilled("/reservation.ftl", map)).
-                link(uri.getBaseUri() + "/", "api").build();
+                link(getAPIURL(), "api").build();
     }
 }
