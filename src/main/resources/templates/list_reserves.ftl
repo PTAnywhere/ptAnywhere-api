@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html class="plain">
 <head>
     <title>List of current sessions</title>
 

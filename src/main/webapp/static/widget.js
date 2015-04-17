@@ -508,8 +508,10 @@ function redrawTopology(callback) {
                 }
                 return;
             } else {
-                console.error("The topology could not be loaded.");
-                console.error(textStatus);
+                console.error("The topology could not be loaded: " + errorThrown + ".");
+                if(xhr.status==404) {
+                    $(".view").html($("#notFound").html());
+                }
             }
         }  // Apparently status code 304 is an error for this method :-S
     });

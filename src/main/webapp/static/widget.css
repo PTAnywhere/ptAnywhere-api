@@ -3,6 +3,10 @@ html,body {
 	background-color: #fff4de;
 }
 
+html.plain, html.plain>body {
+	background-color: #ffffff;
+}
+
 h1 {
 	font-size: 150%;
 	margin: 5px 0;
@@ -51,6 +55,12 @@ div.view {
     background-color: #ffffff;
     border-radius: 20px;
     border: 2px solid lightgray;
+}
+
+div.view div.message {
+	width: 60%;
+	margin: 5% auto;
+	text-align: center;
 }
 
 div.logos {

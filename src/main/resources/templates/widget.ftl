@@ -140,5 +140,12 @@
 <div id="command-line" title="Command line">
     <div id="replace"></div>
 </div>
+<div id="notFound" style="display: none;">
+    <div class="message">
+        <h1>Topology not found.</h1>
+        <p>The topology could not be loaded probably because the session does not exist (e.g., if it has expired).</p>
+        <p><a href="../index.html">Click here</a> to initiate a new one.</p>
+    </div>
+</div>
 </body>
 </html>

@@ -38,8 +38,18 @@
     </script>
 </head>
 <body>
-<p>Reserve instance to see the widget.</p>
-<div><button>Reserve</button></div>
+<div class="widget-header">
+    <h2>
+        <img src="${base}app.png" alt="PacketTracer icon" >
+        ${title}
+    </h2>
+</div>
+<div class="view">
+    <div class="message">
+        <p>Start using the widget by reserving a PacketTracer instance!</p>
+        <button style="margin-top: 4%;">Reserve</button>
+    </div>
+</div>
 <div class="footer">
     <div class="logos">
         <a href="https://www.netacad.com"><img src="${base}Cisco_academy_logo.png" alt="Cisco logo" class="cisco-logo"></a>
@@ -49,7 +59,7 @@
 </div>
 <div id="dialog-message" title="Unavailable PT instances" style="display: none;">
   <p>
-    Sorry, there are <b>not PacketTracer instances available</b> right now to initiate a session.
+    Sorry, there are <b>no PacketTracer instances available</b> right now to initiate a session.
   </p>
   <p>
     Please, wait a little bit and <b>try it again</b>.
