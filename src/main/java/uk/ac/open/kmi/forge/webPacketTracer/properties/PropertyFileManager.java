@@ -38,14 +38,14 @@ public class PropertyFileManager {
 
     private PacketTracerInstanceProperties getConnectionChunks(String s) throws Exception {
         if (s.contains(":")) {
-            final String[] chunks = s.split(":");
+            final String[] chunks = s.trim().split(":");
             if (chunks.length!=2) {
                 throw new Exception("Incorrect instance name error: " + s + ".");
             }
             final int port = Integer.parseInt(chunks[1]);
             return new PacketTracerInstanceProperties(chunks[0], port);
         } else {
-            return new PacketTracerInstanceProperties(s, 39000);
+            return new PacketTracerInstanceProperties(s.trim(), 39000);
         }
     }
 
