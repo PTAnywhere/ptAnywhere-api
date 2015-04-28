@@ -51,15 +51,16 @@ public class ConsoleResource extends CustomAbstractResource {
         return uri.toString();
     }
 
-    private String getPathToEndpoint(String deviceId) throws UnsupportedEncodingException {
+    private String getPathToEndpoint(String sessionId, String deviceId) throws UnsupportedEncodingException {
         final ServerEndpoint annotation = ConsoleEndpoint.class.getAnnotation(ServerEndpoint.class);
         return annotation.value().
+                replace("{session}", sessionId).
                 replace("{device}", URLEncoder.encode(deviceId, "UTF-8")).
                 substring(1);  // Remove first slash because it will already be included in the App root URL
     }
 
-    private String getWebSocketURL(String deviceId) throws UnsupportedEncodingException {
-        return fixPort(getAppRootURL()).replace("http://", "ws://") + getPathToEndpoint(deviceId);
+    private String getWebSocketURL(String sessionId, String deviceId) throws UnsupportedEncodingException {
+        return fixPort(getAppRootURL()).replace("http://", "ws://") + getPathToEndpoint(sessionId, deviceId);
     }
 
     @GET
@@ -68,7 +69,7 @@ public class ConsoleResource extends CustomAbstractResource {
                               @PathParam("device") String deviceId) {
         if (deviceHasCommandLine(sessionId, deviceId)) {
             try {
-                final String wsu = getWebSocketURL(deviceId);
+                final String wsu = getWebSocketURL(sessionId, deviceId);
                 final Map<String, Object> map = new HashMap<String, Object>();
                 map.put("websocketURL", wsu);
                 return Response.ok(getPreFilled("/console.ftl", map)).
