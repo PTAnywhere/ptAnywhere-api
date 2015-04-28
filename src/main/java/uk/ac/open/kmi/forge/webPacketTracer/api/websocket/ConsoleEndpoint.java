@@ -87,7 +87,21 @@ public class ConsoleEndpoint implements TerminalLineEventListener {
     @OnMessage
     public void typeCommand(Session session, String msg, boolean last) {
         if (session.isOpen()) {
-            this.cmd.enterCommand(msg);
+            final String sessionId = session.getPathParameters().get("session");
+            if (SessionsManager.create().doesExist(sessionId)) {
+                this.cmd.enterCommand(msg);
+            } else {
+                // The current session no longer has access to the PT instance it was using...
+                final TerminalLineEventRegistry registry = this.common.getTerminalLineEventRegistry();
+                try {
+                    registry.removeListener(this);
+                    session.getBasicRemote().sendText("\n\n\nThis command line does no longer accept commands.");
+                    session.getBasicRemote().sendText("\nYour session might have expired.");
+                    session.close();
+                } catch(IOException e) {
+                    logger.error(e.getMessage(), e);
+                }
+            }
         }
     }
 
