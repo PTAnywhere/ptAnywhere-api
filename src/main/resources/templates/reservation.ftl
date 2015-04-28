@@ -62,7 +62,7 @@
     Sorry, there are <b>no PacketTracer instances available</b> right now to initiate a session.
   </p>
   <p>
-    Please, wait a little bit and <b>try it again</b>.
+    Please, wait a little bit and <b>try again</b>.
   </p>
 </div>
 </body>

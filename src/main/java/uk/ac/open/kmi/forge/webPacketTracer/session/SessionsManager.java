@@ -24,7 +24,7 @@ public class SessionsManager {
     /**
      * Minutes that a reservation will last.
      */
-    private static final int RESERVATION_TIME = 2;
+    private static final int RESERVATION_TIME = 5;
 
     private static final String AVAILABLE_INSTANCES = "available";
     // TODO use subscriptions to ensure that after deleting a busy-instance-key it is inserted again in the list of available ones.
@@ -150,12 +150,16 @@ public class SessionsManager {
         return this.jedis.exists(rSessionId);
     }
 
+    protected PTInstanceDetails getPTInstanceDetails(String instanceId) {
+        if (instanceId==null) return null;
+        return new PTInstanceDetails( this.jedis.hget(instanceId, INSTANCE_HOSTNAME),
+                Integer.valueOf(this.jedis.hget(instanceId, INSTANCE_PORT)) );
+    }
+
     public PTInstanceDetails getInstance(String sessionId) {
         final String rSessionId = toRedisSessionId(sessionId);
         final String instanceId = this.jedis.get(rSessionId);
-        if (instanceId==null) return null;
-        return new PTInstanceDetails( this.jedis.hget(instanceId, INSTANCE_HOSTNAME),
-                                      Integer.valueOf(this.jedis.hget(instanceId, INSTANCE_PORT)) );
+        return getPTInstanceDetails(instanceId);
     }
 
     /**
@@ -177,5 +181,17 @@ public class SessionsManager {
             t.sadd(AVAILABLE_INSTANCES, assignedInstanceId);
         }
         t.exec();
+    }
+
+
+    /* Methods to ease webapp management */
+    public Set<PTInstanceDetails> getAllInstances() {
+        final Set<PTInstanceDetails> ret = new HashSet<PTInstanceDetails>();
+        for(String instanceId: this.jedis.keys(INSTANCE_PREFIX + "*")) {
+            if (!instanceId.endsWith(INSTANCE_BUSY_POSTFIX)) {
+                ret.add(getPTInstanceDetails(instanceId));
+            }
+        }
+        return ret;
     }
 }

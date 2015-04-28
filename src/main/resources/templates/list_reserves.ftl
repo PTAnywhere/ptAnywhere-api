@@ -38,17 +38,39 @@
             });
         });
     </script>
+
+    <style>
+        td {
+            padding: 0 20px;
+        }
+    </style>
 </head>
 <body>
     <h1>Sessions in use</h1>
-    <ul>
-        <#list sessions as session>
-            <li>
-                <a href="${api}sessions/${session}">Session ${session}</a>
-                <button formaction="p/${session}" class="goto">Go to widget</button>
-                <button formaction="${api}sessions/${session}" class="release">Release</button>
-            </li>
+    <#if (sessions?size > 0) >
+        <ul>
+            <#list sessions as session>
+                <li>
+                    <a href="${api}sessions/${session}">Session ${session}</a>
+                    <button formaction="p/${session}" class="goto">Go to widget</button>
+                    <button formaction="${api}sessions/${session}" class="release">Release</button>
+                </li>
+            </#list>
+        </ul>
+    <#else>
+        <p>No sessions have been initiated.</p>
+    </#if>
+
+    <h1>PT instances used by the application</h1>
+    <table>
+        <tr>
+            <th>Host</th><th>Port</th>
+        </tr>
+        <#list instances as instance>
+        <tr>
+            <td>${instance.host}</td><td>${instance.port}</td>
+        </tr>
         </#list>
-    </ul>
+    </table>
 </body>
 </html>
