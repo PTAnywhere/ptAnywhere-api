@@ -198,12 +198,14 @@
             <artifactId>ptipc</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
-        <!-- TinCanJava's dependencies, hopefully it will be uploaded to a Maven repo soon  -->
+
+        <!-- TinCanJava library locally installed, hopefully it will be updated to a Maven repo soon. -->
         <dependency>
             <groupId>com.rusticisoftware</groupId>
             <artifactId>tincan</artifactId>
             <version>0.7.0</version>
         </dependency>
+        <!-- TinCanJava's dependencies, hopefully this won't be needed soon. -->
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-client</artifactId>
