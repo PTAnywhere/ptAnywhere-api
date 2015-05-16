@@ -24,3 +24,6 @@ release.properties
 
 # IntelliJ IDEA
 .idea/
+
+# Private (secret) property files
+src/main/resources/private
