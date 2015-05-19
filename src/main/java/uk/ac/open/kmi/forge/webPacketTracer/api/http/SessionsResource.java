@@ -1,7 +1,7 @@
 package uk.ac.open.kmi.forge.webPacketTracer.api.http;
 
 import uk.ac.open.kmi.forge.webPacketTracer.analytics.InteractionRecordFactory;
-import uk.ac.open.kmi.forge.webPacketTracer.analytics.InteractionRecordable;
+import uk.ac.open.kmi.forge.webPacketTracer.analytics.InteractionRecord;
 import uk.ac.open.kmi.forge.webPacketTracer.session.BusyInstancesException;
 import uk.ac.open.kmi.forge.webPacketTracer.session.SessionsManager;
 
@@ -38,8 +38,8 @@ public class SessionsResource {
     public Response createSession() throws URISyntaxException {
         try {
             final String id = this.sm.createSession();
-            final InteractionRecordable ir = InteractionRecordFactory.create();
-            ir.interactionStarted();
+            final InteractionRecord ir = InteractionRecordFactory.create();
+            ir.interactionStarted(id);
             return Response.created(new URI(getSessionRelativeURI(id))).
                     links(getItemLink(id)).build();
         } catch(BusyInstancesException e) {
