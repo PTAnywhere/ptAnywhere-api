@@ -8,8 +8,8 @@ import uk.ac.open.kmi.forge.webPacketTracer.properties.PropertyFileManager;
 import uk.ac.open.kmi.forge.webPacketTracer.properties.RedisConnectionProperties;
 
 import java.util.HashSet;
-import java.util.Random;
 import java.util.Set;
+import java.util.UUID;
 
 
 /**
@@ -20,7 +20,6 @@ public class SessionsManager {
 
     private static final Log LOGGER = LogFactory.getLog(SessionsManager.class);
 
-    private static final String NUMBER_SESSIONS = "sessions";
     /**
      * Minutes that a reservation will last.
      */
@@ -56,7 +55,6 @@ public class SessionsManager {
 
     public void clear() {
         this.jedis.flushDB();
-        this.jedis.set(NUMBER_SESSIONS, "0");
     }
 
     private String getInstanceId(String hostname, int port) {
@@ -78,10 +76,7 @@ public class SessionsManager {
     }
 
     private String generateSessionId() {
-        final Long session = this.jedis.incr(NUMBER_SESSIONS);  // Unique part of the id
-        // Random number from 0 to 999 to avoid any user from guessing other users' session ids.
-        final int rnd = new Random().nextInt(1000);
-        return session + "s" + rnd;
+        return UUID.randomUUID().toString();
     }
 
     private String toRedisSessionId(String sessionId) {
