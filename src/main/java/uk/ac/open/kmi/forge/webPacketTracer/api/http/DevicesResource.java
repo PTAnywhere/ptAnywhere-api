@@ -1,5 +1,7 @@
 package uk.ac.open.kmi.forge.webPacketTracer.api.http;
 
+import uk.ac.open.kmi.forge.webPacketTracer.analytics.InteractionRecord;
+import uk.ac.open.kmi.forge.webPacketTracer.analytics.InteractionRecordFactory;
 import uk.ac.open.kmi.forge.webPacketTracer.gateway.PTCallable;
 import uk.ac.open.kmi.forge.webPacketTracer.pojo.Device;
 import uk.ac.open.kmi.forge.webPacketTracer.session.SessionManager;
@@ -59,7 +61,10 @@ public class DevicesResource {
         final Device device = new DevicePoster(this.sm, newDevice).call();
         if (device==null)
             return addDefaultLinks(Response.status(Response.Status.BAD_REQUEST).entity(newDevice)).build();
-        return addDefaultLinks(Response.created(new URI(getDeviceRelativeURI(device.getId())))).
+        final InteractionRecord ir = InteractionRecordFactory.create();
+        final String newDeviceUri = getDeviceRelativeURI(device.getId());
+        ir.deviceCreated(sm.getSessionId(), newDeviceUri);
+        return addDefaultLinks(Response.created(new URI(newDeviceUri))).
                 entity(device).
                 links(getItemLink(device.getId())).build();  // Not using a new Thread
     }

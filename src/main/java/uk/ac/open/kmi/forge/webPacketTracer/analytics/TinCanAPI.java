@@ -4,8 +4,10 @@ import com.rusticisoftware.tincan.*;
 import com.rusticisoftware.tincan.lrsresponses.StatementLRSResponse;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import uk.ac.open.kmi.forge.webPacketTracer.pojo.Device;
 
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.UUID;
 
@@ -20,7 +22,12 @@ public class TinCanAPI extends InteractionRecord {
 
     private static final Log LOGGER = LogFactory.getLog(TinCanAPI.class);
 
+    /* Verbs */
     private static final String INITIALIZED = "http://adlnet.gov/expapi/verbs/initialized";
+    private static final String CREATED = "http://activitystrea.ms/schema/1.0/create";
+
+    /* Objects */
+    // TODO get it from the HTTP API requester?
     private static final String WIDGET = "http://ict-forge.eu/widget/packerTracer";
 
     final RemoteLRS lrs = new RemoteLRS();
@@ -32,8 +39,15 @@ public class TinCanAPI extends InteractionRecord {
         this.lrs.setPassword(password);
     }
 
-    private void logRecordingError() {
-        LOGGER.error("Something went wrong recording the sentence.");
+    private void record(Statement statement) {
+        final StatementLRSResponse lrsRes = lrs.saveStatement(statement);
+        if (lrsRes.getSuccess()) {
+            // success, use lrsRes.getContent() to get the statement back
+            LOGGER.debug("Everything went ok.");
+        } else {
+            // failure, error information is available in lrsRes.getErrMsg()
+            LOGGER.error("Something went wrong recording the sentence.");
+        }
     }
 
     private Agent getAnonymousUser(String sessionId) {
@@ -57,26 +71,32 @@ public class TinCanAPI extends InteractionRecord {
         return context;
     }
 
+    public Statement getPrefilledStatement(String sessionId) {
+        final Statement st = new Statement();
+        st.setActor(getAnonymousUser(sessionId));
+        st.setContext(getContext(sessionId));
+        return st;
+    }
+
     public void interactionStarted(String sessionId) {
         try {
-            final Statement st = new Statement();
-            st.setActor(getAnonymousUser(sessionId));
+            final Statement st = getPrefilledStatement(sessionId);
             st.setVerb(new Verb(INITIALIZED));
             st.setObject(new Activity(WIDGET));
-            st.setContext(getContext(sessionId));
-
-            final StatementLRSResponse lrsRes = lrs.saveStatement(st);
-            if (lrsRes.getSuccess()) {
-                // success, use lrsRes.getContent() to get the statement back
-                LOGGER.debug("Everything went ok.");
-            } else {
-                // failure, error information is available in lrsRes.getErrMsg()
-                logRecordingError();
-            }
+            record(st);
         } catch(URISyntaxException e) {
             LOGGER.error(e.getMessage());
         }
     }
 
-
+    public void deviceCreated(String sessionId, String deviceUri) {
+        try {
+            final Statement st = getPrefilledStatement(sessionId);
+            st.setVerb(new Verb(CREATED));
+            st.setObject(new Activity(deviceUri));
+            record(st);
+        } catch(URISyntaxException e) {
+            LOGGER.error(e.getMessage());
+        }
+    }
 }

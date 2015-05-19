@@ -21,4 +21,8 @@ public class SessionManager {
         if (details==null) throw new SessionNotFoundException(this.sessionId);
         return details;
     }
+
+    public String getSessionId() {
+        return sessionId;
+    }
 }
