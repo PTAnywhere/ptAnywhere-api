@@ -29,6 +29,7 @@ public class TinCanAPI extends InteractionRecord {
     /* Objects */
     // TODO get it from the HTTP API requester?
     private static final String WIDGET = "http://ict-forge.eu/widget/packerTracer";
+    private static final String DEVICE_TYPE = WIDGET + "/devices/type/";
 
     final RemoteLRS lrs = new RemoteLRS();
 
@@ -89,11 +90,20 @@ public class TinCanAPI extends InteractionRecord {
         }
     }
 
-    public void deviceCreated(String sessionId, String deviceUri) {
+    public void deviceCreated(String sessionId, String deviceUri, String deviceName, String deviceType) {
         try {
+            final LanguageMap lm = new LanguageMap();
+            lm.put("en-UK", deviceName);
+            final ActivityDefinition definition = new ActivityDefinition();
+            definition.setType(DEVICE_TYPE + deviceType);
+            definition.setName(lm);
+            final Activity a = new Activity(deviceUri);
+            a.setDefinition(definition);
+
             final Statement st = getPrefilledStatement(sessionId);
             st.setVerb(new Verb(CREATED));
-            st.setObject(new Activity(deviceUri));
+            st.setObject(a);
+
             record(st);
         } catch(URISyntaxException e) {
             LOGGER.error(e.getMessage());

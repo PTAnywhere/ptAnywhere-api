@@ -63,7 +63,7 @@ public class DevicesResource {
             return addDefaultLinks(Response.status(Response.Status.BAD_REQUEST).entity(newDevice)).build();
         final InteractionRecord ir = InteractionRecordFactory.create();
         final String newDeviceUri = getDeviceRelativeURI(device.getId());
-        ir.deviceCreated(sm.getSessionId(), newDeviceUri);
+        ir.deviceCreated(sm.getSessionId(), newDeviceUri, device.getLabel(), device.getGroup());
         return addDefaultLinks(Response.created(new URI(newDeviceUri))).
                 entity(device).
                 links(getItemLink(device.getId())).build();  // Not using a new Thread
