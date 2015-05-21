@@ -4,6 +4,7 @@ import uk.ac.open.kmi.forge.webPacketTracer.analytics.InteractionRecordFactory;
 import uk.ac.open.kmi.forge.webPacketTracer.analytics.InteractionRecord;
 import uk.ac.open.kmi.forge.webPacketTracer.session.BusyInstancesException;
 import uk.ac.open.kmi.forge.webPacketTracer.session.SessionsManager;
+import static uk.ac.open.kmi.forge.webPacketTracer.api.http.URLFactory.SESSION_PARAM;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
@@ -14,14 +15,14 @@ import java.util.Iterator;
 import java.util.Set;
 
 
-@Path("sessions")
+@Path(URLFactory.SESSION_PATH)
 public class SessionsResource {
     @Context
     UriInfo uri;
 
     final SessionsManager sm = SessionsManager.create();
 
-    @Path("{" + SessionResource.SESSION_PARAM + "}")
+    @Path("{" + SESSION_PARAM + "}")
     public SessionResource getResource(@Context UriInfo u) {
         return new SessionResource(u, sm);
     }

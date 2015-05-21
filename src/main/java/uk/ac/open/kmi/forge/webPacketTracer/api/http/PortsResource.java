@@ -3,6 +3,8 @@ package uk.ac.open.kmi.forge.webPacketTracer.api.http;
 import uk.ac.open.kmi.forge.webPacketTracer.gateway.PTCallable;
 import uk.ac.open.kmi.forge.webPacketTracer.pojo.Port;
 import uk.ac.open.kmi.forge.webPacketTracer.session.SessionManager;
+import static uk.ac.open.kmi.forge.webPacketTracer.api.http.URLFactory.PORT_PARAM;
+import static uk.ac.open.kmi.forge.webPacketTracer.api.http.URLFactory.DEVICE_PARAM;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
@@ -34,7 +36,7 @@ public class PortsResource {
         this.sm = sm;
     }
 
-    @Path("{" + PortResource.PORT_PARAM + "}")
+    @Path("{" + PORT_PARAM + "}")
     public PortResource getResource(@Context UriInfo u) {
         return new PortResource(u, this.sm);
     }
@@ -43,7 +45,7 @@ public class PortsResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response getPorts(
-            @PathParam(DeviceResource.DEVICE_PARAM) String deviceId,
+            @PathParam(DEVICE_PARAM) String deviceId,
             @DefaultValue("false") @QueryParam("byName") boolean byName,
             @DefaultValue("false") @QueryParam("free") boolean filterFree) {
         final Collection<Port> p = new PortsGetter(this.sm, deviceId, byName, filterFree).call();  // Not using a new Thread

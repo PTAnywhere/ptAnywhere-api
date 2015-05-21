@@ -6,11 +6,12 @@ import uk.ac.open.kmi.forge.webPacketTracer.gateway.PTCallable;
 import uk.ac.open.kmi.forge.webPacketTracer.pojo.Device;
 import uk.ac.open.kmi.forge.webPacketTracer.session.SessionManager;
 
+import static uk.ac.open.kmi.forge.webPacketTracer.api.http.URLFactory.DEVICE_PARAM;
+
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.*;
 
 
@@ -43,13 +44,15 @@ class DevicePoster extends PTCallable<Device> {
 public class DevicesResource {
 
     final UriInfo uri;
+    final URLFactory gen;
     final SessionManager sm;
     public DevicesResource(UriInfo uri, SessionManager sm) {
         this.uri = uri;
         this.sm = sm;
+        this.gen = new URLFactory(uri.getBaseUri(), this.sm.getSessionId());
     }
 
-    @Path("{" + DeviceResource.DEVICE_PARAM + "}")
+    @Path("{" + DEVICE_PARAM + "}")
     public DeviceResource getResource(@Context UriInfo u) {
         return new DeviceResource(u, this.sm);
     }
@@ -62,7 +65,7 @@ public class DevicesResource {
         if (device==null)
             return addDefaultLinks(Response.status(Response.Status.BAD_REQUEST).entity(newDevice)).build();
         final InteractionRecord ir = InteractionRecordFactory.create();
-        final String newDeviceUri = getDeviceRelativeURI(device.getId());
+        final String newDeviceUri = this.gen.createDeviceURL(device.getId());
         ir.deviceCreated(sm.getSessionId(), newDeviceUri, device.getLabel(), device.getGroup());
         return addDefaultLinks(Response.created(new URI(newDeviceUri))).
                 entity(device).
@@ -83,12 +86,8 @@ public class DevicesResource {
         return rb.link(sessionURL, "session").link(sessionURL + "network", "network");
     }
 
-    private String getDeviceRelativeURI(String id) {
-        return Utils.getURIWithSlashRemovingQuery(this.uri.getRequestUri()) + Utils.encodeForURL(id);
-    }
-
     private Link getItemLink(String id) {
-        return Link.fromUri(getDeviceRelativeURI(id)).rel("item").build();
+        return Link.fromUri(this.gen.createDeviceURL(id)).rel("item").build();
     }
 
     private Link[] createLinks(Collection<Device> devices) {

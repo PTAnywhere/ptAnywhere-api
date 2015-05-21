@@ -4,6 +4,8 @@ import uk.ac.open.kmi.forge.webPacketTracer.gateway.PTCallable;
 import uk.ac.open.kmi.forge.webPacketTracer.pojo.InnerLink;
 import uk.ac.open.kmi.forge.webPacketTracer.pojo.RefactoredLink;
 import uk.ac.open.kmi.forge.webPacketTracer.session.SessionManager;
+import static uk.ac.open.kmi.forge.webPacketTracer.api.http.URLFactory.DEVICE_PATH;
+import static uk.ac.open.kmi.forge.webPacketTracer.api.http.URLFactory.LINK_PARAM;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.PathParam;
@@ -28,8 +30,6 @@ class LinkGetter extends PTCallable<InnerLink> {
 
 
 public class LinkResource {
-
-    static final public String LINK_PARAM = "link";
 
     UriInfo uri;
     SessionManager sm;
@@ -65,7 +65,7 @@ public class LinkResource {
 
     private Response.ResponseBuilder addDefaultLinks(Response.ResponseBuilder rb) {
         final URI sessionURL = getSessionURL();
-        return rb.link(sessionURL, "session").link(sessionURL + "devices", "devices");
+        return rb.link(sessionURL, "session").link(sessionURL + DEVICE_PATH, "devices");
     }
 
     // From the API perspective, the best thing would be to place the DELETE here.
@@ -73,7 +73,7 @@ public class LinkResource {
 
     private String getPortURL(String[] endpointInfo) {
         return getSessionURL() +
-                "devices/" + Utils.encodeForURL(endpointInfo[0]) +
+                DEVICE_PATH + "/" + Utils.encodeForURL(endpointInfo[0]) +
                 "/ports/" + Utils.escapePort(endpointInfo[1]);
     }
 }

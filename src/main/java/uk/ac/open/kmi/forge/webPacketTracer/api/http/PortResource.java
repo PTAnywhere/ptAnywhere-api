@@ -3,6 +3,9 @@ package uk.ac.open.kmi.forge.webPacketTracer.api.http;
 import uk.ac.open.kmi.forge.webPacketTracer.gateway.PTCallable;
 import uk.ac.open.kmi.forge.webPacketTracer.pojo.Port;
 import uk.ac.open.kmi.forge.webPacketTracer.session.SessionManager;
+import static uk.ac.open.kmi.forge.webPacketTracer.api.http.URLFactory.DEVICE_PARAM;
+import static uk.ac.open.kmi.forge.webPacketTracer.api.http.URLFactory.PORT_PARAM;
+import static uk.ac.open.kmi.forge.webPacketTracer.api.http.URLFactory.PORT_LINK_PATH;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
@@ -39,8 +42,6 @@ class PortModifier extends PTCallable<Port> {
 
 public class PortResource {
 
-    static final public String PORT_PARAM = "port";
-
     final UriInfo uri;
     final SessionManager sm;
     public PortResource(UriInfo uri, SessionManager sm) {
@@ -48,7 +49,7 @@ public class PortResource {
         this.sm = sm;
     }
 
-    @Path("link")
+    @Path(PORT_LINK_PATH)
     public PortLinkResource getResource(@Context UriInfo u) {
         return new PortLinkResource(u, this.sm);
     }
@@ -57,7 +58,7 @@ public class PortResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response getPort(
-            @PathParam(DeviceResource.DEVICE_PARAM) String deviceId,
+            @PathParam(DEVICE_PARAM) String deviceId,
             @PathParam(PORT_PARAM) String portName) {
         final Port p = new PortGetter(this.sm, deviceId, Utils.unescapePort(portName)).call();  // Not using a new Thread
         if (p==null)
@@ -75,7 +76,7 @@ public class PortResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response modifyPort(
             Port modification,
-            @PathParam(DeviceResource.DEVICE_PARAM) String deviceId,
+            @PathParam(DEVICE_PARAM) String deviceId,
             @PathParam(PORT_PARAM) String portName) {
         // The portName should be provided in the URL, not in the body (i.e., JSON sent).
         if (modification.getPortName()==null) {

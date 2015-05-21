@@ -5,6 +5,8 @@ import uk.ac.open.kmi.forge.webPacketTracer.analytics.InteractionRecordFactory;
 import uk.ac.open.kmi.forge.webPacketTracer.gateway.PTCallable;
 import uk.ac.open.kmi.forge.webPacketTracer.pojo.Device;
 import uk.ac.open.kmi.forge.webPacketTracer.session.SessionManager;
+import static uk.ac.open.kmi.forge.webPacketTracer.api.http.URLFactory.DEVICE_PARAM;
+import static uk.ac.open.kmi.forge.webPacketTracer.api.http.URLFactory.PORT_PATH;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
@@ -54,7 +56,7 @@ class DeviceModifier extends PTCallable<Device> {
 }
 
 public class DeviceResource {
-    static final public String DEVICE_PARAM = "device";
+
     final UriInfo uri;
     final SessionManager sm;
     public DeviceResource(UriInfo uri, SessionManager sm) {
@@ -62,7 +64,7 @@ public class DeviceResource {
         this.sm = sm;
     }
 
-    @Path("ports")
+    @Path(PORT_PATH)
     public PortsResource getResource(@Context UriInfo u) {
         return new PortsResource(u, this.sm);
     }
@@ -85,7 +87,7 @@ public class DeviceResource {
     // FIXME DELETE and PUT should also consider the 'byName' parameter.
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
-    public Response removeDevice(@PathParam("device") String deviceId) {
+    public Response removeDevice(@PathParam(DEVICE_PARAM) String deviceId) {
         final Device d = new DeviceDeleter(this.sm, deviceId).call();  // Not using a new Thread
         if (d==null)
             return Response.noContent().
@@ -113,7 +115,7 @@ public class DeviceResource {
     }
 
     private Link getPortsLink(Device d) {
-        return Link.fromUri(getSelfURIById(d) + "/ports").rel("ports").build();
+        return Link.fromUri(getSelfURIById(d) + "/" + PORT_PATH).rel("ports").build();
         // More clear but only valid when byName==false
         // return Link.fromUri(this.uri.getRequestUri() + "/ports").rel("ports").build();
     }

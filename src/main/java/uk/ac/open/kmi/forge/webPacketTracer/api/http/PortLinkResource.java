@@ -4,6 +4,9 @@ import uk.ac.open.kmi.forge.webPacketTracer.gateway.PTCallable;
 import uk.ac.open.kmi.forge.webPacketTracer.pojo.Link;
 import uk.ac.open.kmi.forge.webPacketTracer.session.SessionManager;
 
+import static uk.ac.open.kmi.forge.webPacketTracer.api.http.URLFactory.PORT_PARAM;
+import static uk.ac.open.kmi.forge.webPacketTracer.api.http.URLFactory.DEVICE_PARAM;
+
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -71,8 +74,8 @@ public class PortLinkResource {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getLink(@PathParam(DeviceResource.DEVICE_PARAM) String deviceId,
-                            @PathParam(PortResource.PORT_PARAM) String portName) {
+    public Response getLink(@PathParam(DEVICE_PARAM) String deviceId,
+                            @PathParam(PORT_PARAM) String portName) {
         final Link l = new PortLinkGetter(this.sm, deviceId, Utils.unescapePort(portName)).call();
         if (l==null)
             return Response.noContent().
@@ -83,8 +86,8 @@ public class PortLinkResource {
     }
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
-    public Response removeLink(@PathParam(DeviceResource.DEVICE_PARAM) String deviceId,
-                               @PathParam(PortResource.PORT_PARAM) String portName) {
+    public Response removeLink(@PathParam(DEVICE_PARAM) String deviceId,
+                               @PathParam(PORT_PARAM) String portName) {
         final Link deletedLink = new LinkDeleter(this.sm, deviceId, Utils.unescapePort(portName)).call();
         if (deletedLink==null)
             return Response.status(Response.Status.NOT_ACCEPTABLE).entity(deletedLink).
@@ -96,8 +99,8 @@ public class PortLinkResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response createLink(Link newLink,
-                             @PathParam(DeviceResource.DEVICE_PARAM) String deviceId,
-                             @PathParam(PortResource.PORT_PARAM) String portName) {
+                             @PathParam(DEVICE_PARAM) String deviceId,
+                             @PathParam(PORT_PARAM) String portName) {
         final Link createdLink = new LinkCreator(this.sm, deviceId, Utils.unescapePort(portName), newLink).call();
         if (createdLink==null)
             return Response.status(Response.Status.NOT_ACCEPTABLE).entity(newLink).

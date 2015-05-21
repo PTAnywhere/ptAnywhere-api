@@ -2,14 +2,17 @@ package uk.ac.open.kmi.forge.webPacketTracer.api.http;
 
 import uk.ac.open.kmi.forge.webPacketTracer.session.SessionManager;
 import uk.ac.open.kmi.forge.webPacketTracer.session.SessionsManager;
+import static uk.ac.open.kmi.forge.webPacketTracer.api.http.URLFactory.SESSION_PARAM;
+import static uk.ac.open.kmi.forge.webPacketTracer.api.http.URLFactory.DEVICE_PATH;
+import static uk.ac.open.kmi.forge.webPacketTracer.api.http.URLFactory.NETWORK_PATH;
+import static uk.ac.open.kmi.forge.webPacketTracer.api.http.URLFactory.LINKS_PATH;
+import static uk.ac.open.kmi.forge.webPacketTracer.api.http.URLFactory.LINK_PARAM;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
 
 
 public class SessionResource {
-
-    static final public String SESSION_PARAM = "session";
 
     final UriInfo uri;
     final SessionsManager sm;
@@ -18,17 +21,17 @@ public class SessionResource {
         this.sm = sm;
     }
 
-    @Path("devices")
+    @Path(DEVICE_PATH)
     public DevicesResource getDeviceResource(@Context UriInfo u, @PathParam(SESSION_PARAM) String sessionId) {
         return new DevicesResource(u, new SessionManager(sessionId, this.sm));
     }
 
-    @Path("network")
+    @Path(NETWORK_PATH)
     public NetworkResource getNetworkResource(@Context UriInfo u, @PathParam(SESSION_PARAM) String sessionId) {
         return new NetworkResource(u, new SessionManager(sessionId, this.sm));
     }
 
-    @Path("links/{" + LinkResource.LINK_PARAM + "}")
+    @Path(LINKS_PATH + "/{" + LINK_PARAM + "}")
     public LinkResource getLinkResource(@Context UriInfo u, @PathParam(SESSION_PARAM) String sessionId) {
         return new LinkResource(u, new SessionManager(sessionId, this.sm));
     }
@@ -42,8 +45,8 @@ public class SessionResource {
 
         return Response.ok("\"" + sessionId + "\"").
                 links(getSessionsLink()).
-                link(requestUri + "devices", "devices").
-                link(requestUri + "network", "network").build();
+                link(requestUri + DEVICE_PATH, "devices").
+                link(requestUri + NETWORK_PATH, "network").build();
     }
 
     @DELETE
