@@ -1,5 +1,7 @@
 package uk.ac.open.kmi.forge.webPacketTracer.api.http;
 
+import uk.ac.open.kmi.forge.webPacketTracer.analytics.InteractionRecord;
+import uk.ac.open.kmi.forge.webPacketTracer.analytics.InteractionRecordFactory;
 import uk.ac.open.kmi.forge.webPacketTracer.gateway.PTCallable;
 import uk.ac.open.kmi.forge.webPacketTracer.pojo.Device;
 import uk.ac.open.kmi.forge.webPacketTracer.session.SessionManager;
@@ -88,6 +90,8 @@ public class DeviceResource {
         if (d==null)
             return Response.noContent().
                     links(getDevicesLink()).build();
+        final InteractionRecord ir = InteractionRecordFactory.create();
+        ir.deviceDeleted(sm.getSessionId(), this.uri.getRequestUri().toString(), d.getLabel(), d.getGroup());
         return Response.ok(d).
                 links(getDevicesLink()).build();
     }
@@ -101,6 +105,8 @@ public class DeviceResource {
         if (d==null)
             return Response.noContent().
                     links(getDevicesLink()).build();
+        final InteractionRecord ir = InteractionRecordFactory.create();
+        ir.deviceModified(sm.getSessionId(), this.uri.getRequestUri().toString(), d.getLabel(), d.getGroup());
         return Response.ok(d).
                 links(getDevicesLink()).
                 links(getPortsLink(d)).build();

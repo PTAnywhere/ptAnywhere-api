@@ -23,6 +23,8 @@ public class TinCanAPI extends InteractionRecord {
     /* Verbs */
     private static final String INITIALIZED = "http://adlnet.gov/expapi/verbs/initialized";
     private static final String CREATED = "http://activitystrea.ms/schema/1.0/create";
+    private static final String DELETED = "http://activitystrea.ms/schema/1.0/delete";
+    private static final String UPDATED = "http://activitystrea.ms/schema/1.0/update";
 
     /* Objects */
     // TODO get it from the HTTP API requester?
@@ -88,19 +90,52 @@ public class TinCanAPI extends InteractionRecord {
         }
     }
 
+
+    public Activity createDeviceObject(String deviceUri, String deviceName) throws URISyntaxException {
+        return createDeviceObject(deviceUri, deviceName, null);
+    }
+
+    public Activity createDeviceObject(String deviceUri, String deviceName, String deviceType) throws URISyntaxException {
+        final LanguageMap lm = new LanguageMap();
+        lm.put("en-GB", deviceName);
+        final ActivityDefinition definition = new ActivityDefinition();
+        if (deviceType!=null)
+            definition.setType(DEVICE_TYPE + deviceType);
+        definition.setName(lm);
+        final Activity ret = new Activity(deviceUri);
+        ret.setDefinition(definition);
+        return ret;
+    }
+
     public void deviceCreated(String sessionId, String deviceUri, String deviceName, String deviceType) {
         try {
-            final LanguageMap lm = new LanguageMap();
-            lm.put("en-UK", deviceName);
-            final ActivityDefinition definition = new ActivityDefinition();
-            definition.setType(DEVICE_TYPE + deviceType);
-            definition.setName(lm);
-            final Activity a = new Activity(deviceUri);
-            a.setDefinition(definition);
-
             final Statement st = getPrefilledStatement(sessionId);
             st.setVerb(new Verb(CREATED));
-            st.setObject(a);
+            st.setObject(createDeviceObject(deviceUri, deviceName, deviceType));
+
+            record(st);
+        } catch(URISyntaxException e) {
+            LOGGER.error(e.getMessage());
+        }
+    }
+
+    public void deviceDeleted(String sessionId, String deviceUri, String deviceName, String deviceType) {
+        try {
+            final Statement st = getPrefilledStatement(sessionId);
+            st.setVerb(new Verb(DELETED));
+            st.setObject(createDeviceObject(deviceUri, deviceName, deviceType));
+
+            record(st);
+        } catch(URISyntaxException e) {
+            LOGGER.error(e.getMessage());
+        }
+    }
+
+    public void deviceModified(String sessionId, String deviceUri, String deviceName, String deviceType) {
+        try {
+            final Statement st = getPrefilledStatement(sessionId);
+            st.setVerb(new Verb(UPDATED));
+            st.setObject(createDeviceObject(deviceUri, deviceName, deviceType));
 
             record(st);
         } catch(URISyntaxException e) {
