@@ -10,7 +10,7 @@ import java.util.List;
 
 @XmlRootElement
 public class Device {
-    String id;  // E.g., "{4e70e5d7-4399-485e-b409-6c9d1c9446ea}"
+    String id;  // E.g., "b8d5exozT9eNsR1udGjbZQ--"
     String label;  // E.g., "MySwitch"
     double x;  // E.g., 436
     double y; // E.g.,
@@ -31,7 +31,7 @@ public class Device {
 
     public static Device fromCiscoObject(com.cisco.pt.ipc.sim.Device device) {
         if (device==null) return null;
-        final String id = Utils.toSimplifiedUUID(device.getObjectUUID().getDecoratedHexString());
+        final String id = Utils.toSimplifiedId(device.getObjectUUID());
         final String label = /*device.getClass() + ":" + device.getModel()
                                + ":" + */device.getName();
         final int deviceX = (int) (device.getXCoordinate()*1.5);

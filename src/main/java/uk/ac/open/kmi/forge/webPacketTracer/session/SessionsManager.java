@@ -77,7 +77,7 @@ public class SessionsManager {
     }
 
     private String generateSessionId() {
-        return Utils.toSimplifiedUUID(UUID.randomUUID().toString());
+        return Utils.toSimplifiedId(UUID.randomUUID());
     }
 
     private String toRedisSessionId(String sessionId) {

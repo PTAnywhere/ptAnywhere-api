@@ -2,6 +2,7 @@ package uk.ac.open.kmi.forge.webPacketTracer.api.http;
 
 import com.cisco.pt.UUID;
 import com.cisco.pt.impl.UUIDImpl;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -9,6 +10,9 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.nio.ByteBuffer;
+import java.nio.LongBuffer;
+import java.nio.charset.Charset;
 import java.util.Collection;
 
 /**
@@ -19,37 +23,76 @@ public class Utils {
     private static final Log LOGGER = LogFactory.getLog(Utils.class);
 
     /**
-     * Simplifies UUIDs to remove dashes and curly braces.
+     * Simplifies UUIDs converting them to base64url's Y64 variant.
+     * The idea and the code was taken from:
+     *   - http://stackoverflow.com/questions/21103363/base32-encode-uuid-in-java/21103563#21103563
+     *
      * @param uuid
-     *  Examples: "{a9101f6b-ef7c-4372-91c2-9391e94ee233}", "6fc7797b-1a33-4fd7-8db1-1d6e7468db65"
+     *  Examples: "a9101f6b-ef7c-4372-91c2-9391e94ee233", "6fc7797b-1a33-4fd7-8db1-1d6e7468db65"
      * @return
-     *  Examples: "a9101f6bef7c437291c29391e94ee233", "6fc7797b1a334fd78db11d6e7468db65"
+     *  Examples: "qRAfa.98Q3KRwpOR6U7iMw--", "b8d5exozT9eNsR1udGjbZQ--"
      */
-    public static String toSimplifiedUUID(String uuid) {
-        if (uuid==null) return uuid;
-        return uuid.replaceAll("[^0-9a-f]", "");
-    }
-
-    public static String toSimplifiedUUID(UUID uuid) {
-        return toSimplifiedUUID(uuid.getDecoratedHexString());
+    public static String toSimplifiedId(java.util.UUID uuid) {
+        ByteBuffer uuidBuffer = ByteBuffer.allocate(16);
+        LongBuffer longBuffer = uuidBuffer.asLongBuffer();
+        longBuffer.put(uuid.getMostSignificantBits());
+        longBuffer.put(uuid.getLeastSignificantBits());
+        String encoded = new String(Base64.encodeBase64(uuidBuffer.array()),
+                Charset.forName("US-ASCII"));
+        return encoded.replace('+', '.')
+                .replace('/', '_')
+                .replace('=', '-');
     }
 
     /**
-     * Converts simplified UUIDs into Cisco's PacketTracer valid ID.
-     * @param simplifiedUuid
-     *  Examples: "a9101f6bef7c437291c29391e94ee233", "6fc7797b1a334fd78db11d6e7468db65"
+     * Simplifies Cisco's UUIDs converting them to base64url's Y64 variant.
+     * The idea and the code was taken from:
+     *   - http://stackoverflow.com/questions/21103363/base32-encode-uuid-in-java/21103563#21103563
+     *
+     * @param uuid
+     *  Examples: "{a9101f6b-ef7c-4372-91c2-9391e94ee233}", "{6fc7797b-1a33-4fd7-8db1-1d6e7468db65}"
+     * @return
+     *  Examples: "qRAfa.98Q3KRwpOR6U7iMw--", "b8d5exozT9eNsR1udGjbZQ--"
+     */
+    public static String toSimplifiedId(UUID uuid) {
+        // Simple solution which might be slightly slow and memory demanding
+        // than other solutions since it creates a intermediate java UUID object.
+        final String decorated = uuid.getDecoratedHexString();
+        return toSimplifiedId(java.util.UUID.fromString(decorated.substring(1, decorated.length()-1)) );
+    }
+
+    /**
+     * Converts string ins base64url's Y64 variant to UUID.
+     * The idea and the code was taken from:
+     *   - http://stackoverflow.com/questions/21103363/base32-encode-uuid-in-java/21103563#21103563
+     *
+     * @param simplifiedId
+     *  Examples: "qRAfa.98Q3KRwpOR6U7iMw--", "b8d5exozT9eNsR1udGjbZQ--"
+     * @return
+     *  Examples: "a9101f6b-ef7c-4372-91c2-9391e94ee233", "6fc7797b-1a33-4fd7-8db1-1d6e7468db65"
+     */
+    public static java.util.UUID toUUID(String simplifiedId) {
+        final String encoded = simplifiedId.replace('.', '+')
+                .replace('_', '/')
+                .replace('-', '=');
+        ByteBuffer uuidBuffer = ByteBuffer.wrap(Base64.decodeBase64(
+                encoded.getBytes(Charset.forName("US-ASCII"))));
+        LongBuffer longBuffer = uuidBuffer.asLongBuffer();
+        return new java.util.UUID(longBuffer.get(), longBuffer.get());
+    }
+
+    /**
+     * Converts string ins base64url's Y64 variant to Cisco's UUID.
+     * The idea and the code was taken from:
+     *   - http://stackoverflow.com/questions/21103363/base32-encode-uuid-in-java/21103563#21103563
+     *
+     * @param simplifiedId
+     *  Examples: "qRAfa.98Q3KRwpOR6U7iMw--", "b8d5exozT9eNsR1udGjbZQ--"
      * @return
      *  Examples: "{a9101f6b-ef7c-4372-91c2-9391e94ee233}", "{6fc7797b-1a33-4fd7-8db1-1d6e7468db65}"
      */
-    public static UUID toCiscoUUID(String simplifiedUuid) {
-        return new UUIDImpl(simplifiedUuid);
-    }
-
-    public static String toUUID(String simplifiedUuid) {
-        // TODO assert N digits?
-        return simplifiedUuid.replaceAll(
-                    "(\\w{8})(\\w{4})(\\w{4})(\\w{4})(\\w{12})",
-                    "$1-$2-$3-$4-$5");
+    public static UUID toCiscoUUID(String simplifiedId) {
+        return new UUIDImpl(toUUID(simplifiedId).toString());
     }
 
     public static String unescapePort(String portName) {

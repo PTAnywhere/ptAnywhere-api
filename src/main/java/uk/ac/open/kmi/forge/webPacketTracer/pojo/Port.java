@@ -10,7 +10,7 @@ public class Port {
     String portName;  // E.g., "Vlan1"
     String portIpAddress;  // E.g., "0.0.0.0"
     String portSubnetMask;  // E.g., "0.0.0.0"
-    String linkId; // E.g., cc57bc49d73a42a5aa6a1c78066d565c
+    String linkId; // E.g., qRAfa.98Q3KRwpOR6U7iMw--
 
     public Port() {
     }
@@ -27,7 +27,7 @@ public class Port {
 
         final Link l = port.getLink();
         final Port ret = new Port( port.getName(), "", "",
-                (l==null)? null: Utils.toSimplifiedUUID(l.getObjectUUID().getDecoratedHexString()));
+                (l==null)? null: Utils.toSimplifiedId(l.getObjectUUID()));
         if (port instanceof HostPort) {
             final HostPort hPort = (HostPort) port;
             ret.setPortIpAddress(hPort.getIpAddress().getDottedQuadString());

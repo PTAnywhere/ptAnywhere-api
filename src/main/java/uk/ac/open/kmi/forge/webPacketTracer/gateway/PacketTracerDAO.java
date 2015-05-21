@@ -44,12 +44,12 @@ public class PacketTracerDAO {
                 final com.cisco.pt.ipc.sim.port.Port port = d.getPortAt(j);
                 final com.cisco.pt.ipc.sim.port.Link currentLink = port.getLink();
                 if (currentLink != null) {
-                    final String linkId = currentLink.getObjectUUID().getDecoratedHexString();
-                    final String devId = d.getObjectUUID().getDecoratedHexString();
+                    final String linkId = Utils.toSimplifiedId(currentLink.getObjectUUID());
+                    final String devId = Utils.toSimplifiedId(d.getObjectUUID());
                     if (edges.containsKey(linkId)) {
-                        edges.get(linkId).setTo(Utils.toSimplifiedUUID(devId));
+                        edges.get(linkId).setTo(devId);
                     } else {
-                        edges.put(linkId, Edge.fromCiscoIds(linkId, devId, null));
+                        edges.put(linkId, new Edge(linkId, devId, null));
                     }
                 }
             }
@@ -243,9 +243,9 @@ public class PacketTracerDAO {
                 final com.cisco.pt.ipc.sim.Device d = this.network.getDeviceAt(i);
                 for (int j = 0; j < d.getPortCount(); j++) {
                     final com.cisco.pt.ipc.sim.port.Port p = d.getPortAt(j);
-                    final String lId = (p.getLink() == null)? null : Utils.toSimplifiedUUID(p.getLink().getObjectUUID());
+                    final String lId = (p.getLink() == null)? null : Utils.toSimplifiedId(p.getLink().getObjectUUID());
                     if (linkId.equals(lId)) {
-                        ret.appendEndpoint(Utils.toSimplifiedUUID(d.getObjectUUID()),
+                        ret.appendEndpoint(Utils.toSimplifiedId(d.getObjectUUID()),
                                             p.getName());
                         if (ret.areEndpointsSet())
                             return ret;
@@ -270,7 +270,7 @@ public class PacketTracerDAO {
                 if (!deviceId.equals(d.getObjectUUID()))
                     for (int j = 0; j < d.getPortCount(); j++) {
                         final com.cisco.pt.ipc.sim.port.Port p = d.getPortAt(j);
-                        final String lId = (p.getLink() == null) ? null : Utils.toSimplifiedUUID(p.getLink().getObjectUUID());
+                        final String lId = (p.getLink() == null) ? null : Utils.toSimplifiedId(p.getLink().getObjectUUID());
                         if (lId != null && ret.getId().equals(lId)) {
                             ret.setToDevice(d.getName());
                             ret.setToPort(p.getName());

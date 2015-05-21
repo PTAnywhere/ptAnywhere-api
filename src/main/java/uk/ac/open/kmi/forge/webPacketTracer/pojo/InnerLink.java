@@ -15,9 +15,9 @@ public class InnerLink {
         this.endpoints = new String[2][2];
     }
 
-    public void appendEndpoint(String deviceCiscoId, String portName) {
+    public void appendEndpoint(String deviceId, String portName) {
         final int pos = getNextEmptyPosition();  // If the first one is already set, put the second one.
-        this.endpoints[pos][0] = Utils.toSimplifiedUUID(deviceCiscoId);
+        this.endpoints[pos][0] = deviceId;
         this.endpoints[pos][1] = portName;
     }
 

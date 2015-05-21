@@ -1,6 +1,5 @@
 package uk.ac.open.kmi.forge.webPacketTracer.pojo;
 
-import uk.ac.open.kmi.forge.webPacketTracer.api.http.Utils;
 
 public class Edge {
     String id;  // E.g., a9101f6bef7c437291c29391e94ee233
@@ -14,22 +13,6 @@ public class Edge {
         this.id = id;
         this.from = from;
         this.to = to;
-    }
-
-    /**
-     *
-     * @param id
-     *      E.g., {a9101f6b-ef7c-4372-91c2-9391e94ee233}
-     * @param fromId
-     *      E.g., {4e70e5d7-4399-485e-b409-6c9d1c9446ea}
-     * @param toId
-     *      E.g., {6fc7797b-1a33-4fd7-8db1-1d6e7468db65}
-     * @return
-     */
-    public static Edge fromCiscoIds(String id, String fromId, String toId) {
-        return new Edge( Utils.toSimplifiedUUID(id),
-                         Utils.toSimplifiedUUID(fromId),
-                         Utils.toSimplifiedUUID(toId) );
     }
 
     public String getId() {

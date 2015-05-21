@@ -5,12 +5,9 @@ import com.rusticisoftware.tincan.lrsresponses.StatementLRSResponse;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import uk.ac.open.kmi.forge.webPacketTracer.api.http.Utils;
-import uk.ac.open.kmi.forge.webPacketTracer.pojo.Device;
 
 import java.net.MalformedURLException;
-import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.UUID;
 
 
 /**
@@ -69,14 +66,14 @@ public class TinCanAPI extends InteractionRecord {
      */
     private Context getContext(String sessionId) {
         final Context context = new Context();
-        context.setRegistration(UUID.fromString(sessionId));
+        context.setRegistration(Utils.toUUID(sessionId));
         return context;
     }
 
     public Statement getPrefilledStatement(String sessionId) {
         final Statement st = new Statement();
         st.setActor(getAnonymousUser(sessionId));
-        st.setContext(getContext(Utils.toUUID(sessionId)));
+        st.setContext(getContext(sessionId));
         return st;
     }
 
