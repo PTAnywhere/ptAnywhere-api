@@ -3,6 +3,7 @@ package uk.ac.open.kmi.forge.webPacketTracer.widget;
 import com.cisco.pt.ipc.sim.Device;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import uk.ac.open.kmi.forge.webPacketTracer.api.http.Utils;
 import uk.ac.open.kmi.forge.webPacketTracer.api.websocket.ConsoleEndpoint;
 import uk.ac.open.kmi.forge.webPacketTracer.gateway.PTCallable;
 import uk.ac.open.kmi.forge.webPacketTracer.session.SessionManager;
@@ -27,7 +28,7 @@ class CommandLineGetter extends PTCallable<Boolean> {
     }
     @Override
     public Boolean internalRun() {
-        final Device d = this.connection.getDataAccessObject().getSimDeviceById(this.dId);
+        final Device d = this.connection.getDataAccessObject().getSimDeviceById(Utils.toCiscoUUID(this.dId));
         return d.getCommandLine()!=null; // if not null, it has a console.
         /*if (DeviceType.PC.equals(d.getType()) || DeviceType.SWITCH.equals(d.getType()) ||
                 DeviceType.ROUTER.equals(d.getType())) {*/

@@ -7,6 +7,7 @@ import com.cisco.pt.ipc.events.TerminalLineEventRegistry;
 import com.cisco.pt.ipc.sim.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import uk.ac.open.kmi.forge.webPacketTracer.api.http.Utils;
 import uk.ac.open.kmi.forge.webPacketTracer.gateway.PTConnection;
 import uk.ac.open.kmi.forge.webPacketTracer.session.PTInstanceDetails;
 import uk.ac.open.kmi.forge.webPacketTracer.session.SessionsManager;
@@ -35,11 +36,11 @@ public class ConsoleEndpoint implements TerminalLineEventListener {
 
         this.common = PTConnection.createPacketTracerGateway(details.getHost(), details.getPort());
         this.common.open();
-        final String deviceId = "{" + session.getPathParameters().get("device") + "}";
+        final String deviceId = session.getPathParameters().get("device");
         if (logger.isInfoEnabled()) {
             logger.info("Opening communication channel for device " + deviceId + "'s command line.");
         }
-        final Device dev = this.common.getDataAccessObject().getSimDeviceById(deviceId);
+        final Device dev = this.common.getDataAccessObject().getSimDeviceById(Utils.toCiscoUUID(deviceId));
         if (dev==null) {
             if(logger.isErrorEnabled()) {
                 logger.error("Device with id " + deviceId + " not found." );

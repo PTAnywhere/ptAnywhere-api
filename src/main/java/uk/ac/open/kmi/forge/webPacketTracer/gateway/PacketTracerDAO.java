@@ -1,17 +1,18 @@
 package uk.ac.open.kmi.forge.webPacketTracer.gateway;
 
 
-import com.cisco.pt.IPAddress;
+import com.cisco.pt.*;
+import com.cisco.pt.UUID;
 import com.cisco.pt.impl.IPAddressImpl;
 import com.cisco.pt.ipc.IPCConstants;
 import com.cisco.pt.ipc.enums.ConnectType;
 import com.cisco.pt.ipc.enums.DeviceType;
-import com.cisco.pt.ipc.sim.*;
 import com.cisco.pt.ipc.sim.port.HostPort;
 import com.cisco.pt.ipc.ui.IPC;
 import com.cisco.pt.ipc.ui.LogicalWorkspace;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import uk.ac.open.kmi.forge.webPacketTracer.api.http.Utils;
 import uk.ac.open.kmi.forge.webPacketTracer.pojo.*;
 import uk.ac.open.kmi.forge.webPacketTracer.pojo.Device;
 import uk.ac.open.kmi.forge.webPacketTracer.pojo.Network;
@@ -46,9 +47,9 @@ public class PacketTracerDAO {
                     final String linkId = currentLink.getObjectUUID().getDecoratedHexString();
                     final String devId = d.getObjectUUID().getDecoratedHexString();
                     if (edges.containsKey(linkId)) {
-                        edges.get(linkId).setTo(devId);
+                        edges.get(linkId).setTo(Utils.toSimplifiedUUID(devId));
                     } else {
-                        edges.put(linkId, new Edge(linkId, devId, null));
+                        edges.put(linkId, Edge.fromCiscoIds(linkId, devId, null));
                     }
                 }
             }
@@ -124,10 +125,10 @@ public class PacketTracerDAO {
         return ret;
     }
 
-    public com.cisco.pt.ipc.sim.Device getSimDeviceById(String deviceId) {
+    public com.cisco.pt.ipc.sim.Device getSimDeviceById(UUID deviceId) {
         for (int i=0; i<this.network.getDeviceCount(); i++) {
             final com.cisco.pt.ipc.sim.Device ret = this.network.getDeviceAt(i);
-            if (deviceId.equals(ret.getObjectUUID().getDecoratedHexString())) {
+            if (deviceId.equals(ret.getObjectUUID())) {
                 return ret;
             }
         }
@@ -143,7 +144,7 @@ public class PacketTracerDAO {
     }
 
     public Device getDeviceById(String deviceId, boolean loadPorts) {
-        final com.cisco.pt.ipc.sim.Device d = getSimDeviceById(deviceId);
+        final com.cisco.pt.ipc.sim.Device d = getSimDeviceById(Utils.toCiscoUUID(deviceId));
         final Device ret = Device.fromCiscoObject(d);
         if(loadPorts) ret.setPorts(getPorts(d));
         return ret;
@@ -170,7 +171,7 @@ public class PacketTracerDAO {
     }
 
     public Device modifyDevice(Device modification) {
-        final com.cisco.pt.ipc.sim.Device ret = getSimDeviceById(modification.getId());
+        final com.cisco.pt.ipc.sim.Device ret = getSimDeviceById(Utils.toCiscoUUID(modification.getId()));
         if (ret!=null) {
             ret.setName(modification.getLabel());  // Right now, we only allow to change the name of the label!
         }
@@ -201,7 +202,7 @@ public class PacketTracerDAO {
         if (byName)
             return getPorts(getSimDeviceByName(deviceId), filterFree);
         else
-            return getPorts(getSimDeviceById(deviceId), filterFree);
+            return getPorts(getSimDeviceById(Utils.toCiscoUUID(deviceId)), filterFree);
     }
 
     protected com.cisco.pt.ipc.sim.port.Port getSimPort(com.cisco.pt.ipc.sim.Device device, String portName) {
@@ -215,7 +216,7 @@ public class PacketTracerDAO {
     }
 
     protected com.cisco.pt.ipc.sim.port.Port getSimPort(String deviceId, String portName) {
-        return getSimPort(getSimDeviceById(deviceId), portName);
+        return getSimPort(getSimDeviceById(Utils.toCiscoUUID(deviceId)), portName);
     }
 
     public Port getPort(String deviceId, String portName) {
@@ -242,11 +243,10 @@ public class PacketTracerDAO {
                 final com.cisco.pt.ipc.sim.Device d = this.network.getDeviceAt(i);
                 for (int j = 0; j < d.getPortCount(); j++) {
                     final com.cisco.pt.ipc.sim.port.Port p = d.getPortAt(j);
-                    final String lId = (p.getLink() == null) ? null : p.getLink().getObjectUUID().getDecoratedHexString();
-                    if (ret.getId().equals(lId)) {
-                        ret.appendEndpoint( d.getObjectUUID().getDecoratedHexString(),
-                                            p.getName() );
-                        //p.getObjectUUID().getDecoratedHexString() );
+                    final String lId = (p.getLink() == null)? null : Utils.toSimplifiedUUID(p.getLink().getObjectUUID());
+                    if (linkId.equals(lId)) {
+                        ret.appendEndpoint(Utils.toSimplifiedUUID(d.getObjectUUID()),
+                                            p.getName());
                         if (ret.areEndpointsSet())
                             return ret;
                             // Check in the next device (I am assuming that a device cannot be connected to itself!)
@@ -264,13 +264,13 @@ public class PacketTracerDAO {
         if (linkId!=null) {
             final Link ret = new Link();
             ret.setId(linkId);
+            final UUID devId = Utils.toCiscoUUID(deviceId);  // More efficient than the oher way around?
             for (int i = 0; i < this.network.getDeviceCount(); i++) {
                 final com.cisco.pt.ipc.sim.Device d = this.network.getDeviceAt(i);
-                final String dId = d.getObjectUUID().getDecoratedHexString();
-                if (!deviceId.equals(dId))
+                if (!deviceId.equals(d.getObjectUUID()))
                     for (int j = 0; j < d.getPortCount(); j++) {
                         final com.cisco.pt.ipc.sim.port.Port p = d.getPortAt(j);
-                        final String lId = (p.getLink() == null) ? null : p.getLink().getObjectUUID().getDecoratedHexString();
+                        final String lId = (p.getLink() == null) ? null : Utils.toSimplifiedUUID(p.getLink().getObjectUUID());
                         if (lId != null && ret.getId().equals(lId)) {
                             ret.setToDevice(d.getName());
                             ret.setToPort(p.getName());
@@ -284,14 +284,14 @@ public class PacketTracerDAO {
 
     public boolean createLink(String fromDeviceId, String fromPortName, Link newLink) {
         final LogicalWorkspace workspace = this.ipc.appWindow().getActiveWorkspace().getLogicalWorkspace();
-        final com.cisco.pt.ipc.sim.Device device = getSimDeviceById(fromDeviceId);
+        final com.cisco.pt.ipc.sim.Device device = getSimDeviceById(Utils.toCiscoUUID(fromDeviceId));
         if (device==null) return false;
         return workspace.createLink(device.getName(), fromPortName, newLink.getToDevice(), newLink.getToPort(), ConnectType.ETHERNET_STRAIGHT);
     }
 
     public boolean removeLink(String fromDeviceId, String fromPortName) {
         final LogicalWorkspace workspace = this.ipc.appWindow().getActiveWorkspace().getLogicalWorkspace();
-        final com.cisco.pt.ipc.sim.Device device = getSimDeviceById(fromDeviceId);
+        final com.cisco.pt.ipc.sim.Device device = getSimDeviceById(Utils.toCiscoUUID(fromDeviceId));
         if (device==null) return false;
         return workspace.deleteLink(device.getName(), fromPortName);
     }

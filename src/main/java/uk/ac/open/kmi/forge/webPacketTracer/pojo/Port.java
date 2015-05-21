@@ -1,12 +1,8 @@
 package uk.ac.open.kmi.forge.webPacketTracer.pojo;
 
-import com.cisco.pt.IPAddress;
-import com.cisco.pt.impl.IPAddressImpl;
-import com.cisco.pt.ipc.sim.Cloud;
-import com.cisco.pt.ipc.sim.Pc;
-import com.cisco.pt.ipc.sim.Router;
 import com.cisco.pt.ipc.sim.port.HostPort;
 import com.cisco.pt.ipc.sim.port.Link;
+import uk.ac.open.kmi.forge.webPacketTracer.api.http.Utils;
 
 // { "portName": "Vlan1", "portIpAddress": "0.0.0.0","portSubnetMask": "0.0.0.0"}
 public class Port {
@@ -14,7 +10,7 @@ public class Port {
     String portName;  // E.g., "Vlan1"
     String portIpAddress;  // E.g., "0.0.0.0"
     String portSubnetMask;  // E.g., "0.0.0.0"
-    String linkId;
+    String linkId; // E.g., cc57bc49d73a42a5aa6a1c78066d565c
 
     public Port() {
     }
@@ -31,7 +27,7 @@ public class Port {
 
         final Link l = port.getLink();
         final Port ret = new Port( port.getName(), "", "",
-                (l==null)? null: l.getObjectUUID().getDecoratedHexString() );
+                (l==null)? null: Utils.toSimplifiedUUID(l.getObjectUUID().getDecoratedHexString()));
         if (port instanceof HostPort) {
             final HostPort hPort = (HostPort) port;
             ret.setPortIpAddress(hPort.getIpAddress().getDottedQuadString());

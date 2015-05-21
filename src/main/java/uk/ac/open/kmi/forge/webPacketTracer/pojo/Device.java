@@ -3,6 +3,7 @@ package uk.ac.open.kmi.forge.webPacketTracer.pojo;
 import com.cisco.pt.ipc.sim.Cloud;
 import com.cisco.pt.ipc.sim.Pc;
 import com.cisco.pt.ipc.sim.Router;
+import uk.ac.open.kmi.forge.webPacketTracer.api.http.Utils;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.List;
@@ -30,7 +31,7 @@ public class Device {
 
     public static Device fromCiscoObject(com.cisco.pt.ipc.sim.Device device) {
         if (device==null) return null;
-        final String id = device.getObjectUUID().getDecoratedHexString();
+        final String id = Utils.toSimplifiedUUID(device.getObjectUUID().getDecoratedHexString());
         final String label = /*device.getClass() + ":" + device.getModel()
                                + ":" + */device.getName();
         final int deviceX = (int) (device.getXCoordinate()*1.5);

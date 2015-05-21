@@ -1,7 +1,8 @@
 package uk.ac.open.kmi.forge.webPacketTracer.pojo;
 
+
 public class Link {
-    String id;  // E.g., "{cc57bc49-d73a-42a5-aa6a-1c78066d565c}"
+    String id;  // E.g., "cc57bc49d73a42a5aa6a1c78066d565c"
     String toDevice;
     String toPort;
 

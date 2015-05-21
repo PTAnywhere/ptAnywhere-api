@@ -4,6 +4,7 @@ import com.rusticisoftware.tincan.*;
 import com.rusticisoftware.tincan.lrsresponses.StatementLRSResponse;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import uk.ac.open.kmi.forge.webPacketTracer.api.http.Utils;
 import uk.ac.open.kmi.forge.webPacketTracer.pojo.Device;
 
 import java.net.MalformedURLException;
@@ -75,7 +76,7 @@ public class TinCanAPI extends InteractionRecord {
     public Statement getPrefilledStatement(String sessionId) {
         final Statement st = new Statement();
         st.setActor(getAnonymousUser(sessionId));
-        st.setContext(getContext(sessionId));
+        st.setContext(getContext(Utils.toUUID(sessionId)));
         return st;
     }
 

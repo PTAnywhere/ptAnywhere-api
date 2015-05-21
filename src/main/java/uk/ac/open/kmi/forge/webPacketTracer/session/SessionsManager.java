@@ -4,6 +4,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Transaction;
+import uk.ac.open.kmi.forge.webPacketTracer.api.http.Utils;
 import uk.ac.open.kmi.forge.webPacketTracer.properties.PropertyFileManager;
 import uk.ac.open.kmi.forge.webPacketTracer.properties.RedisConnectionProperties;
 
@@ -76,7 +77,7 @@ public class SessionsManager {
     }
 
     private String generateSessionId() {
-        return UUID.randomUUID().toString();
+        return Utils.toSimplifiedUUID(UUID.randomUUID().toString());
     }
 
     private String toRedisSessionId(String sessionId) {

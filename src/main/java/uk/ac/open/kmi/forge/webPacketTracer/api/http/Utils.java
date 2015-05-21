@@ -1,5 +1,7 @@
 package uk.ac.open.kmi.forge.webPacketTracer.api.http;
 
+import com.cisco.pt.UUID;
+import com.cisco.pt.impl.UUIDImpl;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -15,6 +17,40 @@ import java.util.Collection;
 public class Utils {
 
     private static final Log LOGGER = LogFactory.getLog(Utils.class);
+
+    /**
+     * Simplifies UUIDs to remove dashes and curly braces.
+     * @param uuid
+     *  Examples: "{a9101f6b-ef7c-4372-91c2-9391e94ee233}", "6fc7797b-1a33-4fd7-8db1-1d6e7468db65"
+     * @return
+     *  Examples: "a9101f6bef7c437291c29391e94ee233", "6fc7797b1a334fd78db11d6e7468db65"
+     */
+    public static String toSimplifiedUUID(String uuid) {
+        if (uuid==null) return uuid;
+        return uuid.replaceAll("[^0-9a-f]", "");
+    }
+
+    public static String toSimplifiedUUID(UUID uuid) {
+        return toSimplifiedUUID(uuid.getDecoratedHexString());
+    }
+
+    /**
+     * Converts simplified UUIDs into Cisco's PacketTracer valid ID.
+     * @param simplifiedUuid
+     *  Examples: "a9101f6bef7c437291c29391e94ee233", "6fc7797b1a334fd78db11d6e7468db65"
+     * @return
+     *  Examples: "{a9101f6b-ef7c-4372-91c2-9391e94ee233}", "{6fc7797b-1a33-4fd7-8db1-1d6e7468db65}"
+     */
+    public static UUID toCiscoUUID(String simplifiedUuid) {
+        return new UUIDImpl(simplifiedUuid);
+    }
+
+    public static String toUUID(String simplifiedUuid) {
+        // TODO assert N digits?
+        return simplifiedUuid.replaceAll(
+                    "(\\w{8})(\\w{4})(\\w{4})(\\w{4})(\\w{12})",
+                    "$1-$2-$3-$4-$5");
+    }
 
     public static String unescapePort(String portName) {
         // FIXME: Issue with names containing slashes or backslashes and tomcat6.
