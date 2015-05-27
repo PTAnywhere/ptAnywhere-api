@@ -3,6 +3,7 @@ package uk.ac.open.kmi.forge.webPacketTracer.pojo;
 import com.cisco.pt.ipc.sim.Cloud;
 import com.cisco.pt.ipc.sim.Pc;
 import com.cisco.pt.ipc.sim.Router;
+import uk.ac.open.kmi.forge.webPacketTracer.api.http.AbstractWebRepresentable;
 import uk.ac.open.kmi.forge.webPacketTracer.api.http.Utils;
 
 import javax.xml.bind.annotation.XmlRootElement;
@@ -10,7 +11,10 @@ import java.util.List;
 
 
 @XmlRootElement
-public class Device {
+public class Device extends AbstractWebRepresentable {
+    // Shorter version of the identifier (URL) for vis.js
+    // TODO check if this is useful at all regarding the widget performance.
+    // This is the main identifier inside the webapp.
     String id;  // E.g., "b8d5exozT9eNsR1udGjbZQ--"
     String label;  // E.g., "MySwitch"
     double x;  // E.g., 436
@@ -56,6 +60,12 @@ public class Device {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    @Override
+    public String getUrl() {
+        if (this.uf==null) return null;
+        return this.uf.createDeviceURL(this.id);
     }
 
     public String getLabel() {

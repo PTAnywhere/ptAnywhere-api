@@ -13,13 +13,17 @@ import java.net.URI;
 
 class NetworkGetter extends PTCallable<Network> {
 
-    public NetworkGetter(SessionManager sm) {
+    final URLFactory uf;
+
+    public NetworkGetter(SessionManager sm, URI baseURI) {
         super(sm);
+        this.uf = new URLFactory(baseURI, sm.getSessionId());
     }
 
     @Override
     public Network internalRun() {
-        return this.connection.getDataAccessObject().getWholeNetwork();
+        return this.connection.getDataAccessObject().
+                getWholeNetwork().setURLFactory(this.uf);
     }
 }
 
@@ -35,7 +39,7 @@ public class NetworkResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response getAll() {
-        final Network network = new NetworkGetter(this.sm).call();  // No Threads
+        final Network network = new NetworkGetter(this.sm, this.uri.getBaseUri()).call();  // No Threads
         return addDefaultLinks(Response.ok(network)).build();
     }
 

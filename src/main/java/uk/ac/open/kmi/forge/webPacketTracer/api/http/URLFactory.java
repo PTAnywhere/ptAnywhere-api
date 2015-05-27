@@ -12,7 +12,7 @@ public class URLFactory {
     static public final String CONTEXT_PATH = "contexts";
     static public final String CONTEXT_DEVICE_PATH = "device.jsonld";
     static public final String DEVICE_PATH = "devices";
-    static final public String DEVICE_PARAM = "device";
+    static public final String DEVICE_PARAM = "device";
     static public final String PORT_PATH = "ports";
     static public final String PORT_PARAM = "port";
     static public final String PORT_LINK_PATH = "link";
@@ -35,6 +35,10 @@ public class URLFactory {
 
     public String createDeviceURL(String id) {
         return getDevicesURL() + id + "/";
+    }
+
+    public String createLinkURL(String id) {
+        return getSessionURL() + LINKS_PATH + "/" + id;
     }
 
     public String createPortsURL(String deviceId) {
