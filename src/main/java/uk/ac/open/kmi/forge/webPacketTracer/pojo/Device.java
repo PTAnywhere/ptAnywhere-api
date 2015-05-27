@@ -11,7 +11,7 @@ import java.util.List;
 
 
 @XmlRootElement
-public class Device extends AbstractWebRepresentable {
+public class Device extends AbstractWebRepresentable<Device> {
     // Shorter version of the identifier (URL) for vis.js
     // TODO check if this is useful at all regarding the widget performance.
     // This is the main identifier inside the webapp.

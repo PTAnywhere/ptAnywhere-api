@@ -10,18 +10,34 @@ import static uk.ac.open.kmi.forge.webPacketTracer.api.http.URLFactory.PORT_PATH
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
+import java.net.URI;
 
-
-class DeviceGetter extends PTCallable<Device> {
+abstract class AbstractDeviceHandler extends PTCallable<Device> {
     final String dId;
-    final boolean byName;
-    public DeviceGetter(SessionManager sm, String dId, boolean byName) {
+    final URLFactory uf;
+    public AbstractDeviceHandler(SessionManager sm, String dId, URI baseURI) {
         super(sm);
         this.dId = dId;
-        this.byName = byName;
+        this.uf = new URLFactory(baseURI, sm.getSessionId());
     }
     @Override
     public Device internalRun() {
+        final Device ret = manageDevice();
+        if(ret!=null) ret.setURLFactory(this.uf);
+        return ret;
+    }
+
+    abstract Device manageDevice();
+}
+
+class DeviceGetter extends AbstractDeviceHandler {
+    final boolean byName;
+    public DeviceGetter(SessionManager sm, String dId, boolean byName, URI baseURI) {
+        super(sm, dId, baseURI);
+        this.byName = byName;
+    }
+    @Override
+    public Device manageDevice() {
         if (this.byName) {
             return this.connection.getDataAccessObject().getDeviceByName(this.dId);
         } else {
@@ -30,27 +46,25 @@ class DeviceGetter extends PTCallable<Device> {
     }
 }
 
-class DeviceDeleter extends PTCallable<Device> {
-    final String dId;
-    public DeviceDeleter(SessionManager sm, String dId) {
-        super(sm);
-        this.dId = dId;
+class DeviceDeleter extends AbstractDeviceHandler {
+    public DeviceDeleter(SessionManager sm, String dId, URI baseURI) {
+        super(sm, dId, baseURI);
     }
     @Override
-    public Device internalRun() {
+    public Device manageDevice() {
         return this.connection.getDataAccessObject().removeDevice(this.dId);
     }
 }
 
-class DeviceModifier extends PTCallable<Device> {
+class DeviceModifier extends AbstractDeviceHandler {
     final Device modification;
-    public DeviceModifier(SessionManager sm, String dId, Device modification) {
-        super(sm);
+    public DeviceModifier(SessionManager sm, String dId, Device modification, URI baseURI) {
+        super(sm, dId, baseURI);
         modification.setId(dId);
         this.modification = modification;
     }
     @Override
-    public Device internalRun() {
+    public Device manageDevice() {
         return this.connection.getDataAccessObject().modifyDevice(this.modification);
     }
 }
@@ -74,7 +88,7 @@ public class DeviceResource {
     public Response getDevice(
         @PathParam(DEVICE_PARAM) String deviceId,
         @DefaultValue("false") @QueryParam("byName") boolean byName) {
-        final Device d = new DeviceGetter(this.sm, deviceId, byName).call();  // Not using a new Thread
+        final Device d = new DeviceGetter(this.sm, deviceId, byName, this.uri.getBaseUri()).call();  // Not using a new Thread
         if (d==null)
             return Response.noContent().
                     links(getDevicesLink()).build();
@@ -88,7 +102,7 @@ public class DeviceResource {
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     public Response removeDevice(@PathParam(DEVICE_PARAM) String deviceId) {
-        final Device d = new DeviceDeleter(this.sm, deviceId).call();  // Not using a new Thread
+        final Device d = new DeviceDeleter(this.sm, deviceId, this.uri.getBaseUri()).call();  // Not using a new Thread
         if (d==null)
             return Response.noContent().
                     links(getDevicesLink()).build();
@@ -103,7 +117,7 @@ public class DeviceResource {
     public Response modifyDevice(
             Device modification,
             @PathParam(DEVICE_PARAM) String deviceId) {
-        final Device d = new DeviceModifier(this.sm, deviceId, modification).call();  // Not using a new Thread
+        final Device d = new DeviceModifier(this.sm, deviceId, modification, this.uri.getBaseUri()).call();  // Not using a new Thread
         if (d==null)
             return Response.noContent().
                     links(getDevicesLink()).build();

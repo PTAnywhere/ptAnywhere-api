@@ -2,12 +2,13 @@ package uk.ac.open.kmi.forge.webPacketTracer.api.http;
 
 
 // This class is used to decouple URL generation from the rest of the packages...
-public abstract class AbstractWebRepresentable {
+public abstract class AbstractWebRepresentable<T> {
 
     protected URLFactory uf = null;
 
-    public void setURLFactory(URLFactory uf) {
+    public T setURLFactory(URLFactory uf) {
         this.uf = uf;
+        return (T) this;
     }
 
     // Full URL of the resource.

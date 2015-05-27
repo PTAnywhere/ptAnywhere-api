@@ -17,27 +17,39 @@ import java.util.*;
 
 class DevicesGetter extends PTCallable<Collection<Device>> {
 
-    public DevicesGetter(SessionManager sm) {
+    final URLFactory uf;
+
+    public DevicesGetter(SessionManager sm, URI baseURI) {
         super(sm);
+        this.uf = new URLFactory(baseURI, sm.getSessionId());
     }
 
     @Override
     public Collection<Device> internalRun() {
-        return this.connection.getDataAccessObject().getDevices();
+        final Collection<Device> ret = this.connection.getDataAccessObject().getDevices();
+        for(Device d: ret) {
+            d.setURLFactory(this.uf);
+        }
+        return ret;
     }
 }
 
 class DevicePoster extends PTCallable<Device> {
-    final Device d;
 
-    public DevicePoster(SessionManager sm, Device d) {
+    final Device d;
+    final URLFactory uf;
+
+    public DevicePoster(SessionManager sm, Device d, URI baseURI) {
         super(sm);
         this.d = d;
+        this.uf = new URLFactory(baseURI, sm.getSessionId());
     }
 
     @Override
     public Device internalRun() {
-        return this.connection.getDataAccessObject().createDevice(this.d);
+        final Device ret = this.connection.getDataAccessObject().createDevice(this.d);
+        if (ret!=null) ret.setURLFactory(this.uf);
+        return ret;
     }
 }
 
@@ -61,7 +73,7 @@ public class DevicesResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response createDevice(Device newDevice) throws URISyntaxException {
-        final Device device = new DevicePoster(this.sm, newDevice).call();
+        final Device device = new DevicePoster(this.sm, newDevice, this.uri.getBaseUri()).call();
         if (device==null)
             return addDefaultLinks(Response.status(Response.Status.BAD_REQUEST).entity(newDevice)).build();
         final InteractionRecord ir = InteractionRecordFactory.create();
@@ -75,7 +87,7 @@ public class DevicesResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response getJson() {
-        final Collection<Device> d = new DevicesGetter(this.sm).call();  // Not using a new Thread
+        final Collection<Device> d = new DevicesGetter(this.sm, this.uri.getBaseUri()).call();  // Not using a new Thread
         // To array because otherwise Response does not know how to serialize Collection<Device>
         return addDefaultLinks(Response.ok(d.toArray(new Device[d.size()]))).
                 links(createLinks(d)).build();  // Not using a new Thread
