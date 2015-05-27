@@ -8,12 +8,13 @@ import uk.ac.open.kmi.forge.webPacketTracer.api.http.Utils;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.List;
 
+
 @XmlRootElement
 public class Device {
     String id;  // E.g., "b8d5exozT9eNsR1udGjbZQ--"
     String label;  // E.g., "MySwitch"
     double x;  // E.g., 436
-    double y; // E.g.,
+    double y; // E.g., 345
     String group; // E.g., "switchDevice"
     List<Port> ports;
 

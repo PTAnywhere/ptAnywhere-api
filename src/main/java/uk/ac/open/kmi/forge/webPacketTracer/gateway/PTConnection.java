@@ -12,11 +12,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import uk.ac.open.kmi.forge.webPacketTracer.properties.PacketTracerInstanceProperties;
 import uk.ac.open.kmi.forge.webPacketTracer.properties.PropertyFileManager;
-import uk.ac.open.kmi.forge.webPacketTracer.session.PTInstanceDetails;
 
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.Properties;
 
 
 /**

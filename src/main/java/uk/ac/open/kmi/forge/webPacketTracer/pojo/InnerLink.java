@@ -1,6 +1,5 @@
 package uk.ac.open.kmi.forge.webPacketTracer.pojo;
 
-import uk.ac.open.kmi.forge.webPacketTracer.api.http.Utils;
 
 public class InnerLink {
     final String id;  //
