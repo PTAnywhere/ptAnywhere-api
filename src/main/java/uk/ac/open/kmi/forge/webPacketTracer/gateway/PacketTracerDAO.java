@@ -260,14 +260,13 @@ public class PacketTracerDAO {
 
     public Link getLink(String deviceId, String portName) {
         final String linkId = getPort(deviceId, portName).getLink();
-
         if (linkId!=null) {
             final Link ret = new Link();
             ret.setId(linkId);
             final UUID devId = Utils.toCiscoUUID(deviceId);  // More efficient than the oher way around?
             for (int i = 0; i < this.network.getDeviceCount(); i++) {
                 final com.cisco.pt.ipc.sim.Device d = this.network.getDeviceAt(i);
-                if (!deviceId.equals(d.getObjectUUID()))
+                if (!devId.equals(d.getObjectUUID()))
                     for (int j = 0; j < d.getPortCount(); j++) {
                         final com.cisco.pt.ipc.sim.port.Port p = d.getPortAt(j);
                         final String lId = (p.getLink() == null) ? null : Utils.toSimplifiedId(p.getLink().getObjectUUID());

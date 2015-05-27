@@ -19,10 +19,18 @@ public class URLFactory {
 
     final String baseUri;
     final String sessionId;
+    final String deviceId;
 
     URLFactory(URI baseUri, String sessionId) {
         this.baseUri = Utils.getURIWithSlashRemovingQuery(baseUri);
         this.sessionId = sessionId;
+        this.deviceId = null;
+    }
+
+    URLFactory(URI baseUri, String sessionId, String deviceId) {
+        this.baseUri = Utils.getURIWithSlashRemovingQuery(baseUri);
+        this.sessionId = sessionId;
+        this.deviceId = deviceId;
     }
 
     public String getSessionURL() {
@@ -41,15 +49,15 @@ public class URLFactory {
         return getSessionURL() + LINKS_PATH + "/" + id;
     }
 
-    public String createPortsURL(String deviceId) {
-        return createDeviceURL(deviceId) + PORT_PATH + "/";
+    public String createPortsURL() {
+        return createDeviceURL(this.deviceId) + PORT_PATH + "/";
     }
 
-    public String createPortURL(String deviceId, String portId) {
-        return createPortsURL(deviceId) + portId + "/";
+    public String createPortURL(String portId) {
+        return createPortsURL() + portId + "/";
     }
 
-    public String createPortLinkURL(String deviceId, String portId) {
-        return createPortsURL(deviceId) + portId + PORT_LINK_PATH;
+    public String createPortLinkURL(String portId) {
+        return createPortURL(portId) + PORT_LINK_PATH;
     }
 }

@@ -2,10 +2,11 @@ package uk.ac.open.kmi.forge.webPacketTracer.pojo;
 
 import com.cisco.pt.ipc.sim.port.HostPort;
 import com.cisco.pt.ipc.sim.port.Link;
+import uk.ac.open.kmi.forge.webPacketTracer.api.http.AbstractWebRepresentable;
 import uk.ac.open.kmi.forge.webPacketTracer.api.http.Utils;
 
 // { "portName": "Vlan1", "portIpAddress": "0.0.0.0","portSubnetMask": "0.0.0.0"}
-public class Port {
+public class Port extends AbstractWebRepresentable<Port> {
 
     String portName;  // E.g., "Vlan1"
     String portIpAddress;  // E.g., "0.0.0.0"
@@ -37,6 +38,12 @@ public class Port {
         // getLog().error("Port " + port.getName() +
         //        " is not an instance of HostPort " + port.getType().toString());
         return ret;
+    }
+
+    @Override
+    public String getUrl() {
+        if (this.uf==null) return null;
+        return this.uf.createPortURL(this.portName);
     }
 
     public String getPortName() {

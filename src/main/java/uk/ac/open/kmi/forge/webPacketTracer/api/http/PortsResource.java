@@ -8,6 +8,7 @@ import static uk.ac.open.kmi.forge.webPacketTracer.api.http.URLFactory.DEVICE_PA
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
+import java.net.URI;
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -15,15 +16,22 @@ class PortsGetter extends PTCallable<Collection<Port>> {
     final String deviceId;
     final boolean byName;
     final boolean filterFree;
-    public PortsGetter(SessionManager sm, String deviceId, boolean byName, boolean filterFree) {
+    final URLFactory uf;
+
+    public PortsGetter(SessionManager sm, String deviceId, URI baseURI, boolean byName, boolean filterFree) {
         super(sm);
         this.deviceId = deviceId;
         this.byName = byName;
         this.filterFree = filterFree;
+        this.uf = new URLFactory(baseURI, sm.getSessionId(), deviceId);
     }
     @Override
     public Collection<Port> internalRun() {
-        return this.connection.getDataAccessObject().getPorts(this.deviceId, this.byName, this.filterFree);
+        final Collection<Port> ret = this.connection.getDataAccessObject().getPorts(this.deviceId, this.byName, this.filterFree);
+        for(Port p: ret) {
+            p.setURLFactory(this.uf);
+        }
+        return ret;
     }
 }
 
@@ -48,7 +56,7 @@ public class PortsResource {
             @PathParam(DEVICE_PARAM) String deviceId,
             @DefaultValue("false") @QueryParam("byName") boolean byName,
             @DefaultValue("false") @QueryParam("free") boolean filterFree) {
-        final Collection<Port> p = new PortsGetter(this.sm, deviceId, byName, filterFree).call();  // Not using a new Thread
+        final Collection<Port> p = new PortsGetter(this.sm, deviceId, this.uri.getBaseUri(), byName, filterFree).call();
         // To array because otherwise Response does not know how to serialize Collection<Device>
         return Response.ok(p.toArray(new Port[p.size()])).
                 links(getDeviceLink(deviceId)).
