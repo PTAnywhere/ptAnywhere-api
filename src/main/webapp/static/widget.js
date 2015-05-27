@@ -89,14 +89,17 @@ function addDevice(newDevice, callback) {
 }
 
 function deleteDevice(deviceId) {
-    $.deleteHttp(api_url + "/devices/" + deviceId,
+    $.deleteHttp(nodes.get(deviceId).url,
         function(result) {
             console.log("The device has been deleted successfully.");
         }).fail(function(data) { console.error("Something went wrong in the device removal."); });
 }
 
 function deleteEdge(edgeId) {
-    $.getJSON( api_url + "/links/" + edgeId,
+    // TODO replace by links ONLY once the new created ones have URL assigned too
+    //console.log(edges.get(edgeId).url);
+    //console.log(api_url + "/links/" + edgeId);
+    $.getJSON(api_url + "/links/" + edgeId,
         function(data) {
             $.deleteHttp(data.endpoints[0] + "/link",
                 function(result) {
