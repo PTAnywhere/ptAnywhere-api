@@ -60,7 +60,7 @@ public class DevicesResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response createDevice(Device newDevice) throws URISyntaxException{
+    public Response createDevice(Device newDevice) throws URISyntaxException {
         final Device device = new DevicePoster(this.sm, newDevice).call();
         if (device==null)
             return addDefaultLinks(Response.status(Response.Status.BAD_REQUEST).entity(newDevice)).build();

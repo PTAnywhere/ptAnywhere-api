@@ -7,6 +7,7 @@ import static uk.ac.open.kmi.forge.webPacketTracer.api.http.URLFactory.DEVICE_PA
 import static uk.ac.open.kmi.forge.webPacketTracer.api.http.URLFactory.NETWORK_PATH;
 import static uk.ac.open.kmi.forge.webPacketTracer.api.http.URLFactory.LINKS_PATH;
 import static uk.ac.open.kmi.forge.webPacketTracer.api.http.URLFactory.LINK_PARAM;
+import static uk.ac.open.kmi.forge.webPacketTracer.api.http.URLFactory.CONTEXT_PATH;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
@@ -19,6 +20,11 @@ public class SessionResource {
     public SessionResource(UriInfo uri, SessionsManager sm) {
         this.uri = uri;
         this.sm = sm;
+    }
+
+    @Path(CONTEXT_PATH)
+    public ContextsResource getContextResource(@Context UriInfo u, @PathParam(SESSION_PARAM) String sessionId) {
+        return new ContextsResource(u, new SessionManager(sessionId, this.sm));
     }
 
     @Path(DEVICE_PATH)
