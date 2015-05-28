@@ -12,6 +12,7 @@ import com.cisco.pt.ipc.ui.IPC;
 import com.cisco.pt.ipc.ui.LogicalWorkspace;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import uk.ac.open.kmi.forge.webPacketTracer.api.http.URLFactory;
 import uk.ac.open.kmi.forge.webPacketTracer.api.http.Utils;
 import uk.ac.open.kmi.forge.webPacketTracer.pojo.*;
 import uk.ac.open.kmi.forge.webPacketTracer.pojo.Device;
@@ -258,11 +259,11 @@ public class PacketTracerDAO {
         return null;
     }
 
-    public Link getLink(String deviceId, String portName) {
+    public InnerLink getLink(String deviceId, String portName) {
         final String linkId = getPort(deviceId, portName).getLink();
         if (linkId!=null) {
-            final Link ret = new Link();
-            ret.setId(linkId);
+            final InnerLink ret = new InnerLink(linkId);
+            ret.appendEndpoint(deviceId, portName);
             final UUID devId = Utils.toCiscoUUID(deviceId);  // More efficient than the oher way around?
             for (int i = 0; i < this.network.getDeviceCount(); i++) {
                 final com.cisco.pt.ipc.sim.Device d = this.network.getDeviceAt(i);
@@ -271,8 +272,7 @@ public class PacketTracerDAO {
                         final com.cisco.pt.ipc.sim.port.Port p = d.getPortAt(j);
                         final String lId = (p.getLink() == null) ? null : Utils.toSimplifiedId(p.getLink().getObjectUUID());
                         if (lId != null && ret.getId().equals(lId)) {
-                            ret.setToDevice(d.getName());
-                            ret.setToPort(p.getName());
+                            ret.appendEndpoint(Utils.toSimplifiedId(d.getObjectUUID()), p.getName());
                             return ret;
                         }
                     }
@@ -281,11 +281,14 @@ public class PacketTracerDAO {
         return null;
     }
 
-    public boolean createLink(String fromDeviceId, String fromPortName, Link newLink) {
+    public boolean createLink(String fromDeviceId, String fromPortName, HalfLink newLink) {
         final LogicalWorkspace workspace = this.ipc.appWindow().getActiveWorkspace().getLogicalWorkspace();
-        final com.cisco.pt.ipc.sim.Device device = getSimDeviceById(Utils.toCiscoUUID(fromDeviceId));
-        if (device==null) return false;
-        return workspace.createLink(device.getName(), fromPortName, newLink.getToDevice(), newLink.getToPort(), ConnectType.ETHERNET_STRAIGHT);
+        final com.cisco.pt.ipc.sim.Device fromDevice = getSimDeviceById(Utils.toCiscoUUID(fromDeviceId));
+        if (fromDevice==null) return false;
+        final String toDeviceId = URLFactory.parseDeviceId(newLink.getToPort());
+        final String toPortName = URLFactory.parsePortId(newLink.getToPort());
+        final Device toDevice = getDeviceById(toDeviceId);
+        return workspace.createLink(fromDevice.getName(), fromPortName, toDevice.getLabel(), toPortName, ConnectType.ETHERNET_STRAIGHT);
     }
 
     public boolean removeLink(String fromDeviceId, String fromPortName) {

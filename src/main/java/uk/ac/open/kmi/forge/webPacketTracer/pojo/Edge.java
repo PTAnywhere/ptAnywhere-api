@@ -3,6 +3,10 @@ package uk.ac.open.kmi.forge.webPacketTracer.pojo;
 import uk.ac.open.kmi.forge.webPacketTracer.api.http.AbstractWebRepresentable;
 
 
+/**
+ * Class specifically designed for vis.js.
+ * It is used when the network map is loaded.
+ */
 public class Edge extends AbstractWebRepresentable<Edge> {
     String id;  // E.g., a9101f6bef7c437291c29391e94ee233
     String from;  // E.g., 4e70e5d74399485eb4096c9d1c9446ea

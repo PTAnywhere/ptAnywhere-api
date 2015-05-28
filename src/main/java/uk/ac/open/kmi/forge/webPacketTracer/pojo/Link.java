@@ -1,20 +1,28 @@
 package uk.ac.open.kmi.forge.webPacketTracer.pojo;
 
-
 import uk.ac.open.kmi.forge.webPacketTracer.api.http.AbstractWebRepresentable;
+import uk.ac.open.kmi.forge.webPacketTracer.api.http.URLFactory;
+
 
 public class Link extends AbstractWebRepresentable<Link> {
-    String id;  // E.g., "cc57bc49d73a42a5aa6a1c78066d565c"
-    String toDevice;
-    String toPort;
+    String id;  // E.g., "{cc57bc49-d73a-42a5-aa6a-1c78066d565c}"
+    String[] endpoints;
 
     public Link() {
+        this.endpoints = new String[2];
     }
 
-    public Link(String id, String toDevice, String toPort) {
-        this.id = id;
-        this.toDevice = toDevice;
-        this.toPort = toPort;
+    public static Link createFromInnerLink(InnerLink il, URLFactory uf) {
+        final Link rl = new Link();
+        rl.setId(il.getId());
+        rl.setURLFactory(uf); // To generate URL
+        String[] endpoints = new String[2];
+        for(int i=0; i<endpoints.length; i++) {
+            String[] endpoint = il.getEndpoints()[i];
+            endpoints[i] = uf.createPortURL(endpoint[0], endpoint[1]);
+        }
+        rl.setEndpoints(endpoints);
+        return rl;
     }
 
     public String getId() {
@@ -31,19 +39,11 @@ public class Link extends AbstractWebRepresentable<Link> {
         return this.uf.createLinkURL(this.id);
     }
 
-    public String getToDevice() {
-        return toDevice;
+    public String[] getEndpoints() {
+        return endpoints;
     }
 
-    public void setToDevice(String toDevice) {
-        this.toDevice = toDevice;
-    }
-
-    public String getToPort() {
-        return toPort;
-    }
-
-    public void setToPort(String toPort) {
-        this.toPort = toPort;
+    public void setEndpoints(String[] endpoints) {
+        this.endpoints = endpoints;
     }
 }

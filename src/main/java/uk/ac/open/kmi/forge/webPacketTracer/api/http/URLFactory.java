@@ -57,7 +57,28 @@ public class URLFactory {
         return createPortsURL() + Utils.escapePort(portId) + "/";
     }
 
+    public String createPortURL(String deviceId, String portId) {
+        return createDeviceURL(deviceId) + PORT_PATH + "/" + Utils.escapePort(portId) + "/";
+    }
+
     public String createPortLinkURL(String portId) {
         return createPortURL(portId) + PORT_LINK_PATH;
+    }
+
+    protected static String extractElement(String url, String id) {
+        boolean next = false;
+        for(String piece: url.split("/")) {
+            if (next) return piece;
+            next = piece.equals(id);
+        }
+        return null;
+    }
+
+    public static String parseDeviceId(String url) {
+        return extractElement(url, DEVICE_PATH);
+    }
+
+    public static String parsePortId(String url) {
+        return Utils.unescapePort(extractElement(url, PORT_PATH));
     }
 }

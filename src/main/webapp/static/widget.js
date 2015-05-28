@@ -98,7 +98,7 @@ function deleteDevice(deviceId) {
 function deleteEdge(edgeId) {
     $.getJSON(edges.get(edgeId).url,
         function(data) {
-            $.deleteHttp(data.endpoints[0] + "/link",
+            $.deleteHttp(data.endpoints[0] + "link",
                 function(result) {
                     console.log("The link has been deleted successfully.");
                 }
@@ -133,10 +133,9 @@ function modifyPort(portURL, modForm, callback) {
     .fail(function(data) { console.error("Something went wrong in the port modification."); });
 }
 
-function createLink(fromPortURL, toDevice, toPort, doneCallback, successCallback) {
+function createLink(fromPortURL, toPortURL, doneCallback, successCallback) {
     var modification = {
-        toDevice: toDevice,
-        toPort: toPort
+        toPort: toPortURL
     }
     $.postJSON(fromPortURL + "link", modification,
         function(response) {
@@ -208,11 +207,10 @@ function onLinkCreation(fromDeviceId, toDeviceId) {
                     }]);
                 };
                 //var fromPortName = $("#linkFromInterface option:selected", linkForm).text().replace("/", "%20");
-                var toPortName = $("#linkToInterface option:selected", linkForm).text();
+                //var toPortName = $("#linkToInterface option:selected", linkForm).text();
                 var fromPortURL = $("#linkFromInterface option:selected", linkForm).val();
-                //var toURL = $("#linkToInterface option:selected", linkForm).val();
-                createLink(fromPortURL, toDeviceName, toPortName,
-                            doneCallback, successfulCreationCallback);
+                var toPortURL = $("#linkToInterface option:selected", linkForm).val();
+                createLink(fromPortURL, toPortURL, doneCallback, successfulCreationCallback);
             },
             Cancel: function() {
                 $( this ).dialog( "close" );

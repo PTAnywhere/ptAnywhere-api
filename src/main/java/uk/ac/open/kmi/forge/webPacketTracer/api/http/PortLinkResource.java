@@ -1,6 +1,8 @@
 package uk.ac.open.kmi.forge.webPacketTracer.api.http;
 
 import uk.ac.open.kmi.forge.webPacketTracer.gateway.PTCallable;
+import uk.ac.open.kmi.forge.webPacketTracer.pojo.HalfLink;
+import uk.ac.open.kmi.forge.webPacketTracer.pojo.InnerLink;
 import uk.ac.open.kmi.forge.webPacketTracer.pojo.Link;
 import uk.ac.open.kmi.forge.webPacketTracer.session.SessionManager;
 
@@ -26,11 +28,11 @@ abstract class AbstractPortLinkHandler extends  PTCallable<Link> {
     }
     @Override
     public Link internalRun() {
-        final Link ret = handleLink();
-        if (ret!=null) ret.setURLFactory(this.uf);
-        return ret;
+        final InnerLink il = handleLink();
+        if (il==null) return null;
+        return Link.createFromInnerLink(il, this.uf);
     }
-    abstract Link handleLink();
+    abstract InnerLink handleLink();
 }
 
 class PortLinkGetter extends AbstractPortLinkHandler {
@@ -38,35 +40,33 @@ class PortLinkGetter extends AbstractPortLinkHandler {
         super(sm, deviceId, portName, baseURI);
     }
     @Override
-    public Link handleLink() {
+    public InnerLink handleLink() {
         return this.connection.getDataAccessObject().getLink(this.deviceId, this.portName);
     }
 }
 
 class LinkDeleter extends AbstractPortLinkHandler {
-    final Link toDelete = new Link();
     public LinkDeleter(SessionManager sm, String deviceId, String portName, URI baseURI) {
         super(sm, deviceId, portName, baseURI);
-        this.toDelete.setToDevice(deviceId);
-        this.toDelete.setToPort(portName);
     }
     @Override
-    public Link handleLink() {
-        final boolean success = this.connection.getDataAccessObject().removeLink(this.toDelete.getToDevice(), this.toDelete.getToPort());
+    public InnerLink handleLink() {
+        final InnerLink il = this.connection.getDataAccessObject().getLink(this.deviceId, this.portName);
+        final boolean success = this.connection.getDataAccessObject().removeLink(this.deviceId, this.portName);
         if (success)
-            return this.toDelete;
+            return il;
         return null;
     }
 }
 
 class LinkCreator extends AbstractPortLinkHandler {
-    final Link linkToCreate;
-    public LinkCreator(SessionManager sm, String deviceId, String portName, Link linkToCreate, URI baseURI) {
+    final HalfLink linkToCreate;
+    public LinkCreator(SessionManager sm, String deviceId, String portName, HalfLink linkToCreate, URI baseURI) {
         super(sm, deviceId, portName, baseURI);
         this.linkToCreate = linkToCreate;
     }
     @Override
-    public Link handleLink() {
+    public InnerLink handleLink() {
         final boolean success = this.connection.getDataAccessObject().createLink(this.deviceId, this.portName, this.linkToCreate);
         if (success)
             // Improvable performance
@@ -93,8 +93,8 @@ public class PortLinkResource {
             return Response.noContent().
                     links(getPortLink()).build();
         return Response.ok(l).
-                links(getPortLink()).
-                links(getToPortLink(l)).build();
+                links(getPortLink()).build();
+                // TODO create endpoints links
     }
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
@@ -110,26 +110,18 @@ public class PortLinkResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response createLink(Link newLink,
+    public Response createLink(HalfLink newLink,
                              @PathParam(DEVICE_PARAM) String deviceId,
                              @PathParam(PORT_PARAM) String portName) {
-        final Link createdLink = new LinkCreator(this.sm, deviceId, Utils.unescapePort(portName), newLink,this.uri.getBaseUri()).call();
+        final Link createdLink = new LinkCreator(this.sm, deviceId, Utils.unescapePort(portName), newLink, this.uri.getBaseUri()).call();
         if (createdLink==null)
             return Response.status(Response.Status.NOT_ACCEPTABLE).entity(newLink).
                     links(getPortLink()).build();
         return Response.created(this.uri.getRequestUri()).entity(createdLink).
-                links(getPortLink()).
-                links(getToPortLink(createdLink)).build();
+                links(getPortLink()).build();
+                // TODO create endpoints links
     }
     private javax.ws.rs.core.Link getPortLink() {
         return javax.ws.rs.core.Link.fromUri(Utils.getParent(this.uri.getRequestUri())).rel("port").build();  // Rename it to from?
-    }
-    private javax.ws.rs.core.Link getToPortLink(Link l) {
-        return javax.ws.rs.core.Link.fromUri(
-                    // FIXME This URL does not exist yet (and maybe it's better to return the id based one)
-                    this.uri.getBaseUri() +
-                    "devices/" + l.getToDevice() +
-                    "/ports/" + Utils.escapePort(l.getToPort()) + "?byName=true"
-                ).rel("to").build();  // Rename it to port?
     }
 }

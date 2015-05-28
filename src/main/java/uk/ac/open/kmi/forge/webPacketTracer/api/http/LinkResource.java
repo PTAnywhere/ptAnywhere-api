@@ -2,7 +2,7 @@ package uk.ac.open.kmi.forge.webPacketTracer.api.http;
 
 import uk.ac.open.kmi.forge.webPacketTracer.gateway.PTCallable;
 import uk.ac.open.kmi.forge.webPacketTracer.pojo.InnerLink;
-import uk.ac.open.kmi.forge.webPacketTracer.pojo.RefactoredLink;
+import uk.ac.open.kmi.forge.webPacketTracer.pojo.Link;
 import uk.ac.open.kmi.forge.webPacketTracer.session.SessionManager;
 import static uk.ac.open.kmi.forge.webPacketTracer.api.http.URLFactory.DEVICE_PATH;
 import static uk.ac.open.kmi.forge.webPacketTracer.api.http.URLFactory.LINK_PARAM;
@@ -46,15 +46,12 @@ public class LinkResource {
             return addDefaultLinks(Response.noContent()).build();
         }
 
-        final RefactoredLink rl = new RefactoredLink();
-        rl.setId(l.getId());
-        rl.setURLFactory(new URLFactory(this.uri.getBaseUri(), sm.getSessionId()));
+        final URLFactory uf = new URLFactory(this.uri.getBaseUri(), sm.getSessionId());
+        final Link rl = Link.createFromInnerLink(l, uf);
 
         Response.ResponseBuilder ret = addDefaultLinks(Response.ok());
-        for (String[] endpoint: l.getEndpoints()) {
-            final String e = getPortURL(endpoint);
-            ret = ret.link(e, "endpoint");
-            rl.appendEndpoint(e);
+        for (String endpointURL: rl.getEndpoints()) {
+            ret = ret.link(endpointURL, "endpoint");
         }
 
         return ret.entity(rl).build();
@@ -71,10 +68,4 @@ public class LinkResource {
 
     // From the API perspective, the best thing would be to place the DELETE here.
     // However, seeing how the PT library (or even the protocol) works, I will keep it in the endpoints.
-
-    private String getPortURL(String[] endpointInfo) {
-        return getSessionURL() +
-                DEVICE_PATH + "/" + Utils.encodeForURL(endpointInfo[0]) +
-                "/ports/" + Utils.escapePort(endpointInfo[1]);
-    }
 }
