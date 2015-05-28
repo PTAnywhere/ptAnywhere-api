@@ -147,7 +147,7 @@ function createLink(fromDeviceId, fromPortName, toDevice, toPort, doneCallback, 
 }
 
 function getAvailablePorts(deviceId, selectEl, csuccess, cfail) {
-    $.getJSON(api_url + "/devices/" + deviceId + "/ports?free=true", function(ports) {
+    $.getJSON(nodes.get(deviceId).url + "ports?free=true", function(ports) {
         csuccess(selectEl, ports);
     }).fail(cfail);
 }
