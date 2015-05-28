@@ -18,7 +18,7 @@ abstract class AbstractPortHandler extends PTCallable<Port> {
     public AbstractPortHandler(SessionManager sm, String deviceId, URI baseURI) {
         super(sm);
         this.deviceId = deviceId;
-        this.uf = new URLFactory(baseURI, sm.getSessionId());
+        this.uf = new URLFactory(baseURI, sm.getSessionId(), deviceId);
     }
     public Port internalRun() {
         final Port ret = handlePort();
