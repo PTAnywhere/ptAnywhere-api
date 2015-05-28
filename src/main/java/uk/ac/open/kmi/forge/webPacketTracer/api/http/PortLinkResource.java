@@ -11,31 +11,47 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
+import java.net.URI;
 
 
-class PortLinkGetter extends  PTCallable<Link> {
+abstract class AbstractPortLinkHandler extends  PTCallable<Link> {
     final String deviceId;
     final String portName;
-    public PortLinkGetter(SessionManager sm, String deviceId, String portName) {
+    final URLFactory uf;
+    public AbstractPortLinkHandler(SessionManager sm, String deviceId, String portName, URI baseURI) {
         super(sm);
         this.deviceId = deviceId;
         this.portName = portName;
+        this.uf = new URLFactory(baseURI, sm.getSessionId(), deviceId);
     }
     @Override
     public Link internalRun() {
+        final Link ret = handleLink();
+        if (ret!=null) ret.setURLFactory(this.uf);
+        return ret;
+    }
+    abstract Link handleLink();
+}
+
+class PortLinkGetter extends AbstractPortLinkHandler {
+    public PortLinkGetter(SessionManager sm, String deviceId, String portName, URI baseURI) {
+        super(sm, deviceId, portName, baseURI);
+    }
+    @Override
+    public Link handleLink() {
         return this.connection.getDataAccessObject().getLink(this.deviceId, this.portName);
     }
 }
 
-class LinkDeleter extends PTCallable<Link> {
+class LinkDeleter extends AbstractPortLinkHandler {
     final Link toDelete = new Link();
-    public LinkDeleter(SessionManager sm, String deviceId, String portName) {
-        super(sm);
+    public LinkDeleter(SessionManager sm, String deviceId, String portName, URI baseURI) {
+        super(sm, deviceId, portName, baseURI);
         this.toDelete.setToDevice(deviceId);
         this.toDelete.setToPort(portName);
     }
     @Override
-    public Link internalRun() {
+    public Link handleLink() {
         final boolean success = this.connection.getDataAccessObject().removeLink(this.toDelete.getToDevice(), this.toDelete.getToPort());
         if (success)
             return this.toDelete;
@@ -43,18 +59,14 @@ class LinkDeleter extends PTCallable<Link> {
     }
 }
 
-class LinkCreator extends PTCallable<Link> {
-    final String deviceId;
-    final String portName;
+class LinkCreator extends AbstractPortLinkHandler {
     final Link linkToCreate;
-    public LinkCreator(SessionManager sm, String deviceId, String portName, Link linkToCreate) {
-        super(sm);
-        this.deviceId = deviceId;
-        this.portName = portName;
+    public LinkCreator(SessionManager sm, String deviceId, String portName, Link linkToCreate, URI baseURI) {
+        super(sm, deviceId, portName, baseURI);
         this.linkToCreate = linkToCreate;
     }
     @Override
-    public Link internalRun() {
+    public Link handleLink() {
         final boolean success = this.connection.getDataAccessObject().createLink(this.deviceId, this.portName, this.linkToCreate);
         if (success)
             // Improvable performance
@@ -76,7 +88,7 @@ public class PortLinkResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response getLink(@PathParam(DEVICE_PARAM) String deviceId,
                             @PathParam(PORT_PARAM) String portName) {
-        final Link l = new PortLinkGetter(this.sm, deviceId, Utils.unescapePort(portName)).call();
+        final Link l = new PortLinkGetter(this.sm, deviceId, Utils.unescapePort(portName),this.uri.getBaseUri()).call();
         if (l==null)
             return Response.noContent().
                     links(getPortLink()).build();
@@ -88,7 +100,7 @@ public class PortLinkResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response removeLink(@PathParam(DEVICE_PARAM) String deviceId,
                                @PathParam(PORT_PARAM) String portName) {
-        final Link deletedLink = new LinkDeleter(this.sm, deviceId, Utils.unescapePort(portName)).call();
+        final Link deletedLink = new LinkDeleter(this.sm, deviceId, Utils.unescapePort(portName),this.uri.getBaseUri()).call();
         if (deletedLink==null)
             return Response.status(Response.Status.NOT_ACCEPTABLE).entity(deletedLink).
                     links(getPortLink()).build();
@@ -101,7 +113,7 @@ public class PortLinkResource {
     public Response createLink(Link newLink,
                              @PathParam(DEVICE_PARAM) String deviceId,
                              @PathParam(PORT_PARAM) String portName) {
-        final Link createdLink = new LinkCreator(this.sm, deviceId, Utils.unescapePort(portName), newLink).call();
+        final Link createdLink = new LinkCreator(this.sm, deviceId, Utils.unescapePort(portName), newLink,this.uri.getBaseUri()).call();
         if (createdLink==null)
             return Response.status(Response.Status.NOT_ACCEPTABLE).entity(newLink).
                     links(getPortLink()).build();
