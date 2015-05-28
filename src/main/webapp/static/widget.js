@@ -96,10 +96,7 @@ function deleteDevice(deviceId) {
 }
 
 function deleteEdge(edgeId) {
-    // TODO replace by links ONLY once the new created ones have URL assigned too
-    //console.log(edges.get(edgeId).url);
-    //console.log(api_url + "/links/" + edgeId);
-    $.getJSON(api_url + "/links/" + edgeId,
+    $.getJSON(edges.get(edgeId).url,
         function(data) {
             $.deleteHttp(data.endpoints[0] + "/link",
                 function(result) {
@@ -144,7 +141,7 @@ function createLink(fromDeviceId, fromPortName, toDevice, toPort, doneCallback, 
     $.postJSON(api_url + "/devices/" + fromDeviceId + "/ports/" + fromPortName + "/link", modification,
         function(response) {
             console.log("The link has been created successfully.");
-            successCallback(response.id);
+            successCallback(response.id, response.url);
     }).done(doneCallback)
     .fail(function(data) { console.error("Something went wrong in the link creation."); });
 }
@@ -202,9 +199,10 @@ function onLinkCreation(fromDeviceId, toDeviceId) {
                 var doneCallback = function() {
                     dialog.dialog( "close" );
                 };
-                var successfulCreationCallback = function(edgeId) {
+                var successfulCreationCallback = function(edgeId, edgeUrl) {
                     edges.add([{
                         id: edgeId,
+                        url: edgeUrl,
                         from: fromDeviceId,
                         to: toDeviceId,
                     }]);
