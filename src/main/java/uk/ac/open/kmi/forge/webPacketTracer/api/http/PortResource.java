@@ -9,33 +9,46 @@ import static uk.ac.open.kmi.forge.webPacketTracer.api.http.URLFactory.PORT_LINK
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
+import java.net.URI;
 
 
-class PortGetter extends PTCallable<Port> {
+abstract class AbstractPortHandler extends PTCallable<Port> {
     final String deviceId;
-    final String portName;
-    public PortGetter(SessionManager sm, String deviceId, String portName) {
+    final URLFactory uf;
+    public AbstractPortHandler(SessionManager sm, String deviceId, URI baseURI) {
         super(sm);
         this.deviceId = deviceId;
+        this.uf = new URLFactory(baseURI, sm.getSessionId());
+    }
+    public Port internalRun() {
+        final Port ret = handlePort();
+        if (ret!=null) ret.setURLFactory(this.uf);
+        return ret;
+    }
+    public abstract Port handlePort();
+}
+
+class PortGetter extends AbstractPortHandler {
+    final String portName;
+    public PortGetter(SessionManager sm, String deviceId, String portName, URI baseURI) {
+        super(sm, deviceId, baseURI);
         this.portName = portName;
     }
     @Override
-    public Port internalRun() {
+    public Port handlePort() {
         return this.connection.getDataAccessObject().getPort(this.deviceId, this.portName);
     }
 }
 
-class PortModifier extends PTCallable<Port> {
-    final String deviceId;
+class PortModifier extends AbstractPortHandler {
     final Port modification;
-    public PortModifier(SessionManager sm, String deviceId, Port modification) {
-        super(sm);
-        this.deviceId = deviceId;
+    public PortModifier(SessionManager sm, String deviceId, Port modification, URI baseURI) {
+        super(sm, deviceId, baseURI);
         this.modification = modification;
     }
 
     @Override
-    public Port internalRun() {
+    public Port handlePort() {
         return this.connection.getDataAccessObject().modifyPort(this.deviceId, this.modification);
     }
 }
@@ -60,7 +73,7 @@ public class PortResource {
     public Response getPort(
             @PathParam(DEVICE_PARAM) String deviceId,
             @PathParam(PORT_PARAM) String portName) {
-        final Port p = new PortGetter(this.sm, deviceId, Utils.unescapePort(portName)).call();  // Not using a new Thread
+        final Port p = new PortGetter(this.sm, deviceId, Utils.unescapePort(portName), this.uri.getBaseUri()).call();  // Not using a new Thread
         if (p==null)
             return Response.noContent().
                     links(getPortsLink()).build();
@@ -81,7 +94,7 @@ public class PortResource {
         // The portName should be provided in the URL, not in the body (i.e., JSON sent).
         if (modification.getPortName()==null) {
             modification.setPortName(Utils.unescapePort(portName));
-            final Port ret = new PortModifier(this.sm, deviceId, modification).call();  // Not using a new Thread
+            final Port ret = new PortModifier(this.sm, deviceId, modification, this.uri.getBaseUri()).call();  // Not using a new Thread
             return Response.ok(ret).
                     links(getPortsLink()).
                     links(getLinkLink()).build();
