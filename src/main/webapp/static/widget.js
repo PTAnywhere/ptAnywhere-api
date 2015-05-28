@@ -120,13 +120,13 @@ function modifyDevice(deviceId, callback) {
     .fail(function(data) { console.error("Something went wrong in the device modification."); });
 }
 
-function modifyPort(deviceId, portName, modForm, callback) {
+function modifyPort(portURL, modForm, callback) {
     // Send new IP settings
     var modification = {
         portIpAddress: $("input[name='ipAddress']", modForm).val(),
         portSubnetMask: $("input[name='subnetMask']", modForm).val()
     }
-    $.putJSON(api_url + "/devices/" + deviceId + "/ports/" + portName, modification,
+    $.putJSON(portURL, modification,
         function(result) {
             console.log("The port has been modified successfully.");
     }).done(callback)
@@ -240,13 +240,13 @@ function handleModificationSubmit(callback) {
     // Check the tab
     var modForm = $("form[name='modify-device']");
     var selectedTab = $("li.ui-state-active", modForm).attr("aria-controls");
-    var deviceId = $("input[name='deviceId']", modForm).val();
     if (selectedTab=="tabs-1") { // General settings
+        var deviceId = $("input[name='deviceId']", modForm).val();
         modifyDevice(deviceId, callback);
     } else if (selectedTab=="tabs-2") { // Interfaces
-        var selectedFromInterface = $("#interface", modForm).val().replace("/", "%20");
+        var portURL = $("#interface", modForm).val();
         // Room for improvement: the following request could be avoided when nothing has changed
-        modifyPort(deviceId, selectedFromInterface, modForm, callback);  // In case just the port details are modified...
+        modifyPort(portURL, modForm, callback);  // In case just the port details are modified...
     } else {
         console.error("ERROR. Selected tab unknown.");
     }
@@ -289,7 +289,8 @@ function loadPortsInSelect(ports, selectElement, defaultSelection) {
     selectElement.html(""); // Remove everything
     for (var i = 0; i < ports.length; i++) {
         var portName = ports[i].portName;
-        var htmlAppend = '<option value="' + portName + '"';
+        var portURL = ports[i].url;
+        var htmlAppend = '<option value="' + portURL + '"';
         if (i == defaultSelection) {
             htmlAppend += ' selected';
             ret = ports[i];
@@ -324,17 +325,17 @@ function loadPortsForInterface(ports, selectedDevice, formToUpdate) {
     });
 }
 
-function updateEditForm(node) {
+function updateEditForm(deviceId) {
     $("#tabs-2>.loading").show();
     $("#tabs-2>.loaded").hide();
 
-    var current = nodes.get(node);
+    var current = nodes.get(deviceId);
     var modForm = $("form[name='modify-device']");
-    $("input[name='deviceId']", modForm).val(node);
+    $("input[name='deviceId']", modForm).val(deviceId);
     $("input[name='displayName']", modForm).val(current.label);
 
-    $.getJSON(api_url + "/devices/" + node + "/ports", function(data) {
-        loadPortsForInterface(data, current, modForm);
+    $.getJSON(current.url + "ports", function(ports) {
+        loadPortsForInterface(ports, current, modForm);
     }).fail(function() {
         console.error("Ports for the device " + node + " could not be loaded. Possible timeout.");
     });
