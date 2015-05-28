@@ -48,6 +48,7 @@ public class LinkResource {
 
         final RefactoredLink rl = new RefactoredLink();
         rl.setId(l.getId());
+        rl.setURLFactory(new URLFactory(this.uri.getBaseUri(), sm.getSessionId()));
 
         Response.ResponseBuilder ret = addDefaultLinks(Response.ok());
         for (String[] endpoint: l.getEndpoints()) {

@@ -1,6 +1,9 @@
 package uk.ac.open.kmi.forge.webPacketTracer.pojo;
 
-public class RefactoredLink {
+import uk.ac.open.kmi.forge.webPacketTracer.api.http.AbstractWebRepresentable;
+
+
+public class RefactoredLink extends AbstractWebRepresentable<RefactoredLink> {
     String id;  // E.g., "{cc57bc49-d73a-42a5-aa6a-1c78066d565c}"
     String[] endpoints;
 
@@ -19,6 +22,12 @@ public class RefactoredLink {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    @Override
+    public String getUrl() {
+        if (this.uf==null) return null;
+        return this.uf.createLinkURL(this.id);
     }
 
     public String[] getEndpoints() {
