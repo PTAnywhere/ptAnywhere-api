@@ -54,7 +54,7 @@ public class URLFactory {
     }
 
     public String createPortURL(String portId) {
-        return createPortsURL() + portId + "/";
+        return createPortsURL() + Utils.escapePort(portId) + "/";
     }
 
     public String createPortLinkURL(String portId) {
