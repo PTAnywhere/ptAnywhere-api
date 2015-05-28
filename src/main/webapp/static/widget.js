@@ -112,7 +112,7 @@ function modifyDevice(deviceId, callback) {
     var modification = {
         label: $("form[name='modify-device'] input[name='displayName']").val()
     }
-    $.putJSON(api_url + "/devices/" + deviceId, modification,
+    $.putJSON(nodes.get(deviceId).url, modification,
         function(result) {
             console.log("The device has been modified successfully.");
             nodes.update(result);  // As the device has the same id, it should replace the older one.
@@ -133,12 +133,12 @@ function modifyPort(portURL, modForm, callback) {
     .fail(function(data) { console.error("Something went wrong in the port modification."); });
 }
 
-function createLink(fromDeviceId, fromPortName, toDevice, toPort, doneCallback, successCallback) {
+function createLink(fromPortURL, toDevice, toPort, doneCallback, successCallback) {
     var modification = {
         toDevice: toDevice,
         toPort: toPort
     }
-    $.postJSON(api_url + "/devices/" + fromDeviceId + "/ports/" + fromPortName + "/link", modification,
+    $.postJSON(fromPortURL + "link", modification,
         function(response) {
             console.log("The link has been created successfully.");
             successCallback(response.id, response.url);
@@ -207,9 +207,11 @@ function onLinkCreation(fromDeviceId, toDeviceId) {
                         to: toDeviceId,
                     }]);
                 };
-                var fromPortName = $("#linkFromInterface option:selected", linkForm).text().replace("/", "%20");
+                //var fromPortName = $("#linkFromInterface option:selected", linkForm).text().replace("/", "%20");
                 var toPortName = $("#linkToInterface option:selected", linkForm).text();
-                createLink(fromDeviceId, fromPortName, toDeviceName, toPortName,
+                var fromPortURL = $("#linkFromInterface option:selected", linkForm).val();
+                //var toURL = $("#linkToInterface option:selected", linkForm).val();
+                createLink(fromPortURL, toDeviceName, toPortName,
                             doneCallback, successfulCreationCallback);
             },
             Cancel: function() {
