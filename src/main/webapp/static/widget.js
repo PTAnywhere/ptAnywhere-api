@@ -524,18 +524,33 @@ function getURLParameter(sParam) {
     }
 }
 
+
+var DraggableDevice = function(el, canvasEl, deviceType) {
+    this.el = el;
+    this.originalPosition = {
+        'left': el.css('left'),
+        'top': el.css('top')
+    };
+    this.canvas = canvasEl;
+    // FIXME too many callbacks here, it's too confusing
+    this.creationCallback = function(elementOffset, callback) {
+                                addDevicePositioned(deviceType, elementOffset, callback);
+                            };
+    this.init();
+}
+
 // Source: http://stackoverflow.com/questions/5419134/how-to-detect-if-two-divs-touch-with-jquery
-function collisionWithCanvas(element) {
-    var x1 = $("#network").offset().left;
-    var y1 = $("#network").offset().top;
-    var h1 = $("#network").outerHeight(true);
-    var w1 = $("#network").outerWidth(true);
+DraggableDevice.prototype.collisionsWithCanvas = function(draggingEl) {
+    var x1 = this.canvas.offset().left;
+    var y1 = this.canvas.offset().top;
+    var h1 = this.canvas.outerHeight(true);
+    var w1 = this.canvas.outerWidth(true);
     var b1 = y1 + h1;
     var r1 = x1 + w1;
-    var x2 = element.offset().left;
-    var y2 = element.offset().top;
-    var h2 = element.outerHeight(true);
-    var w2 = element.outerWidth(true);
+    var x2 = draggingEl.offset().left;
+    var y2 = draggingEl.offset().top;
+    var h2 = draggingEl.outerHeight(true);
+    var w2 = draggingEl.outerWidth(true);
     var b2 = y2 + h2;
     var r2 = x2 + w2;
 
@@ -543,21 +558,19 @@ function collisionWithCanvas(element) {
     return true;
 }
 
-function initDraggable(element) {
-    element.animate({'opacity':'1'}, 1000, function() {
-        element.css({ // would be great with an animation too, but it doesn't work
-            'left':element.data('originalLeft'),
-            'top':element.data('originalTop')
+DraggableDevice.prototype.moveToStartingPosition = function() {
+    var obj = this;
+    this.el.animate({'opacity':'1'}, 1000, function() {
+        obj.el.css({ // would be great with an animation too, but it doesn't work
+            'left': obj.originalPosition.left,
+            'top': obj.originalPosition.top
         });
     });
 }
 
-function configureDraggableCreationElement(element, creation_function) {
-    element.data({ // Or we could also record it in the 'start' event.
-        'originalLeft': element.css('left'),
-        'originalTop': element.css('top')
-    });
-    element.draggable({
+DraggableDevice.prototype.init = function() {
+    var originalObj = this;
+    this.el.draggable({
         helper: "clone",
         opacity: 0.4,
         /*revert: true, // It interferes with the position I want to capture in the 'stop' event
@@ -569,7 +582,7 @@ function configureDraggableCreationElement(element, creation_function) {
             console.log(event);
         },*/
         stop: function(event, ui) {
-            if (collisionWithCanvas(ui.helper)) {
+            if (originalObj.collisionsWithCanvas(ui.helper)) {
                 var image = $('<img alt="Temporary image" src="' + ui.helper.attr("src") + '">');
                 image.css("width", ui.helper.css("width"));
                 var warning = $('<div class="text-in-image"><span>Creating...</span></div>');
@@ -578,12 +591,12 @@ function configureDraggableCreationElement(element, creation_function) {
                 warning.css({'position': 'absolute',
                              'left': ui.offset.left,
                              'top': ui.offset.top});
-                creation_function(ui.offset, function() {
-                    initDraggable(element);
+                originalObj.creationCallback(ui.offset, function() {
+                    originalObj.moveToStartingPosition();
                     warning.remove();
                 });
             } else {
-                initDraggable(element);
+                originalObj.moveToStartingPosition();
             }
         }
     });
@@ -622,18 +635,11 @@ $(function() {
     $("#modify-device").hide();
     $("#link-devices").hide();
 
-    configureDraggableCreationElement($("#cloud"), function(elementOffset, callback) {
-        addDevicePositioned("cloud", elementOffset, callback);
-    });
-    configureDraggableCreationElement($("#router"), function(elementOffset, callback) {
-        addDevicePositioned("router", elementOffset, callback);
-    });
-    configureDraggableCreationElement($("#switch"), function(elementOffset, callback) {
-        addDevicePositioned("switch", elementOffset, callback);
-    });
-    configureDraggableCreationElement($("#pc"), function(elementOffset, callback) {
-        addDevicePositioned("pc",elementOffset, callback);
-    });
+    var networkCanvas = $("#network");
+    var draggableCloud = new DraggableDevice($("#cloud"), networkCanvas, "cloud");
+    var draggableRouter = new DraggableDevice($("#router"), networkCanvas, "router");
+    var draggableSwitch = new DraggableDevice($("#switch"), networkCanvas, "switch");
+    var draggablePc = new DraggableDevice($("#pc"), networkCanvas, "pc");
 
     redrawTopology(null);
 });
