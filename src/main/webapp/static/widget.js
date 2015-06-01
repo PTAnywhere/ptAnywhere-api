@@ -31,6 +31,48 @@ $.deleteHttp = function(url, callback) {
 };
 
 
+// http://addyosmani.com/resources/essentialjsdesignpatterns/book/#revealingmodulepatternjavascript
+/**
+ * Client for PacketTracer's HTTP API.
+ */
+var packetTracer = (function () {
+    /**
+     * @arg callback If it is null, it is simply ignored.
+     */
+    function getTopology(callback) {
+        $.ajax({
+            url: api_url + "/network",
+            type : 'GET',
+            dataType: 'json',
+            success: callback,
+            tryCount : 0,
+            retryLimit : 3,
+            timeout: 2000,
+            error : function(xhr, textStatus, errorThrown ) {
+                if (textStatus == 'timeout') {
+                    console.error("The topology could not be loaded: timeout.");
+                    this.tryCount++;
+                    if (this.tryCount <= this.retryLimit) {
+                        //try again
+                        $.ajax(this);
+                        return;
+                    }
+                    return;
+                } else {
+                    console.error("The topology could not be loaded: " + errorThrown + ".");
+                    if(xhr.status==404) {
+                        $(".view").html($("#notFound").html());
+                    }
+                }
+            }  // Apparently status code 304 is an error for this method :-S
+        });
+    }
+
+    return {
+        getNetwork: getTopology
+    };
+
+})();
 
 
 // Canvas' (0,0) does not correspond with the network map's (0,0) position.
@@ -385,131 +427,120 @@ function openCommandLine() {
     }
 }
 
-function loadTopology(responseData) {
-    // Initialize data sets if needed
-    if (nodes==null) {
-        nodes = new vis.DataSet();
-    }
-    if (edges==null) {
-        edges = new vis.DataSet();
+
+// The Revealing Module Pattern
+// http://addyosmani.com/resources/essentialjsdesignpatterns/book/#revealingmodulepatternjavascript
+var networkMap = (function () {
+
+    //var container = $('#network').get(0);
+    //var nodes = null; // To replace in the future with null
+    //var edges = null; // To replace in the future with null
+
+    function drawTopology(responseData) {
+        // Initialize data sets if needed
+        if (nodes==null) {
+            nodes = new vis.DataSet();
+        }
+        if (edges==null) {
+            edges = new vis.DataSet();
+        }
+
+        // Load data
+        if (responseData.devices!=null) {
+            nodes.clear();
+            nodes.add(responseData.devices);
+        }
+        if (responseData.edges!=null) {
+            edges.clear();
+            edges.add(responseData.edges);
+        }
+
+        // Create network element if needed (only the first time)
+        if (network==null) {
+            // create a network
+            var container = $('#network').get(0);
+            var visData = { nodes : nodes, edges : edges };
+            var options = {
+                //dragNetwork : false,
+                //dragNodes : true,
+                //zoomable : false,
+                stabilize: true,
+                dataManipulation: true,
+                edges: {
+                    width: 3,
+                    widthSelectionMultiplier: 1.4,
+                    color: {
+                        color:'#606060',
+                        highlight:'#000000',
+                        hover: '#000000'
+                    }
+                 },
+                groups : {
+                    // TODO room for improvement, static URL vs relative URL
+                    cloudDevice : {
+                        shape : 'image',
+                        image : "../../static/cloud.png"
+                    },
+                    routerDevice : {
+                        shape : 'image',
+                        image : "../../static/router.png"
+                    },
+                    switchDevice : {
+                        shape : 'image',
+                        image : "../../static/switch.png"
+                    },
+                    pcDevice : {
+                        shape : 'image',
+                        image : "../../static/PC.png"
+                    }
+                },
+                onAdd: function(data, callback) {
+                    onDeviceAdd(data.x, data.y);
+                },
+                onConnect: function(data, callback) {
+                    onLinkCreation(data.from, data.to);
+                },
+                onEdit: function(data, callback) {
+                    onDeviceEdit(data.id);
+                },
+                onDelete: function(data, callback) {
+                    if (data.nodes.length>0) {
+                        deleteDevice(data.nodes[0]);
+                    } else if (data.edges.length>0) {
+                        deleteEdge(data.edges[0]);
+                    }
+                    // This callback is important, otherwise it received 3 consecutive onDelete events.
+                    callback(data);
+                }
+            };
+            network = new vis.Network(container, visData, options);
+            network.on('doubleClick', openCommandLine);
+        }
     }
 
-    // Load data
-    if (responseData.devices!=null) {
-        nodes.clear();
-        nodes.add(responseData.devices);
-    }
-    if (responseData.edges!=null) {
-        edges.clear();
-        edges.add(responseData.edges);
+    /**
+     * @arg callback If it is null, it is simply ignored.
+     */
+    function loadTopology(callback) {
+        var draw = drawTopology;
+        packetTracer.getNetwork(function(data) {
+            draw(data);
+            if (callback!=null)
+                callback();
+        });
     }
 
-    // Create network element if needed (only the first time)
-    if (network==null) {
-        // create a network
-        var container = $('#network').get(0);
-        var visData = { nodes : nodes, edges : edges };
-        var options = {
-            //dragNetwork : false,
-            //dragNodes : true,
-            //zoomable : false,
-            stabilize: true,
-            dataManipulation: true,
-            edges: {
-                width: 3,
-                widthSelectionMultiplier: 1.4,
-                color: {
-                    color:'#606060',
-                    highlight:'#000000',
-                    hover: '#000000'
-                }
-             },
-            groups : {
-                // TODO room for improvement, static URL vs relative URL
-                cloudDevice : {
-                    shape : 'image',
-                    image : "../../static/cloud.png"
-                },
-                routerDevice : {
-                    shape : 'image',
-                    image : "../../static/router.png"
-                },
-                switchDevice : {
-                    shape : 'image',
-                    image : "../../static/switch.png"
-                },
-                pcDevice : {
-                    shape : 'image',
-                    image : "../../static/PC.png"
-                }
-            },
-            onAdd: function(data, callback) {
-                onDeviceAdd(data.x, data.y);
-            },
-            onConnect: function(data, callback) {
-                onLinkCreation(data.from, data.to);
-            },
-            onEdit: function(data, callback) {
-                onDeviceEdit(data.id);
-            },
-            onDelete: function(data, callback) {
-                if (data.nodes.length>0) {
-                    deleteDevice(data.nodes[0]);
-                } else if (data.edges.length>0) {
-                    deleteEdge(data.edges[0]);
-                }
-                // This callback is important, otherwise it received 3 consecutive onDelete events.
-                callback(data);
-            }
-        };
-        network = new vis.Network(container, visData, options);
-        network.on('doubleClick', openCommandLine);
-    }
-}
+    // Reveal public pointers to
+    // private functions and properties
+   return {
+        load: loadTopology,
+   };
+
+})();
 
 // convenience method to stringify a JSON object
 function toJSON(obj) {
     return JSON.stringify(obj, null, 4);
-}
-
-function redrawTopology() {
-    redrawTopology(null);
-}
-
-/**
- * @arg callback If it is null, it is simply ignored.
- */
-function redrawTopology(callback) {
-    $.ajax({
-        url: api_url + "/network",
-        type : 'GET',
-        dataType: 'json',
-        success: function(data) {
-            loadTopology(data);
-            if (callback!=null)
-                callback();
-        },
-        tryCount : 0,
-        retryLimit : 3,
-        timeout: 2000,
-        error : function(xhr, textStatus, errorThrown ) {
-            if (textStatus == 'timeout') {
-                console.error("The topology could not be loaded: timeout.");
-                this.tryCount++;
-                if (this.tryCount <= this.retryLimit) {
-                    //try again
-                    $.ajax(this);
-                    return;
-                }
-                return;
-            } else {
-                console.error("The topology could not be loaded: " + errorThrown + ".");
-                if(xhr.status==404) {
-                    $(".view").html($("#notFound").html());
-                }
-            }
-        }  // Apparently status code 304 is an error for this method :-S
-    });
 }
 
 // From: http://www.jquerybyexample.net/2012/06/get-url-parameters-using-jquery.html
@@ -641,5 +672,5 @@ $(function() {
     var draggableSwitch = new DraggableDevice($("#switch"), networkCanvas, "switch");
     var draggablePc = new DraggableDevice($("#pc"), networkCanvas, "pc");
 
-    redrawTopology(null);
+    networkMap.load();
 });
