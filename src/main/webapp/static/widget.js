@@ -84,8 +84,48 @@ var packetTracer = (function () {
             }).fail(function(data) { console.error("Something went wrong in the device removal."); });
     }
 
-    function deleteEdge(edgeId) {
-        $.getJSON(edges.get(edgeId).url,
+    function putDevice(deviceId, deviceLabel, callback) { // modify
+        // General settings: PUT to /devices/id
+        var modification = { label: deviceLabel };
+        $.putJSON(nodes.get(deviceId).url, modification,
+            function(result) {
+                console.log("The device has been modified successfully.");
+                nodes.update(result);  // As the device has the same id, it should replace the older one.
+        }).done(callback)
+        .fail(function(data) { console.error("Something went wrong in the device modification."); });
+    }
+
+    function putPort(portURL, ipAddress, subnetMask, callback) {
+        // Send new IP settings
+        var modification = {
+            portIpAddress: ipAddress,
+            portSubnetMask: subnetMask
+        };
+        $.putJSON(portURL, modification,
+            function(result) {
+                console.log("The port has been modified successfully.");
+        }).done(callback)
+        .fail(function(data) { console.error("Something went wrong in the port modification."); });
+    }
+
+    function getFreePorts(deviceId, csuccess, cfail) {
+        $.getJSON(nodes.get(deviceId).url + "ports?free=true", csuccess).fail(cfail);
+    }
+
+    function postLink(fromPortURL, toPortURL, doneCallback, successCallback) {
+        var modification = {
+            toPort: toPortURL
+        }
+        $.postJSON(fromPortURL + "link", modification,
+            function(response) {
+                console.log("The link has been created successfully.");
+                successCallback(response.id, response.url);
+        }).done(doneCallback)
+        .fail(function(data) { console.error("Something went wrong in the link creation."); });
+    }
+
+    function deleteLink(linkUrl) {
+        $.getJSON(linkUrl,
             function(data) {
                 $.deleteHttp(data.endpoints[0] + "link",
                     function(result) {
@@ -100,6 +140,11 @@ var packetTracer = (function () {
         getNetwork: getTopology,
         addDevice: postDevice,
         removeDevice: deleteDevice,
+        modifyDevice: putDevice,
+        modifyPort: putPort,
+        getAvailablePorts: getFreePorts,
+        createLink: postLink,
+        removeLink: deleteLink,
     };
 
 })();
@@ -151,50 +196,6 @@ function addDeviceWithName(label, type, x, y, callback) {
     }, callback);
 }
 
-function modifyDevice(deviceId, callback) {
-    // General settings: PUT to /devices/id
-    var modification = {
-        label: $("form[name='modify-device'] input[name='displayName']").val()
-    }
-    $.putJSON(nodes.get(deviceId).url, modification,
-        function(result) {
-            console.log("The device has been modified successfully.");
-            nodes.update(result);  // As the device has the same id, it should replace the older one.
-    }).done(callback)
-    .fail(function(data) { console.error("Something went wrong in the device modification."); });
-}
-
-function modifyPort(portURL, modForm, callback) {
-    // Send new IP settings
-    var modification = {
-        portIpAddress: $("input[name='ipAddress']", modForm).val(),
-        portSubnetMask: $("input[name='subnetMask']", modForm).val()
-    }
-    $.putJSON(portURL, modification,
-        function(result) {
-            console.log("The port has been modified successfully.");
-    }).done(callback)
-    .fail(function(data) { console.error("Something went wrong in the port modification."); });
-}
-
-function createLink(fromPortURL, toPortURL, doneCallback, successCallback) {
-    var modification = {
-        toPort: toPortURL
-    }
-    $.postJSON(fromPortURL + "link", modification,
-        function(response) {
-            console.log("The link has been created successfully.");
-            successCallback(response.id, response.url);
-    }).done(doneCallback)
-    .fail(function(data) { console.error("Something went wrong in the link creation."); });
-}
-
-function getAvailablePorts(deviceId, selectEl, csuccess, cfail) {
-    $.getJSON(nodes.get(deviceId).url + "ports?free=true", function(ports) {
-        csuccess(selectEl, ports);
-    }).fail(cfail);
-}
-
 function loadAvailablePorts(fromDeviceId, toDeviceId, linkForm, bothLoadedSuccess, bothLoadedFail) {
     oneLoaded = false; // It must be global for the magic to happen ;)
     afterLoadingSuccess = function(selectPortsEl, ports) {
@@ -214,9 +215,12 @@ function loadAvailablePorts(fromDeviceId, toDeviceId, linkForm, bothLoadedSucces
         console.error("Something went wrong getting this devices' available ports " + deviceId + ".")
         bothLoadedFail("Unable to get " + deviceId + " device's ports.");
     }
-
-    getAvailablePorts(fromDeviceId, $("#linkFromInterface", linkForm), afterLoadingSuccess, afterLoadingError);
-    getAvailablePorts(toDeviceId, $("#linkToInterface", linkForm), afterLoadingSuccess, afterLoadingError);
+    packetTracer.getAvailablePorts(fromDeviceId, function(ports) {
+                                                    afterLoadingSuccess($("#linkFromInterface", linkForm), ports);
+                                                 }, afterLoadingError);
+    packetTracer.getAvailablePorts(toDeviceId, function(ports) {
+                                                  afterLoadingSuccess($("#linkToInterface", linkForm), ports);
+                                               }, afterLoadingError);
 }
 
 function onLinkCreation(fromDeviceId, toDeviceId) {
@@ -254,7 +258,7 @@ function onLinkCreation(fromDeviceId, toDeviceId) {
                 //var toPortName = $("#linkToInterface option:selected", linkForm).text();
                 var fromPortURL = $("#linkFromInterface option:selected", linkForm).val();
                 var toPortURL = $("#linkToInterface option:selected", linkForm).val();
-                createLink(fromPortURL, toPortURL, doneCallback, successfulCreationCallback);
+                packetTracer.createLink(fromPortURL, toPortURL, doneCallback, successfulCreationCallback);
             },
             Cancel: function() {
                 $( this ).dialog( "close" );
@@ -286,11 +290,14 @@ function handleModificationSubmit(callback) {
     var selectedTab = $("li.ui-state-active", modForm).attr("aria-controls");
     if (selectedTab=="tabs-1") { // General settings
         var deviceId = $("input[name='deviceId']", modForm).val();
-        modifyDevice(deviceId, callback);
+        var deviceLabel = $("form[name='modify-device'] input[name='displayName']").val();
+        packetTracer.modifyDevice(deviceId, deviceLabel, callback);
     } else if (selectedTab=="tabs-2") { // Interfaces
         var portURL = $("#interface", modForm).val();
+        var portIpAddress = $("input[name='ipAddress']", modForm).val();
+        var portSubnetMask = $("input[name='subnetMask']", modForm).val();
         // Room for improvement: the following request could be avoided when nothing has changed
-        modifyPort(portURL, modForm, callback);  // In case just the port details are modified...
+        packetTracer.modifyPort(portURL, portIpAddress, portSubnetMask, callback);  // In case just the port details are modified...
     } else {
         console.error("ERROR. Selected tab unknown.");
     }
@@ -509,7 +516,8 @@ var networkMap = (function () {
                     if (data.nodes.length>0) {
                         packetTracer.removeDevice(data.nodes[0]);
                     } else if (data.edges.length>0) {
-                        deleteEdge(data.edges[0]);
+                        var edgeId = data.edges[0]; // Var created just to enhance readability
+                        packetTracer.removeLink( edges.get(edgeId).url );
                     }
                     // This callback is important, otherwise it received 3 consecutive onDelete events.
                     callback(data);
