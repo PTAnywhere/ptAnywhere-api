@@ -343,71 +343,94 @@ function loadPortsInSelect(ports, selectElement, defaultSelection) {
     return ret;
 }
 
-function updateInterfaceInformation(port, formToUpdate) {
-    $('input[name="ipAddress"]', formToUpdate).val(port.portIpAddress);
-    $('input[name="subnetMask"]', formToUpdate).val(port.portSubnetMask);
-}
 
-function loadPortsForInterface(ports, selectedDevice, formToUpdate) {
-    var selectedPort = loadPortsInSelect(ports, $("#interface", formToUpdate), 0);
-    if (selectedPort!=null) {
-        updateInterfaceInformation(selectedPort, formToUpdate);
-        $("#tabs-2>.loading").hide();
-        $("#tabs-2>.loaded").show();
+var deviceModificationDialog = (function () {
+    var selectedDevice;
+    var modForm;  // To hopefully improve selectors performance
+
+    function updateInterfaceInformation(port) {
+        $('input[name="ipAddress"]', modForm).val(port.portIpAddress);
+        $('input[name="subnetMask"]', modForm).val(port.portSubnetMask);
     }
-    $("#interface", formToUpdate).change(function () {
-        $("option:selected", this).each(function(index, element) { // There is only one selection
-            var selectedIFace = $(element).text();
-            for (var i = 0; i < ports.length; i++) {  // Instead of getting its info again (we save one request)
-                if ( selectedIFace == ports[i].portName ) {
-                    updateInterfaceInformation(ports[i], formToUpdate);
-                    break;
+
+    function showLoadingPanel(loading) {
+        if (loading) {
+            $("#tabs-2>.loading").hide();
+            $("#tabs-2>.loaded").show();
+        } else {
+            $("#tabs-2>.loading").show();
+            $("#tabs-2>.loaded").hide();
+        }
+    }
+
+    function loadPortsForInterface(ports) {
+        var selectedPort = loadPortsInSelect(ports, $("#interface"), 0);
+        if (selectedPort!=null) {
+            updateInterfaceInformation(selectedPort);
+            showLoadingPanel(true);
+        }
+        $("#interface", modForm).change(function () {
+            $("option:selected", this).each(function(index, element) { // There is only one selection
+                var selectedIFace = $(element).text();
+                for (var i = 0; i < ports.length; i++) {  // Instead of getting its info again (we save one request)
+                    if ( selectedIFace == ports[i].portName ) {
+                        updateInterfaceInformation(ports[i]);
+                        break;
+                    }
                 }
-            }
+            });
         });
-    });
-}
+    }
 
-function updateEditForm(deviceId) {
-    $("#tabs-2>.loading").show();
-    $("#tabs-2>.loaded").hide();
+    function updateEditForm() {
+        showLoadingPanel(false);
 
-    var current = nodes.get(deviceId);
-    var modForm = $("form[name='modify-device']");
-    $("input[name='deviceId']", modForm).val(deviceId);
-    $("input[name='displayName']", modForm).val(current.label);
+        $("input[name='deviceId']", modForm).val(selectedDevice.id);
+        $("input[name='displayName']", modForm).val(selectedDevice.label);
 
-    $.getJSON(current.url + "ports", function(ports) {
-        loadPortsForInterface(ports, current, modForm);
-    }).fail(function() {
-        console.error("Ports for the device " + node + " could not be loaded. Possible timeout.");
-    });
-}
+        $.getJSON(selectedDevice.url + "ports", function(ports) {
+            loadPortsForInterface(ports, selectedDevice, modForm);
+        }).fail(function() {
+            console.error("Ports for the device " + node + " could not be loaded. Possible timeout.");
+        });
+    }
 
-function onDeviceEdit(node) {
-    updateEditForm(node);
-    $("#modify-dialog-tabs").tabs();
-    var dialog = $("#modify-device").dialog({
-        title: "Modify device",
-        height: 350, width: 450,
-        autoOpen: false, modal: true, draggable: false,
-        buttons: {
-            "SUBMIT": function() {
-                var dialog = $(this);
-                var callback = function() {
-                    dialog.dialog( "close" );
-                };
-                handleModificationSubmit(callback);
-            },
-            Cancel: function() {
-                $(this).dialog( "close" );
-            }
-        }, close: function() { /*console.log("Closing dialog...");*/ }
-     });
-    dialog.parent().attr("id", "modify-dialog");
-    var form = dialog.find( "form" ).on("submit", function( event ) { event.preventDefault(); });
-    dialog.dialog( "open" );
-}
+    function openDialog() {
+        $("#modify-dialog-tabs").tabs();
+        var dialog = $("#modify-device").dialog({
+            title: "Modify device",
+            height: 350, width: 450,
+            autoOpen: false, modal: true, draggable: false,
+            buttons: {
+                "SUBMIT": function() {
+                    var dialog = $(this);
+                    var callback = function() {
+                        dialog.dialog( "close" );
+                    };
+                    handleModificationSubmit(callback);
+                },
+                Cancel: function() {
+                    $(this).dialog( "close" );
+                }
+            }, close: function() { /*console.log("Closing dialog...");*/ }
+         });
+        dialog.parent().attr("id", "modify-dialog");
+        var form = dialog.find( "form" ).on("submit", function( event ) { event.preventDefault(); });
+        dialog.dialog( "open" );
+    }
+
+    function createDialog(deviceId) {
+        selectedDevice = nodes.get(deviceId);
+        modForm = $("form[name='modify-device']");
+        updateEditForm();
+        openDialog();
+    }
+
+    return {
+        create: createDialog,
+    };
+})();
+
 
 var commandLine = (function () {
     function getCommandLineURL(nodeId) {
@@ -508,7 +531,7 @@ var networkMap = (function () {
                     linkDialog.create(data.from, data.to);
                 },
                 onEdit: function(data, callback) {
-                    onDeviceEdit(data.id);
+                    deviceModificationDialog.create(data.id);
                 },
                 onDelete: function(data, callback) {
                     if (data.nodes.length>0) {
