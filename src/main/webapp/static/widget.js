@@ -390,25 +390,32 @@ function onDeviceEdit(node) {
     dialog.dialog( "open" );
 }
 
-function getCommandLineURL(nodeId) {
-    var keyUrlPart = "/widget/p/";
-    var ret = window.location.href.substr(0, window.location.href.search(keyUrlPart));
-    var sessionId = window.location.href.substr(window.location.href.search(keyUrlPart) + keyUrlPart.length);
-    return ret + "/widget/sessions/" + sessionId + "/devices/" + nodeId + "/console";
-}
-
-function openCommandLine() {
-    var selected = networkMap.getSelected();
-    if (selected!=null) { // Only if just one is selected
-        var dialog = $("#command-line").dialog({
-            autoOpen: false, height: 400, width: 600, modal: true, draggable: false,
-            close: function() { dialog.html(""); }
-        });
-        dialog.html('<div class="iframeWrapper"><iframe class="terminal" src="' + getCommandLineURL(selected) + '"></iframe></div>');
-        dialog.dialog( "open" );
+var commandLine = (function () {
+    function getCommandLineURL(nodeId) {
+        var keyUrlPart = "/widget/p/";
+        var ret = window.location.href.substr(0, window.location.href.search(keyUrlPart));
+        var sessionId = window.location.href.substr(window.location.href.search(keyUrlPart) + keyUrlPart.length);
+        return ret + "/widget/sessions/" + sessionId + "/devices/" + nodeId + "/console";
     }
-}
 
+    function openIFrame() {
+        var selected = networkMap.getSelected();
+        if (selected!=null) { // Only if just one is selected
+            var dialog = $("#command-line").dialog({
+                autoOpen: false, height: 400, width: 600, modal: true, draggable: false,
+                close: function() { dialog.html(""); }
+            });
+            dialog.html('<div class="iframeWrapper"><iframe class="terminal" src="' + getCommandLineURL(selected) + '"></iframe></div>');
+            dialog.dialog( "open" );
+        }
+    }
+
+    // Reveal public pointers to
+    // private functions and properties
+    return {
+        open: openIFrame,
+    };
+})();
 
 // The Revealing Module Pattern
 // http://addyosmani.com/resources/essentialjsdesignpatterns/book/#revealingmodulepatternjavascript
@@ -497,7 +504,7 @@ var networkMap = (function () {
             };
             var container = $('#network').get(0);
             network = new vis.Network(container, visData, options);
-            network.on('doubleClick', openCommandLine);
+            network.on('doubleClick', commandLine.open);
         }
     }
 
