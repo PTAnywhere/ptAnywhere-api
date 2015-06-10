@@ -1,4 +1,4 @@
-var nodes, edges, network;
+var nodes, edges;
 
 function requestJSON(verb, url, data, callback) {
     return $.ajax({
@@ -149,37 +149,10 @@ var packetTracer = (function () {
 
 })();
 
-
-// Canvas' (0,0) does not correspond with the network map's (0,0) position.
-function toNetworkMapCoordinate(x, y) {
-    var net =$("#network");
-    var htmlElement = {
-        topLeft: [net.offset().left, net.offset().top],
-        width: net.width(),
-        height: net.height()
-    };
-
-    var relativePercentPosition = [];
-    relativePercentPosition[0] = (x - htmlElement.topLeft[0]) / htmlElement.width;
-    relativePercentPosition[1] = (y - htmlElement.topLeft[1]) / htmlElement.height;
-
-    // FIXME what if network does not exist yet?
-    var canvas = {
-        width: network.canvasBottomRight.x - network.canvasTopLeft.x,
-        height: network.canvasBottomRight.y - network.canvasTopLeft.y
-    };
-
-    var ret = [];
-    ret[0] = relativePercentPosition[0] * canvas.width + network.canvasTopLeft.x;
-    ret[1] = relativePercentPosition[1] * canvas.height + network.canvasTopLeft.y;
-
-    return ret;
-}
-
 function addDevicePositioned(type, elOffset, callback) {
     var x = elOffset.left;
     var y = elOffset.top;
-    var position = toNetworkMapCoordinate(x, y);
+    var position = networkMap.getCoordinate(x, y);
     return packetTracer.addDevice({
         "group": type,
         "x": position[0],
@@ -425,13 +398,13 @@ function getCommandLineURL(nodeId) {
 }
 
 function openCommandLine() {
-    var selected = network.getSelection();
-    if (selected.nodes.length==1) { // Only if just one is selected
+    var selected = networkMap.getSelected();
+    if (selected!=null) { // Only if just one is selected
         var dialog = $("#command-line").dialog({
             autoOpen: false, height: 400, width: 600, modal: true, draggable: false,
             close: function() { dialog.html(""); }
         });
-        dialog.html('<div class="iframeWrapper"><iframe class="terminal" src="' + getCommandLineURL(selected.nodes[0]) + '"></iframe></div>');
+        dialog.html('<div class="iframeWrapper"><iframe class="terminal" src="' + getCommandLineURL(selected) + '"></iframe></div>');
         dialog.dialog( "open" );
     }
 }
@@ -441,9 +414,9 @@ function openCommandLine() {
 // http://addyosmani.com/resources/essentialjsdesignpatterns/book/#revealingmodulepatternjavascript
 var networkMap = (function () {
 
-    //var container = $('#network').get(0);
     //var nodes = null; // To replace in the future with null
     //var edges = null; // To replace in the future with null
+    var network;
 
     function drawTopology(responseData) {
         // Initialize data sets if needed
@@ -467,7 +440,6 @@ var networkMap = (function () {
         // Create network element if needed (only the first time)
         if (network==null) {
             // create a network
-            var container = $('#network').get(0);
             var visData = { nodes : nodes, edges : edges };
             var options = {
                 //dragNetwork : false,
@@ -523,9 +495,41 @@ var networkMap = (function () {
                     callback(data);
                 }
             };
+            var container = $('#network').get(0);
             network = new vis.Network(container, visData, options);
             network.on('doubleClick', openCommandLine);
         }
+    }
+
+    /**
+     * Canvas' (0,0) does not correspond with the network map's (0,0) position.
+     *   @arg x X coordinate relative to the canvas element.
+     *   @arg y Y coordinate relative to the canvas element.
+     *   @return Two element array of the coordinates relative to the network map.
+     */
+    function toNetworkMapCoordinate(x, y) {
+        var canvasElement = $('#network');
+        var htmlElement = {
+            topLeft: [canvasElement.offset().left, canvasElement.offset().top],
+            width: canvasElement.width(),
+            height: canvasElement.height()
+        };
+
+        var relativePercentPosition = [];
+        relativePercentPosition[0] = (x - htmlElement.topLeft[0]) / htmlElement.width;
+        relativePercentPosition[1] = (y - htmlElement.topLeft[1]) / htmlElement.height;
+
+        // FIXME what if network does not exist yet?
+        var canvas = {
+            width: network.canvasBottomRight.x - network.canvasTopLeft.x,
+            height: network.canvasBottomRight.y - network.canvasTopLeft.y
+        };
+
+        var ret = [];
+        ret[0] = relativePercentPosition[0] * canvas.width + network.canvasTopLeft.x;
+        ret[1] = relativePercentPosition[1] * canvas.height + network.canvasTopLeft.y;
+
+        return ret;
     }
 
     /**
@@ -540,10 +544,21 @@ var networkMap = (function () {
         });
     }
 
+    function getSelection() {
+        var selected = network.getSelection();
+        if (selected.nodes.length!=1) { // Only if just one is selected
+            console.log("Only one device is supposed to be selected. Instead " + selected.nodes.length + " are selected.");
+            return null;
+        }
+        return selected.nodes[0];
+    }
+
     // Reveal public pointers to
     // private functions and properties
    return {
         load: loadTopology,
+        getSelected: getSelection,
+        getCoordinate: toNetworkMapCoordinate,
    };
 
 })();
