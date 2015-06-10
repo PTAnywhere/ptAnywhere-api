@@ -1,34 +1,40 @@
 var nodes, edges;
 
-function requestJSON(verb, url, data, callback) {
-    return $.ajax({
-        headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json'
-        },
-        type: verb,
-        url: url,
-        data: JSON.stringify(data),
-        dataType: 'json',
-        success: callback
-    });
-};
 
-$.postJSON = function(url, data, callback) {
-    return requestJSON('POST', url, data, callback);
-};
+// Utility functions that are transversal to the modules defined.
 
-$.putJSON = function(url, data, callback) {
-    return requestJSON('PUT', url, data, callback);
-};
+/**
+ * @param defaultSelection It can be an int with the number of the option to be selected or a "null" (for any choice).
+ * @return Selected port.
+ */
+function loadPortsInSelect(ports, selectElement, defaultSelection) {
+    var ret = null;
+    selectElement.html(""); // Remove everything
+    for (var i = 0; i < ports.length; i++) {
+        var portName = ports[i].portName;
+        var portURL = ports[i].url;
+        var htmlAppend = '<option value="' + portURL + '"';
+        if (i == defaultSelection) {
+            htmlAppend += ' selected';
+            ret = ports[i];
+        }
+        selectElement.append(htmlAppend + '>' + portName + '</option>');
+    }
+    return ret;
+}
 
-$.deleteHttp = function(url, callback) {
-    return $.ajax({
-        type: 'DELETE',
-        url: url,
-        success: callback
-    });
-};
+// From: http://www.jquerybyexample.net/2012/06/get-url-parameters-using-jquery.html
+function getURLParameter(sParam) {
+    var sPageURL = window.location.search.substring(1);
+    var sURLVariables = sPageURL.split('&');
+    for (var i = 0; i < sURLVariables.length; i++) {
+        var sParameterName = sURLVariables[i].split('=');
+        if (sParameterName[0] == sParam) {
+            return sParameterName[1];
+        }
+    }
+}
+
 
 
 // http://addyosmani.com/resources/essentialjsdesignpatterns/book/#revealingmodulepatternjavascript
@@ -36,6 +42,41 @@ $.deleteHttp = function(url, callback) {
  * Client for PacketTracer's HTTP API.
  */
 var packetTracer = (function () {
+
+    // Private utility functions
+
+    function requestJSON(verb, url, data, callback) {
+        return $.ajax({
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json'
+            },
+            type: verb,
+            url: url,
+            data: JSON.stringify(data),
+            dataType: 'json',
+            success: callback
+        });
+    };
+
+    function postJSON(url, data, callback) {
+        return requestJSON('POST', url, data, callback);
+    };
+
+    function putJSON(url, data, callback) {
+        return requestJSON('PUT', url, data, callback);
+    };
+
+    function deleteHttp(url, callback) {
+        return $.ajax({
+            type: 'DELETE',
+            url: url,
+            success: callback
+        });
+    };
+
+    // Publicly exposed functions which call API resources
+
     /**
      * @arg callback If it is null, it is simply ignored.
      */
@@ -69,7 +110,7 @@ var packetTracer = (function () {
     }
 
     function postDevice(newDevice, callback) {
-        $.postJSON( api_url + "/devices", newDevice,
+        postJSON( api_url + "/devices", newDevice,
             function(data) {
                 console.log("The device was created successfully.");
                 nodes.add(data);
@@ -78,7 +119,7 @@ var packetTracer = (function () {
     }
 
     function deleteDevice(deviceId) {
-        $.deleteHttp(nodes.get(deviceId).url,
+        deleteHttp(nodes.get(deviceId).url,
             function(result) {
                 console.log("The device has been deleted successfully.");
             }).fail(function(data) { console.error("Something went wrong in the device removal."); });
@@ -87,7 +128,7 @@ var packetTracer = (function () {
     function putDevice(deviceId, deviceLabel, callback) { // modify
         // General settings: PUT to /devices/id
         var modification = { label: deviceLabel };
-        $.putJSON(nodes.get(deviceId).url, modification,
+        putJSON(nodes.get(deviceId).url, modification,
             function(result) {
                 console.log("The device has been modified successfully.");
                 nodes.update(result);  // As the device has the same id, it should replace the older one.
@@ -101,11 +142,18 @@ var packetTracer = (function () {
             portIpAddress: ipAddress,
             portSubnetMask: subnetMask
         };
-        $.putJSON(portURL, modification,
+        putJSON(portURL, modification,
             function(result) {
                 console.log("The port has been modified successfully.");
         }).done(callback)
         .fail(function(data) { console.error("Something went wrong in the port modification."); });
+    }
+
+    function getPorts(deviceUrl, callback) {
+        $.getJSON(deviceUrl + "ports", callback)
+        .fail(function() {
+            console.error("Ports for the device " + node + " could not be loaded. Possible timeout.");
+        });
     }
 
     function getFreePorts(deviceUrl, csuccess, cfail) {
@@ -116,7 +164,7 @@ var packetTracer = (function () {
         var modification = {
             toPort: toPortURL
         }
-        $.postJSON(fromPortURL + "link", modification,
+        postJSON(fromPortURL + "link", modification,
             function(response) {
                 console.log("The link has been created successfully.");
                 successCallback(response.id, response.url);
@@ -127,7 +175,7 @@ var packetTracer = (function () {
     function deleteLink(linkUrl) {
         $.getJSON(linkUrl,
             function(data) {
-                $.deleteHttp(data.endpoints[0] + "link",
+                deleteHttp(data.endpoints[0] + "link",
                     function(result) {
                         console.log("The link has been deleted successfully.");
                     }
@@ -142,33 +190,13 @@ var packetTracer = (function () {
         removeDevice: deleteDevice,
         modifyDevice: putDevice,
         modifyPort: putPort,
+        getAllPorts: getPorts,
         getAvailablePorts: getFreePorts,
         createLink: postLink,
         removeLink: deleteLink,
     };
 
 })();
-
-
-function addDevicePositioned(type, elOffset, callback) {
-    var x = elOffset.left;
-    var y = elOffset.top;
-    var position = networkMap.getCoordinate(x, y);
-    return packetTracer.addDevice({
-        "group": type,
-        "x": position[0],
-        "y": position[1]
-    }, callback);
-}
-
-function addDeviceWithName(label, type, x, y, callback) {
-    return packetTracer.addDevice({
-        "label": label,
-        "group": type,
-        "x": x,
-        "y": y
-    }, callback);
-}
 
 
 var linkDialog = (function () {
@@ -276,82 +304,50 @@ var linkDialog = (function () {
 })();
 
 
-function handleModificationSubmit(callback) {
-    // Check the tab
-    var modForm = $("form[name='modify-device']");
-    var selectedTab = $("li.ui-state-active", modForm).attr("aria-controls");
-    if (selectedTab=="tabs-1") { // General settings
-        var deviceId = $("input[name='deviceId']", modForm).val();
-        var deviceLabel = $("form[name='modify-device'] input[name='displayName']").val();
-        packetTracer.modifyDevice(deviceId, deviceLabel, callback);
-    } else if (selectedTab=="tabs-2") { // Interfaces
-        var portURL = $("#interface", modForm).val();
-        var portIpAddress = $("input[name='ipAddress']", modForm).val();
-        var portSubnetMask = $("input[name='subnetMask']", modForm).val();
-        // Room for improvement: the following request could be avoided when nothing has changed
-        packetTracer.modifyPort(portURL, portIpAddress, portSubnetMask, callback);  // In case just the port details are modified...
-    } else {
-        console.error("ERROR. Selected tab unknown.");
+var deviceCreationDialog = (function () {
+    function addDeviceWithName(label, type, x, y, callback) {
+        return packetTracer.addDevice({
+            "label": label,
+            "group": type,
+            "x": x,
+            "y": y
+        }, callback);
     }
-}
 
-function onDeviceAdd(x, y) {
-    var dialog = $("#create-device").dialog({
-        title: "Create new device",
-        autoOpen: false, height: 300, width: 400, modal: true, draggable: false,
-        buttons: {
-            "SUBMIT": function() {
-                var callback = function() {
-                    dialog.dialog( "close" );
-                };
-                name = document.forms["create-device"]["name"].value;
-                type = document.forms["create-device"]["type"].value;
-                addDeviceWithName(name, type, x, y, callback);
-            },
-            Cancel:function() {
-                $(this).dialog( "close" );
-            }
-        }, close: function() { /*console.log("Closing dialog...");*/ }
-     });
-    dialog.parent().attr("id", "create-dialog");
-    var form = dialog.find( "form" ).on("submit", function( event ) { event.preventDefault(); });
-    $("#device-type").iconselectmenu().iconselectmenu("menuWidget").addClass("ui-menu-icons customicons");
-    dialog.dialog( "open" );
-}
-
-function selectOptionWithText(selectEl, text) {
-    $("option", selectEl).filter(function () { return $(this).html() == text; }).prop('selected', true);
-}
-
-/**
- * @param defaultSelection It can be an int with the number of the option to be selected or a "null" (for any choice).
- * @return Selected port.
- */
-function loadPortsInSelect(ports, selectElement, defaultSelection) {
-    var ret = null;
-    selectElement.html(""); // Remove everything
-    for (var i = 0; i < ports.length; i++) {
-        var portName = ports[i].portName;
-        var portURL = ports[i].url;
-        var htmlAppend = '<option value="' + portURL + '"';
-        if (i == defaultSelection) {
-            htmlAppend += ' selected';
-            ret = ports[i];
-        }
-        selectElement.append(htmlAppend + '>' + portName + '</option>');
+    function createDialog(x, y) {
+        var dialog = $("#create-device").dialog({
+            title: "Create new device",
+            autoOpen: false, height: 300, width: 400, modal: true, draggable: false,
+            buttons: {
+                "SUBMIT": function() {
+                    var callback = function() {
+                        dialog.dialog( "close" );
+                    };
+                    name = document.forms["create-device"]["name"].value;
+                    type = document.forms["create-device"]["type"].value;
+                    addDeviceWithName(name, type, x, y, callback);
+                },
+                Cancel:function() {
+                    $(this).dialog( "close" );
+                }
+            }, close: function() { /*console.log("Closing dialog...");*/ }
+         });
+        dialog.parent().attr("id", "create-dialog");
+        var form = dialog.find( "form" ).on("submit", function( event ) { event.preventDefault(); });
+        $("#device-type").iconselectmenu().iconselectmenu("menuWidget").addClass("ui-menu-icons customicons");
+        dialog.dialog( "open" );
     }
-    return ret;
-}
+
+    return {
+        create: createDialog,
+    };
+
+})();
 
 
 var deviceModificationDialog = (function () {
     var selectedDevice;
-    var modForm;  // To hopefully improve selectors performance
-
-    function updateInterfaceInformation(port) {
-        $('input[name="ipAddress"]', modForm).val(port.portIpAddress);
-        $('input[name="subnetMask"]', modForm).val(port.portSubnetMask);
-    }
+    var modForm;  // Not yet checked, but this should improve selectors performance.
 
     function showLoadingPanel(loading) {
         if (loading) {
@@ -361,6 +357,11 @@ var deviceModificationDialog = (function () {
             $("#tabs-2>.loading").show();
             $("#tabs-2>.loaded").hide();
         }
+    }
+
+    function updateInterfaceInformation(port) {
+        $('input[name="ipAddress"]', modForm).val(port.portIpAddress);
+        $('input[name="subnetMask"]', modForm).val(port.portSubnetMask);
     }
 
     function loadPortsForInterface(ports) {
@@ -388,11 +389,25 @@ var deviceModificationDialog = (function () {
         $("input[name='deviceId']", modForm).val(selectedDevice.id);
         $("input[name='displayName']", modForm).val(selectedDevice.label);
 
-        $.getJSON(selectedDevice.url + "ports", function(ports) {
-            loadPortsForInterface(ports, selectedDevice, modForm);
-        }).fail(function() {
-            console.error("Ports for the device " + node + " could not be loaded. Possible timeout.");
-        });
+        packetTracer.getAllPorts(selectedDevice.url, loadPortsForInterface);
+    }
+
+    function handleModificationSubmit(callback) {
+        // Check the tab
+        var selectedTab = $("li.ui-state-active", modForm).attr("aria-controls");
+        if (selectedTab=="tabs-1") { // General settings
+            var deviceId = $("input[name='deviceId']", modForm).val();
+            var deviceLabel = $("form[name='modify-device'] input[name='displayName']").val();
+            packetTracer.modifyDevice(deviceId, deviceLabel, callback);
+        } else if (selectedTab=="tabs-2") { // Interfaces
+            var portURL = $("#interface", modForm).val();
+            var portIpAddress = $("input[name='ipAddress']", modForm).val();
+            var portSubnetMask = $("input[name='subnetMask']", modForm).val();
+            // Room for improvement: the following request could be avoided when nothing has changed
+            packetTracer.modifyPort(portURL, portIpAddress, portSubnetMask, callback);  // In case just the port details are modified...
+        } else {
+            console.error("ERROR. Selected tab unknown.");
+        }
     }
 
     function openDialog() {
@@ -525,7 +540,7 @@ var networkMap = (function () {
                     }
                 },
                 onAdd: function(data, callback) {
-                    onDeviceAdd(data.x, data.y);
+                    deviceCreationDialog.create(data.x, data.y);
                 },
                 onConnect: function(data, callback) {
                     linkDialog.create(data.from, data.to);
@@ -612,24 +627,6 @@ var networkMap = (function () {
 
 })();
 
-// convenience method to stringify a JSON object
-function toJSON(obj) {
-    return JSON.stringify(obj, null, 4);
-}
-
-// From: http://www.jquerybyexample.net/2012/06/get-url-parameters-using-jquery.html
-function getURLParameter(sParam) {
-    var sPageURL = window.location.search.substring(1);
-    var sURLVariables = sPageURL.split('&');
-    for (var i = 0; i < sURLVariables.length; i++) {
-        var sParameterName = sURLVariables[i].split('=');
-        if (sParameterName[0] == sParam) {
-            return sParameterName[1];
-        }
-    }
-}
-
-
 var DraggableDevice = function(el, canvasEl, deviceType) {
     this.el = el;
     this.originalPosition = {
@@ -639,7 +636,15 @@ var DraggableDevice = function(el, canvasEl, deviceType) {
     this.canvas = canvasEl;
     // FIXME too many callbacks here, it's too confusing
     this.creationCallback = function(elementOffset, callback) {
-                                addDevicePositioned(deviceType, elementOffset, callback);
+                                var x = elementOffset.left;
+                                var y = elementOffset.top;
+                                var position = networkMap.getCoordinate(x, y);
+                                // We don't use the return
+                                packetTracer.addDevice({
+                                    "group": deviceType,
+                                    "x": position[0],
+                                    "y": position[1]
+                                }, callback);
                             };
     this.init();
 }
