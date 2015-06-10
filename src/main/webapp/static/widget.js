@@ -68,8 +68,38 @@ var packetTracer = (function () {
         });
     }
 
+    function postDevice(newDevice, callback) {
+        $.postJSON( api_url + "/devices", newDevice,
+            function(data) {
+                console.log("The device was created successfully.");
+                nodes.add(data);
+            }).done(callback)
+            .fail(function(data) { console.error("Something went wrong in the device creation."); });
+    }
+
+    function deleteDevice(deviceId) {
+        $.deleteHttp(nodes.get(deviceId).url,
+            function(result) {
+                console.log("The device has been deleted successfully.");
+            }).fail(function(data) { console.error("Something went wrong in the device removal."); });
+    }
+
+    function deleteEdge(edgeId) {
+        $.getJSON(edges.get(edgeId).url,
+            function(data) {
+                $.deleteHttp(data.endpoints[0] + "link",
+                    function(result) {
+                        console.log("The link has been deleted successfully.");
+                    }
+                ).fail(function(data) { console.error("Something went wrong in the link removal."); });
+            }
+        ).fail(function(data) { console.error("Something went wrong getting this link " + edgeId + "."); });
+    }
+
     return {
-        getNetwork: getTopology
+        getNetwork: getTopology,
+        addDevice: postDevice,
+        removeDevice: deleteDevice,
     };
 
 })();
@@ -105,7 +135,7 @@ function addDevicePositioned(type, elOffset, callback) {
     var x = elOffset.left;
     var y = elOffset.top;
     var position = toNetworkMapCoordinate(x, y);
-    return addDevice({
+    return packetTracer.addDevice({
         "group": type,
         "x": position[0],
         "y": position[1]
@@ -113,40 +143,12 @@ function addDevicePositioned(type, elOffset, callback) {
 }
 
 function addDeviceWithName(label, type, x, y, callback) {
-    return addDevice({
+    return packetTracer.addDevice({
         "label": label,
         "group": type,
         "x": x,
         "y": y
     }, callback);
-}
-
-function addDevice(newDevice, callback) {
-    $.postJSON( api_url + "/devices", newDevice,
-        function(data) {
-            console.log("The device was created successfully.");
-            nodes.add(data);
-        }).done(callback)
-        .fail(function(data) { console.error("Something went wrong in the device creation."); });
-}
-
-function deleteDevice(deviceId) {
-    $.deleteHttp(nodes.get(deviceId).url,
-        function(result) {
-            console.log("The device has been deleted successfully.");
-        }).fail(function(data) { console.error("Something went wrong in the device removal."); });
-}
-
-function deleteEdge(edgeId) {
-    $.getJSON(edges.get(edgeId).url,
-        function(data) {
-            $.deleteHttp(data.endpoints[0] + "link",
-                function(result) {
-                    console.log("The link has been deleted successfully.");
-                }
-            ).fail(function(data) { console.error("Something went wrong in the link removal."); });
-        }
-    ).fail(function(data) { console.error("Something went wrong getting this link " + edgeId + "."); });
 }
 
 function modifyDevice(deviceId, callback) {
@@ -505,7 +507,7 @@ var networkMap = (function () {
                 },
                 onDelete: function(data, callback) {
                     if (data.nodes.length>0) {
-                        deleteDevice(data.nodes[0]);
+                        packetTracer.removeDevice(data.nodes[0]);
                     } else if (data.edges.length>0) {
                         deleteEdge(data.edges[0]);
                     }
