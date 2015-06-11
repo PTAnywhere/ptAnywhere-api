@@ -1,5 +1,7 @@
 package uk.ac.open.kmi.forge.webPacketTracer.api.http;
 
+import uk.ac.open.kmi.forge.webPacketTracer.analytics.InteractionRecord;
+import uk.ac.open.kmi.forge.webPacketTracer.analytics.InteractionRecordFactory;
 import uk.ac.open.kmi.forge.webPacketTracer.gateway.PTCallable;
 import uk.ac.open.kmi.forge.webPacketTracer.pojo.HalfLink;
 import uk.ac.open.kmi.forge.webPacketTracer.pojo.InnerLink;
@@ -88,7 +90,7 @@ public class PortLinkResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response getLink(@PathParam(DEVICE_PARAM) String deviceId,
                             @PathParam(PORT_PARAM) String portName) {
-        final Link l = new PortLinkGetter(this.sm, deviceId, Utils.unescapePort(portName),this.uri.getBaseUri()).call();
+        final Link l = new PortLinkGetter(this.sm, deviceId, Utils.unescapePort(portName), this.uri.getBaseUri()).call();
         if (l==null)
             return Response.noContent().
                     links(getPortLink()).build();
@@ -100,10 +102,12 @@ public class PortLinkResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response removeLink(@PathParam(DEVICE_PARAM) String deviceId,
                                @PathParam(PORT_PARAM) String portName) {
-        final Link deletedLink = new LinkDeleter(this.sm, deviceId, Utils.unescapePort(portName),this.uri.getBaseUri()).call();
+        final Link deletedLink = new LinkDeleter(this.sm, deviceId, Utils.unescapePort(portName), this.uri.getBaseUri()).call();
         if (deletedLink==null)
             return Response.status(Response.Status.NOT_ACCEPTABLE).entity(deletedLink).
                     links(getPortLink()).build();
+        final InteractionRecord ir = InteractionRecordFactory.create();
+        ir.deviceDisconnected(sm.getSessionId(), deletedLink.getUrl(), deletedLink.getEndpoints());
         return Response.ok(deletedLink).
                 links(getPortLink()).build();
     }
@@ -117,6 +121,8 @@ public class PortLinkResource {
         if (createdLink==null)
             return Response.status(Response.Status.NOT_ACCEPTABLE).entity(newLink).
                     links(getPortLink()).build();
+        final InteractionRecord ir = InteractionRecordFactory.create();
+        ir.deviceConnected(sm.getSessionId(), createdLink.getUrl(), createdLink.getEndpoints());
         return Response.created(this.uri.getRequestUri()).entity(createdLink).
                 links(getPortLink()).build();
                 // TODO create endpoints links

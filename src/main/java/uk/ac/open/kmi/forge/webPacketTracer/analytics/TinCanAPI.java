@@ -1,13 +1,20 @@
 package uk.ac.open.kmi.forge.webPacketTracer.analytics;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.rusticisoftware.tincan.*;
 import com.rusticisoftware.tincan.lrsresponses.StatementLRSResponse;
+import jdk.nashorn.internal.ir.ObjectNode;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import uk.ac.open.kmi.forge.webPacketTracer.api.http.Utils;
 
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -20,6 +27,10 @@ public class TinCanAPI extends InteractionRecord {
 
     private static final Log LOGGER = LogFactory.getLog(TinCanAPI.class);
 
+    // Own vocabulary
+    // TODO get it from the HTTP API requester?
+    private static final String WIDGET = "http://ict-forge.eu/widget/packerTracer";
+
     /* Verbs */
     private static final String INITIALIZED = "http://adlnet.gov/expapi/verbs/initialized";
     private static final String CREATED = "http://activitystrea.ms/schema/1.0/create";
@@ -27,9 +38,10 @@ public class TinCanAPI extends InteractionRecord {
     private static final String UPDATED = "http://activitystrea.ms/schema/1.0/update";
 
     /* Objects */
-    // TODO get it from the HTTP API requester?
-    private static final String WIDGET = "http://ict-forge.eu/widget/packerTracer";
     private static final String DEVICE_TYPE = WIDGET + "/devices/type/";
+
+    /* Extensions */
+    private static final String ENDPOINTS = WIDGET + "/endpoints";
 
     final RemoteLRS lrs = new RemoteLRS();
 
@@ -136,6 +148,54 @@ public class TinCanAPI extends InteractionRecord {
             final Statement st = getPrefilledStatement(sessionId);
             st.setVerb(new Verb(UPDATED));
             st.setObject(createDeviceObject(deviceUri, deviceName, deviceType));
+
+            record(st);
+        } catch(URISyntaxException e) {
+            LOGGER.error(e.getMessage());
+        }
+    }
+
+    public Activity createLinkObject(String linkUri) throws URISyntaxException {
+        final LanguageMap lm = new LanguageMap();
+        lm.put("en-GB", "link"); // Generic name defined to enhance readability in LearningLocker.
+        final ActivityDefinition definition = new ActivityDefinition();
+        definition.setName(lm);
+        final Activity ret = new Activity(linkUri);
+        ret.setDefinition(definition);
+        return ret;
+    }
+
+    /*
+     * Alternatives to model a connection:
+     *      - user creates link1 (extensions: endpoints: [portUrl1, portUrl2]
+     *      - user connects device1 (extension: port: portUrl1, with: portUrl2)
+     *      - previous alternative x2 (one for each endpoint)
+     *
+     * I will use the first one as it seems more symmetric and I don't invent new verbs (connect).
+     */
+    public void deviceConnected(String sessionId, String linkUri, String[] endpointURLs) {
+        try {
+            final Statement st = getPrefilledStatement(sessionId);
+            st.setVerb(new Verb(CREATED));
+            st.setObject( createLinkObject(linkUri) );
+            final Extensions ext = new Extensions();
+            ext.put(new URI(ENDPOINTS), endpointURLs);
+            st.getContext().setExtensions(ext);
+
+            record(st);
+        } catch(URISyntaxException e) {
+            LOGGER.error(e.getMessage());
+        }
+    }
+
+    public void deviceDisconnected(String sessionId, String linkUri, String[] endpointURLs) {
+        try {
+            final Statement st = getPrefilledStatement(sessionId);
+            st.setVerb(new Verb(DELETED));
+            st.setObject( createLinkObject(linkUri) );
+            final Extensions ext = new Extensions();
+            ext.put(new URI(ENDPOINTS), endpointURLs);
+            st.getContext().setExtensions(ext);
 
             record(st);
         } catch(URISyntaxException e) {
