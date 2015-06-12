@@ -1,7 +1,6 @@
 package uk.ac.open.kmi.forge.webPacketTracer.api.http;
 
 import uk.ac.open.kmi.forge.webPacketTracer.analytics.InteractionRecord;
-import uk.ac.open.kmi.forge.webPacketTracer.analytics.InteractionRecordFactory;
 import uk.ac.open.kmi.forge.webPacketTracer.gateway.PTCallable;
 import uk.ac.open.kmi.forge.webPacketTracer.pojo.HalfLink;
 import uk.ac.open.kmi.forge.webPacketTracer.pojo.InnerLink;
@@ -11,7 +10,9 @@ import uk.ac.open.kmi.forge.webPacketTracer.session.SessionManager;
 import static uk.ac.open.kmi.forge.webPacketTracer.api.http.URLFactory.PORT_PARAM;
 import static uk.ac.open.kmi.forge.webPacketTracer.api.http.URLFactory.DEVICE_PARAM;
 
+import javax.servlet.ServletContext;
 import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
@@ -81,6 +82,7 @@ public class PortLinkResource {
 
     final UriInfo uri;
     final SessionManager sm;
+
     public PortLinkResource(UriInfo uri, SessionManager sm) {
         this.uri = uri;
         this.sm = sm;
@@ -101,13 +103,14 @@ public class PortLinkResource {
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     public Response removeLink(@PathParam(DEVICE_PARAM) String deviceId,
-                               @PathParam(PORT_PARAM) String portName) {
+                               @PathParam(PORT_PARAM) String portName,
+                               @Context ServletContext servletContext) {
         final Link deletedLink = new LinkDeleter(this.sm, deviceId, Utils.unescapePort(portName), this.uri.getBaseUri()).call();
         if (deletedLink==null)
             return Response.status(Response.Status.NOT_ACCEPTABLE).entity(deletedLink).
                     links(getPortLink()).build();
-        final InteractionRecord ir = InteractionRecordFactory.create();
-        ir.deviceDisconnected(sm.getSessionId(), deletedLink.getUrl(), deletedLink.getEndpoints());
+        final InteractionRecord ir =  Utils.createInteractionRecord(servletContext);
+        ir.deviceDisconnected(this.sm.getSessionId(), deletedLink.getUrl(), deletedLink.getEndpoints());
         return Response.ok(deletedLink).
                 links(getPortLink()).build();
     }
@@ -116,12 +119,13 @@ public class PortLinkResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response createLink(HalfLink newLink,
                              @PathParam(DEVICE_PARAM) String deviceId,
-                             @PathParam(PORT_PARAM) String portName) {
+                             @PathParam(PORT_PARAM) String portName,
+                               @Context ServletContext servletContext) {
         final Link createdLink = new LinkCreator(this.sm, deviceId, Utils.unescapePort(portName), newLink, this.uri.getBaseUri()).call();
         if (createdLink==null)
             return Response.status(Response.Status.NOT_ACCEPTABLE).entity(newLink).
                     links(getPortLink()).build();
-        final InteractionRecord ir = InteractionRecordFactory.create();
+        final InteractionRecord ir =  Utils.createInteractionRecord(servletContext);
         ir.deviceConnected(sm.getSessionId(), createdLink.getUrl(), createdLink.getEndpoints());
         return Response.created(this.uri.getRequestUri()).entity(createdLink).
                 links(getPortLink()).build();

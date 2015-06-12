@@ -2,6 +2,8 @@ package uk.ac.open.kmi.forge.webPacketTracer.api.http;
 
 import java.net.URI;
 
+// TODO read the following and refactor:
+// https://jersey.java.net/documentation/latest/user-guide.html#d0e10659
 public class URLFactory {
 
     static public final String SESSION_PATH = "sessions";

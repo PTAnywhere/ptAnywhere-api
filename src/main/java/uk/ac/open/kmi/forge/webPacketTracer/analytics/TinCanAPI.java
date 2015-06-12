@@ -1,11 +1,7 @@
 package uk.ac.open.kmi.forge.webPacketTracer.analytics;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.rusticisoftware.tincan.*;
 import com.rusticisoftware.tincan.lrsresponses.StatementLRSResponse;
-import jdk.nashorn.internal.ir.ObjectNode;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import uk.ac.open.kmi.forge.webPacketTracer.api.http.Utils;
@@ -13,8 +9,7 @@ import uk.ac.open.kmi.forge.webPacketTracer.api.http.Utils;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.concurrent.ExecutorService;
 
 
 /**
@@ -44,23 +39,33 @@ public class TinCanAPI extends InteractionRecord {
     private static final String ENDPOINTS = WIDGET + "/endpoints";
 
     final RemoteLRS lrs = new RemoteLRS();
+    final ExecutorService executor;
 
-    protected TinCanAPI(String endpoint, String username, String password) throws MalformedURLException {
+    protected TinCanAPI(String endpoint, String username, String password, ExecutorService executor) throws MalformedURLException {
+        this.executor = executor;
         this.lrs.setEndpoint(endpoint);
         this.lrs.setVersion(TCAPIVersion.V100);
         this.lrs.setUsername(username);
         this.lrs.setPassword(password);
     }
 
-    private void record(Statement statement) {
-        final StatementLRSResponse lrsRes = lrs.saveStatement(statement);
-        if (lrsRes.getSuccess()) {
-            // success, use lrsRes.getContent() to get the statement back
-            LOGGER.debug("Everything went ok.");
-        } else {
-            // failure, error information is available in lrsRes.getErrMsg()
-            LOGGER.error("Something went wrong recording the sentence.");
-        }
+    private void record(final Statement statement) {
+        final Runnable saveTask = new Runnable() {
+            @Override
+            public void run() {
+                final StatementLRSResponse lrsRes = lrs.saveStatement(statement);
+                if (lrsRes.getSuccess()) {
+                    // success, use lrsRes.getContent() to get the statement back
+                    LOGGER.debug("Everything went ok.");
+                } else {
+                    // failure, error information is available in lrsRes.getErrMsg()
+                    LOGGER.error("Something went wrong recording the sentence.");
+                }
+            }
+        };
+        // To avoid adding uneeded delays in the HTTP request which is recording
+        // the statement, we do it in a different Thread...
+        this.executor.submit(saveTask);
     }
 
     private Agent getAnonymousUser(String sessionId) {
@@ -103,11 +108,11 @@ public class TinCanAPI extends InteractionRecord {
     }
 
 
-    public Activity createDeviceObject(String deviceUri, String deviceName) throws URISyntaxException {
+    private Activity createDeviceObject(String deviceUri, String deviceName) throws URISyntaxException {
         return createDeviceObject(deviceUri, deviceName, null);
     }
 
-    public Activity createDeviceObject(String deviceUri, String deviceName, String deviceType) throws URISyntaxException {
+    private Activity createDeviceObject(String deviceUri, String deviceName, String deviceType) throws URISyntaxException {
         final LanguageMap lm = new LanguageMap();
         lm.put("en-GB", deviceName);
         final ActivityDefinition definition = new ActivityDefinition();
@@ -155,7 +160,7 @@ public class TinCanAPI extends InteractionRecord {
         }
     }
 
-    public Activity createLinkObject(String linkUri) throws URISyntaxException {
+    private Activity createLinkObject(String linkUri) throws URISyntaxException {
         final LanguageMap lm = new LanguageMap();
         lm.put("en-GB", "link"); // Generic name defined to enhance readability in LearningLocker.
         final ActivityDefinition definition = new ActivityDefinition();

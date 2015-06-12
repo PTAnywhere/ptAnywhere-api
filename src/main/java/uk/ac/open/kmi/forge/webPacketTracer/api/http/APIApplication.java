@@ -1,14 +1,36 @@
 package uk.ac.open.kmi.forge.webPacketTracer.api.http;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.glassfish.jersey.server.ResourceConfig;
+import uk.ac.open.kmi.forge.webPacketTracer.analytics.InteractionRecordFactory;
+
+import javax.annotation.PreDestroy;
+import javax.servlet.ServletContext;
 import javax.ws.rs.ApplicationPath;
+import javax.ws.rs.core.Context;
 
 
 @ApplicationPath("api")
 public class APIApplication extends ResourceConfig {
-    public APIApplication() {
+
+    public static final String INTERACTION_RECORD_FACTORY = "interactionRecordFactory";
+    private static final Log LOGGER = LogFactory.getLog(APIApplication.class);
+
+    private final InteractionRecordFactory irf;
+
+    public APIApplication(@Context ServletContext servletContext) {
+        LOGGER.debug("Creating API webapp.");
         packages(getClass().getPackage().getName());
-        //register(JsonMoxyConfigurationContextResolver.class);
+        this.irf = new InteractionRecordFactory();
+        servletContext.setAttribute(INTERACTION_RECORD_FACTORY, this.irf);
+    }
+
+    //@PostConstruct
+    @PreDestroy
+    public void stop() {
+        LOGGER.debug("Destroying API webapp.");
+        this.irf.shutdown();
     }
 }
 

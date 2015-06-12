@@ -1,13 +1,15 @@
 package uk.ac.open.kmi.forge.webPacketTracer.api.http;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import uk.ac.open.kmi.forge.webPacketTracer.analytics.InteractionRecord;
-import uk.ac.open.kmi.forge.webPacketTracer.analytics.InteractionRecordFactory;
 import uk.ac.open.kmi.forge.webPacketTracer.gateway.PTCallable;
 import uk.ac.open.kmi.forge.webPacketTracer.pojo.Device;
 import uk.ac.open.kmi.forge.webPacketTracer.session.SessionManager;
 
 import static uk.ac.open.kmi.forge.webPacketTracer.api.http.URLFactory.DEVICE_PARAM;
 
+import javax.servlet.ServletContext;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
 import java.net.URI;
@@ -55,9 +57,12 @@ class DevicePoster extends PTCallable<Device> {
 
 public class DevicesResource {
 
+    private static final Log LOGGER = LogFactory.getLog(DevicesResource.class);
+
     final UriInfo uri;
     final URLFactory gen;
     final SessionManager sm;
+
     public DevicesResource(UriInfo uri, SessionManager sm) {
         this.uri = uri;
         this.sm = sm;
@@ -72,11 +77,13 @@ public class DevicesResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response createDevice(Device newDevice) throws URISyntaxException {
+    public Response createDevice(Device newDevice,
+                                 @Context ServletContext servletContext) throws URISyntaxException {
         final Device device = new DevicePoster(this.sm, newDevice, this.uri.getBaseUri()).call();
         if (device==null)
             return addDefaultLinks(Response.status(Response.Status.BAD_REQUEST).entity(newDevice)).build();
-        final InteractionRecord ir = InteractionRecordFactory.create();
+
+        final InteractionRecord ir = Utils.createInteractionRecord(servletContext);
         final String newDeviceUri = this.gen.createDeviceURL(device.getId());
         ir.deviceCreated(sm.getSessionId(), newDeviceUri, device.getLabel(), device.getGroup());
         return addDefaultLinks(Response.created(new URI(newDeviceUri))).

@@ -1,13 +1,13 @@
 package uk.ac.open.kmi.forge.webPacketTracer.api.http;
 
 import uk.ac.open.kmi.forge.webPacketTracer.analytics.InteractionRecord;
-import uk.ac.open.kmi.forge.webPacketTracer.analytics.InteractionRecordFactory;
 import uk.ac.open.kmi.forge.webPacketTracer.gateway.PTCallable;
 import uk.ac.open.kmi.forge.webPacketTracer.pojo.Device;
 import uk.ac.open.kmi.forge.webPacketTracer.session.SessionManager;
 import static uk.ac.open.kmi.forge.webPacketTracer.api.http.URLFactory.DEVICE_PARAM;
 import static uk.ac.open.kmi.forge.webPacketTracer.api.http.URLFactory.PORT_PATH;
 
+import javax.servlet.ServletContext;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
 import java.net.URI;
@@ -73,6 +73,7 @@ public class DeviceResource {
 
     final UriInfo uri;
     final SessionManager sm;
+
     public DeviceResource(UriInfo uri, SessionManager sm) {
         this.uri = uri;
         this.sm = sm;
@@ -101,12 +102,14 @@ public class DeviceResource {
     // FIXME DELETE and PUT should also consider the 'byName' parameter.
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
-    public Response removeDevice(@PathParam(DEVICE_PARAM) String deviceId) {
+    public Response removeDevice(@PathParam(DEVICE_PARAM) String deviceId,
+                                 @Context ServletContext servletContext) {
         final Device d = new DeviceDeleter(this.sm, deviceId, this.uri.getBaseUri()).call();  // Not using a new Thread
         if (d==null)
             return Response.noContent().
                     links(getDevicesLink()).build();
-        final InteractionRecord ir = InteractionRecordFactory.create();
+
+        final InteractionRecord ir = Utils.createInteractionRecord(servletContext);
         ir.deviceDeleted(sm.getSessionId(), this.uri.getRequestUri().toString(), d.getLabel(), d.getGroup());
         return Response.ok(d).
                 links(getDevicesLink()).build();
@@ -116,12 +119,13 @@ public class DeviceResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response modifyDevice(
             Device modification,
-            @PathParam(DEVICE_PARAM) String deviceId) {
+            @PathParam(DEVICE_PARAM) String deviceId,
+            @Context ServletContext servletContext) {
         final Device d = new DeviceModifier(this.sm, deviceId, modification, this.uri.getBaseUri()).call();  // Not using a new Thread
         if (d==null)
             return Response.noContent().
                     links(getDevicesLink()).build();
-        final InteractionRecord ir = InteractionRecordFactory.create();
+        final InteractionRecord ir = Utils.createInteractionRecord(servletContext);
         ir.deviceModified(sm.getSessionId(), this.uri.getRequestUri().toString(), d.getLabel(), d.getGroup());
         return Response.ok(d).
                 links(getDevicesLink()).

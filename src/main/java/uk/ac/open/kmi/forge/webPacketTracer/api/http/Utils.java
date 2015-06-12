@@ -5,7 +5,10 @@ import com.cisco.pt.impl.UUIDImpl;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import uk.ac.open.kmi.forge.webPacketTracer.analytics.InteractionRecord;
+import uk.ac.open.kmi.forge.webPacketTracer.analytics.InteractionRecordFactory;
 
+import javax.servlet.ServletContext;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLDecoder;
@@ -156,5 +159,9 @@ public class Utils {
         }
         ret += "]";
         return ret;
+    }
+
+    public static InteractionRecord createInteractionRecord(ServletContext servletContext) {
+        return ((InteractionRecordFactory) servletContext.getAttribute(APIApplication.INTERACTION_RECORD_FACTORY)).create();
     }
 }
