@@ -22,3 +22,25 @@ Use any of the following commands to deploy it in other environments:
 
 Please, note that you need to [configure your web server](http://www.mkyong.com/maven/how-to-deploy-maven-based-war-file-to-tomcat/) before using the tomcat deployment command shown above.
 If you are using Tomcat6, you might need to [consider this too](http://stackoverflow.com/questions/8726987/cant-access-tomcat-6-manager-app).
+
+
+## Missing dependencies
+
+If you are reading this section is probably because you cannot compile this project.
+This happens because the following dependencies are missing:
+ * tincan
+ * ptipc
+
+__Tincan__ is not yet available in Maven repositories.
+However, the author claims that: "At some point in the future we plan to make the maven artifacts available via some publicly available repository".
+Let's cross the fingers.
+
+In the meantime, you can install their latest jar in your local maven repository using the following command:
+
+    mvn install:install-file -Dfile=tincan-0.7.0.jar -DgroupId=com.rusticisoftware -DartifactId=tincan -Dversion=0.7.0 -Dpackaging=jar
+
+
+__Ptipc__ is a Java library made by Cisco to communicate with their Packet Tracer using IPC (Inter-Process Communication).
+The bad news: I do not have the intellectual property about this piece of software and therefore I cannot share it.
+Hopefully this will change in the future.
+In the meantime, you can contact me to try to sort this problem out together.
