@@ -27,9 +27,7 @@ If you are using Tomcat6, you might need to [consider this too](http://stackover
 ## Missing dependencies
 
 If you are reading this section is probably because you cannot compile this project.
-This happens because the following dependencies are missing:
- * tincan
- * ptipc
+This happens because the following dependencies are missing: _tincan_ and _ptipc_.
 
 __Tincan__ is not yet available in Maven repositories.
 However, the author claims that: "At some point in the future we plan to make the maven artifacts available via some publicly available repository".
