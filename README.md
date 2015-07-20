@@ -2,6 +2,7 @@
 
 Web API and widget (e.g., web UI) for [PacketTracer](https://www.netacad.com/web/about-us/cisco-packet-tracer).
 Both components are being developed as part of the [FORGE](http://ict-forge.eu/) project.
+For more information about _PT Anywhere_, please check [its offical website](http://pt-anywhere.kmi.open.ac.uk).
 
 
 The Web API uses [Jersey](https://jersey.java.net/documentation/latest/user-guide.html).
