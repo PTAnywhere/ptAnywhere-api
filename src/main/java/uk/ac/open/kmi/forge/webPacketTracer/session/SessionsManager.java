@@ -68,6 +68,8 @@ public class SessionsManager {
      * @param port
      */
     public void addAvailableInstance(String hostname, int port) {
+        // TODO instead of registering available instances, register available
+        // TODO management APIs (machines which can create PT instances)
         final String instanceId = getInstanceId(hostname, port);
         final Transaction t = this.jedis.multi();
         t.sadd(AVAILABLE_INSTANCES, instanceId);
@@ -102,6 +104,7 @@ public class SessionsManager {
         final Transaction t = this.jedis.multi();
         // Use hset if more details are needed
         t.set(rSessionId, instanceId);
+        // TODO store instance details instead of instanceId (+ removal URL).
         t.expire(rSessionId, expirationAfter);
         t.set(busyInstanceId, rSessionId);
         t.expire(busyInstanceId, expirationAfter);
@@ -127,6 +130,7 @@ public class SessionsManager {
      * @return The new session id.
      */
     public String createSession() throws BusyInstancesException {
+        // TODO get new available instance consuming management API
         freeInstancesAssignedToExpiredSessions();
         final String instanceId = this.jedis.spop(AVAILABLE_INSTANCES);
         if (instanceId==null) throw new BusyInstancesException();
@@ -167,6 +171,7 @@ public class SessionsManager {
         final String assignedInstanceId = this.jedis.get(rSessionId);
         final String assignedSessionId = this.jedis.get(assignedInstanceId + INSTANCE_BUSY_POSTFIX);
 
+        // TODO delete instance using management API
         final Transaction t = this.jedis.multi();
         if (assignedSessionId!=null)  // Delete only if it exists.
             t.del(rSessionId);
