@@ -173,6 +173,14 @@
             <artifactId>jersey-mvc-freemarker</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.glassfish.jersey.core</groupId>
+            <artifactId>jersey-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.connectors</groupId>
+            <artifactId>jersey-apache-connector</artifactId>>
+        </dependency>
+        <dependency>
             <groupId>org.glassfish.main.extras</groupId>
             <artifactId>glassfish-embedded-web</artifactId>
             <scope>provided</scope>
