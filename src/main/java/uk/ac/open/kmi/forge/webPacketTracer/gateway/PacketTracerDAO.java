@@ -7,6 +7,7 @@ import com.cisco.pt.impl.IPAddressImpl;
 import com.cisco.pt.ipc.IPCConstants;
 import com.cisco.pt.ipc.enums.ConnectType;
 import com.cisco.pt.ipc.enums.DeviceType;
+import com.cisco.pt.ipc.sim.Pc;
 import com.cisco.pt.ipc.sim.port.HostPort;
 import com.cisco.pt.ipc.ui.IPC;
 import com.cisco.pt.ipc.ui.LogicalWorkspace;
@@ -174,7 +175,12 @@ public class PacketTracerDAO {
     public Device modifyDevice(Device modification) {
         final com.cisco.pt.ipc.sim.Device ret = getSimDeviceById(Utils.toCiscoUUID(modification.getId()));
         if (ret!=null) {
-            ret.setName(modification.getLabel());  // Right now, we only allow to change the name of the label!
+            ret.setName(modification.getLabel());
+            // FIXME distinguish between devices in a more elegant way
+            if (ret instanceof Pc && modification.getDefaultGateway()!=null) {
+                final IPAddress gateway = new IPAddressImpl(modification.getDefaultGateway());
+                ((Pc) ret).setDefaultGateway(gateway);
+            }
         }
         return Device.fromCiscoObject(ret);
     }

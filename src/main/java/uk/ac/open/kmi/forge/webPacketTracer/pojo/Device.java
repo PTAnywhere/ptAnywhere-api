@@ -6,6 +6,7 @@ import com.cisco.pt.ipc.sim.Router;
 import uk.ac.open.kmi.forge.webPacketTracer.api.http.AbstractWebRepresentable;
 import uk.ac.open.kmi.forge.webPacketTracer.api.http.Utils;
 
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.List;
 
@@ -22,6 +23,10 @@ public class Device extends AbstractWebRepresentable<Device> {
     String group; // E.g., "switchDevice"
     List<Port> ports;
 
+    // FIXME Only in Pcs and WirelessRouters!
+    //@XmlElement(required=true)
+    String defaultGateway;
+
     public Device() {
         this(null, null, -1, -1, null);
     }
@@ -32,6 +37,7 @@ public class Device extends AbstractWebRepresentable<Device> {
         this.x = x;
         this.y = y;
         this.group = group;
+        this.defaultGateway = null;
     }
 
     public static Device fromCiscoObject(com.cisco.pt.ipc.sim.Device device) {
@@ -42,16 +48,21 @@ public class Device extends AbstractWebRepresentable<Device> {
         final int deviceX = (int) (device.getXCoordinate()*1.5);
         final int deviceY = (int) (device.getYCoordinate()*1.5);
         final String group;
+        String defaultGateway = null; // FIXME only defined when it is a pcDevice
         if (device instanceof Router) {
             group = "routerDevice";
         } else if (device instanceof Cloud) {
             group = "cloudDevice";
         } else if (device instanceof Pc) {
             group = "pcDevice";
+            //defaultGateway = ((Pc) device).getDefaultGateway().getDottedQuadString();
+            defaultGateway = "0.0.0.0";
         } else {
             group = "switchDevice";
         }
-        return new Device(id, label, deviceX, deviceY, group);
+        final Device ret = new Device(id, label, deviceX, deviceY, group);
+        ret.setDefaultGateway(defaultGateway);
+        return ret;
     }
 
     public String getId() {
@@ -106,6 +117,14 @@ public class Device extends AbstractWebRepresentable<Device> {
 
     public void setPorts(List<Port> ports) {
         this.ports = ports;
+    }
+
+    public String getDefaultGateway() {
+        return defaultGateway;
+    }
+
+    public void setDefaultGateway(String defaultGateway) {
+        this.defaultGateway = defaultGateway;
     }
 
     @Override
