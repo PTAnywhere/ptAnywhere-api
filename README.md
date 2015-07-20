@@ -30,13 +30,12 @@ If you are reading this section is probably because you cannot compile this proj
 This happens because the following dependencies are missing: _tincan_ and _ptipc_.
 
 __Tincan__ is not yet available in Maven repositories.
-However, the author claims that: "At some point in the future we plan to make the maven artifacts available via some publicly available repository".
+However, the author claims that: "At some point in the future we [plan to make the maven artifacts available via some publicly available repository](https://github.com/RusticiSoftware/TinCanJava/issues/31)".
 Let's cross the fingers.
 
 In the meantime, you can install their latest jar in your local maven repository using the following command:
 
     mvn install:install-file -Dfile=tincan-0.7.0.jar -DgroupId=com.rusticisoftware -DartifactId=tincan -Dversion=0.7.0 -Dpackaging=jar
-
 
 __Ptipc__ is a Java library made by Cisco to communicate with their Packet Tracer using IPC (Inter-Process Communication).
 The bad news: I do not have the intellectual property about this piece of software and therefore I cannot share it.
