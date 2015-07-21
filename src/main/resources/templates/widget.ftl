@@ -104,8 +104,13 @@
                         <option value="loading">Loading...</option>
                     </select>
                     <hr>
-                    IP address: <input type="text" name="ipAddress"><br>
-                    Subnet mask: <input type="text" name="subnetMask">
+                    <div id="ifaceDetails">
+                        IP address: <input type="text" name="ipAddress"><br>
+                        Subnet mask: <input type="text" name="subnetMask">
+                    </div>
+                    <div id="noIfaceDetails">
+                        No settings can be specified for this type of interface.
+                    </div>
                 </div>
             </div>
         </form>

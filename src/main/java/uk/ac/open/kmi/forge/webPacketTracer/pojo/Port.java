@@ -27,7 +27,7 @@ public class Port extends AbstractWebRepresentable<Port> {
         if (port==null) return null;
 
         final Link l = port.getLink();
-        final Port ret = new Port( port.getName(), "", "",
+        final Port ret = new Port( port.getName(), null, null,
                 (l==null)? null: Utils.toSimplifiedId(l.getObjectUUID()));
         if (port instanceof HostPort) {
             final HostPort hPort = (HostPort) port;

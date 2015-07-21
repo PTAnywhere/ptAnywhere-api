@@ -364,8 +364,15 @@ var deviceModificationDialog = (function () {
     }
 
     function updateInterfaceInformation(port) {
-        $('input[name="ipAddress"]', modForm).val(port.portIpAddress);
-        $('input[name="subnetMask"]', modForm).val(port.portSubnetMask);
+        if (port.hasOwnProperty('portIpAddress') && port.hasOwnProperty('portSubnetMask')) {
+            $('#ifaceDetails', modForm).show();
+            $('#noIfaceDetails', modForm).hide();
+            $('input[name="ipAddress"]', modForm).val(port.portIpAddress);
+            $('input[name="subnetMask"]', modForm).val(port.portSubnetMask);
+        } else {
+            $('#ifaceDetails', modForm).hide();
+            $('#noIfaceDetails', modForm).show();
+        }
     }
 
     function loadPortsForInterface(ports) {
