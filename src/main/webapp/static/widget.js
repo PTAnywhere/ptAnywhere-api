@@ -125,12 +125,16 @@ var packetTracer = (function () {
             }).fail(function(data) { console.error("Something went wrong in the device removal."); });
     }
 
-    function putDevice(deviceId, deviceLabel, callback) { // modify
+    function putDevice(deviceId, deviceLabel, defaultGateway, callback) { // modify
         // General settings: PUT to /devices/id
         var modification = { label: deviceLabel };
+        if (defaultGateway!="") {
+            modification.defaultGateway = defaultGateway;
+        }
         putJSON(nodes.get(deviceId).url, modification,
             function(result) {
                 console.log("The device has been modified successfully.");
+                result.defaultGateway = defaultGateway;  // FIXME PTPIC library!
                 nodes.update(result);  // As the device has the same id, it should replace the older one.
         }).done(callback)
         .fail(function(data) { console.error("Something went wrong in the device modification."); });
@@ -388,6 +392,13 @@ var deviceModificationDialog = (function () {
 
         $("input[name='deviceId']", modForm).val(selectedDevice.id);
         $("input[name='displayName']", modForm).val(selectedDevice.label);
+        if (selectedDevice.hasOwnProperty('defaultGateway')) {
+            $("input[name='defaultGateway']", modForm).val(selectedDevice.defaultGateway);
+            $("#defaultGw", modForm).show();
+        } else {
+            $("input[name='defaultGateway']", modForm).val("");
+            $("#defaultGw", modForm).hide();
+        }
 
         packetTracer.getAllPorts(selectedDevice.url, loadPortsForInterface);
     }
@@ -397,8 +408,9 @@ var deviceModificationDialog = (function () {
         var selectedTab = $("li.ui-state-active", modForm).attr("aria-controls");
         if (selectedTab=="tabs-1") { // General settings
             var deviceId = $("input[name='deviceId']", modForm).val();
-            var deviceLabel = $("form[name='modify-device'] input[name='displayName']").val();
-            packetTracer.modifyDevice(deviceId, deviceLabel, callback);
+            var deviceLabel = $("input[name='displayName']", modForm).val();
+            var defaultGateway = $("input[name='defaultGateway']", modForm).val();
+            packetTracer.modifyDevice(deviceId, deviceLabel, defaultGateway, callback);
         } else if (selectedTab=="tabs-2") { // Interfaces
             var portURL = $("#interface", modForm).val();
             var portIpAddress = $("input[name='ipAddress']", modForm).val();

@@ -87,13 +87,13 @@
     <div id="modify-dialog-tabs">
         <form name="modify-device">
             <input type="hidden" name="deviceId" value="">
-            <input type="hidden" name="defaultgateway" value="">
             <ul>
                 <li><a href="#tabs-1">Global Settings</a></li>
                 <li><a href="#tabs-2">Interfaces</a></li>
             </ul>
             <div id="tabs-1">
-                Name: <input type="text" name="displayName">
+                Name: <input type="text" name="displayName"><br />
+                <span id="defaultGw">Default gateway: <input type="text" name="defaultGateway"></span>
             </div>
             <div id="tabs-2">
                 <div class="loading">
