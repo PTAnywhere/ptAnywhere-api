@@ -5,6 +5,7 @@ import javax.ws.rs.core.Link;
 import javax.ws.rs.core.Response;
 
 
+// TODO implement ExceptionMapper?
 public class SessionNotFoundException extends WebApplicationException {
     public SessionNotFoundException(String sessionId, Link... link) {
         super(Response.status(Response.Status.NOT_FOUND).

@@ -1,4 +1,4 @@
-package uk.ac.open.kmi.forge.webPacketTracer.session;
+package uk.ac.open.kmi.forge.webPacketTracer.session.management;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -21,7 +21,7 @@ public class PTManagementClient {
             .request(MediaType.TEXT_PLAIN_TYPE)
             .header("some-header", "true")
             .get(String.class);
-        * */
+        */
         final String response = this.target.path("instances")
             //.queryParam()
             .request(MediaType.APPLICATION_JSON)
