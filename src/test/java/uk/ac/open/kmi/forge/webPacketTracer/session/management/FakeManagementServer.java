@@ -1,53 +1,54 @@
+package uk.ac.open.kmi.forge.webPacketTracer.session.management;
+
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.client.Client;
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
+
+import static uk.ac.open.kmi.forge.webPacketTracer.session.management.PTManagementClient.*;
 
 
 public class FakeManagementServer {
 
-    static final String BASE_URI = "http://localhost:8080/myapp/";
-    static HttpServer server;
+    final HttpServer server;
+    static Instance createdInstance;
+    static final Map<Integer, Instance> instances = new HashMap<Integer, Instance>();
 
-    private static HttpServer startServer() {
-        final ResourceConfig resourceConfig = new ResourceConfig()
-                .packages("where.my.resources.are")
-                .register(HelloResource.class);
-        // normally the resource class would not be in the unit test class
-        // and would be in the `where.my.resources.are` package pr sub package
-        return GrizzlyHttpServerFactory.createHttpServer(URI.create(BASE_URI), resourceConfig);
-    }
+    @Path(INSTANCES_PATH)
+    public static class InstanceResource {
+        @POST
+        @Produces(MediaType.APPLICATION_JSON)
+        public Response createInstance() {
+            return Response.ok(createdInstance).build();
+        }
 
-    @Path("instances")
-    public static class HelloResource {
-        @GET
-        public String getHello() {
-            return "Hello World!";
+        @DELETE @Path("/{" + INSTANCE_PARAM + "}")
+        @Produces(MediaType.APPLICATION_JSON)
+        public Response deleteInstance(@PathParam(INSTANCE_PARAM) String instanceId) {
+            final Instance deleted = instances.remove(Integer.parseInt(instanceId));
+            if (deleted==null)
+                return Response.status(Response.Status.NOT_FOUND).build();
+            return Response.ok(deleted).build();
         }
     }
 
-    @BeforeClass
-    public static void setUpClass() {
-        server = startServer();
+    public FakeManagementServer(String baseUri) {
+        final ResourceConfig resourceConfig = new ResourceConfig()
+                .register(InstanceResource.class);
+        this.server = GrizzlyHttpServerFactory.createHttpServer(URI.create(baseUri), resourceConfig);
     }
 
-    @AfterClass
-    public static void tearDownClass() {
-        server.shutdown();
+    public void shutdown() {
+        this.server.shutdown();
     }
 
-    @Test
-    public void test() {
-        WebTarget target = client.target(BASE_URI);
-        Response response = target.path("hello").request().get();
-        String hello = response.readEntity(String.class);
-        assertEquals("Hello World!", hello);
-        response.close();
+    public void addInstance(Instance instance) {
+        this.instances.put(instance.getId(), instance);
     }
 }
