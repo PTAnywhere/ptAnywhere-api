@@ -109,7 +109,7 @@ public class DeviceResource {
             return Response.noContent().
                     links(getDevicesLink()).build();
 
-        final InteractionRecord ir = Utils.createInteractionRecord(servletContext);
+        final InteractionRecord ir = APIApplication.createInteractionRecord(servletContext);
         ir.deviceDeleted(this.sm.getSessionId(), this.uri.getRequestUri().toString(), d.getLabel(), d.getGroup());
         return Response.ok(d).
                 links(getDevicesLink()).build();
@@ -125,7 +125,7 @@ public class DeviceResource {
         if (d==null)
             return Response.noContent().
                     links(getDevicesLink()).build();
-        final InteractionRecord ir = Utils.createInteractionRecord(servletContext);
+        final InteractionRecord ir = APIApplication.createInteractionRecord(servletContext);
         ir.deviceModified(this.sm.getSessionId(), this.uri.getRequestUri().toString(), d.getLabel(), d.getGroup());
         return Response.ok(d).
                 links(getDevicesLink()).

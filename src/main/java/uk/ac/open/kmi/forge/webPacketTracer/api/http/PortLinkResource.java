@@ -109,7 +109,7 @@ public class PortLinkResource {
         if (deletedLink==null)
             return Response.status(Response.Status.NOT_ACCEPTABLE).entity(deletedLink).
                     links(getPortLink()).build();
-        final InteractionRecord ir =  Utils.createInteractionRecord(servletContext);
+        final InteractionRecord ir =  APIApplication.createInteractionRecord(servletContext);
         ir.deviceDisconnected(this.sm.getSessionId(), deletedLink.getUrl(), deletedLink.getEndpoints());
         return Response.ok(deletedLink).
                 links(getPortLink()).build();
@@ -125,7 +125,7 @@ public class PortLinkResource {
         if (createdLink==null)
             return Response.status(Response.Status.NOT_ACCEPTABLE).entity(newLink).
                     links(getPortLink()).build();
-        final InteractionRecord ir =  Utils.createInteractionRecord(servletContext);
+        final InteractionRecord ir =  APIApplication.createInteractionRecord(servletContext);
         ir.deviceConnected(sm.getSessionId(), createdLink.getUrl(), createdLink.getEndpoints());
         return Response.created(this.uri.getRequestUri()).entity(createdLink).
                 links(getPortLink()).build();

@@ -83,7 +83,7 @@ public class DevicesResource {
         if (device==null)
             return addDefaultLinks(Response.status(Response.Status.BAD_REQUEST).entity(newDevice)).build();
 
-        final InteractionRecord ir = Utils.createInteractionRecord(servletContext);
+        final InteractionRecord ir = APIApplication.createInteractionRecord(servletContext);
         final String newDeviceUri = this.gen.createDeviceURL(device.getId());
         ir.deviceCreated(sm.getSessionId(), newDeviceUri, device.getLabel(), device.getGroup());
         return addDefaultLinks(Response.created(new URI(newDeviceUri))).
