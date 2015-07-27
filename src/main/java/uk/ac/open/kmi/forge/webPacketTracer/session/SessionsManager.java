@@ -3,7 +3,8 @@ package uk.ac.open.kmi.forge.webPacketTracer.session;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPubSub;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.Transaction;
 import uk.ac.open.kmi.forge.webPacketTracer.api.http.Utils;
 import uk.ac.open.kmi.forge.webPacketTracer.api.http.exceptions.NoPTInstanceAvailableException;
@@ -17,24 +18,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-
-
-class JedisFactory {
-    final String hostname;
-    final int port, dbNumber;
-
-    protected JedisFactory(String hostname, int port, int dbNumber) {
-        this.hostname = hostname;
-        this.port = port;
-        this.dbNumber = dbNumber;
-    }
-
-    protected Jedis create() {
-        final Jedis ret = new Jedis(hostname, port);
-        ret.select(dbNumber);
-        return ret;
-    }
-}
 
 
 /**
@@ -62,12 +45,16 @@ public class SessionsManager {
      */
     private static final String SESSION_PREFIX = "session:";
 
-    final JedisFactory jedisFactory;
-    final Jedis jedis;
+    // Pool usage recommended in the official documentation:
+    //   "You can store the pool somewhere statically, it is thread-safe."
+    private static JedisPool pool;
 
-    protected SessionsManager(String hostname, int port, int dbNumber) {
-        this.jedisFactory = new JedisFactory(hostname, port, dbNumber);
-        this.jedis = this.jedisFactory.create();
+
+    protected SessionsManager() {
+        // From docs:
+        // Note that subscribe is a blocking operation because it will poll Redis for responses on the thread that calls subscribe.
+        // A single JedisPubSub instance can be used to subscribe to multiple channels.
+        // You can call subscribe or psubscribe on an existing JedisPubSub instance to change your subscriptions.
         /*this.jedis.psubscribe(new JedisPubSub() {
             @Override
             public void onPMessage(String pattern, String channel, String message) {
@@ -79,14 +66,19 @@ public class SessionsManager {
     }
 
     public static SessionsManager create() {
-        // FIXME should we cache these values to avoid reading the file over and over again???
-        final PropertyFileManager pfm = new PropertyFileManager();
-        final RedisConnectionProperties rcp = pfm.getRedisConnectionDetails();
-        return new SessionsManager(rcp.getHostname(), rcp.getPort(), rcp.getDbNumber());
+        if(pool==null) {
+            final PropertyFileManager pfm = new PropertyFileManager();
+            final RedisConnectionProperties rcp = pfm.getRedisConnectionDetails();
+            // 2000 and null are the default values used in JedisPool...
+            pool = new JedisPool(new JedisPoolConfig(), rcp.getHostname(), rcp.getPort(), 2000, null, rcp.getDbNumber());
+        }
+        return new SessionsManager();
     }
 
     public void clear() {
-        this.jedis.flushDB();
+        try (Jedis jedis = pool.getResource()) {
+            jedis.flushDB();
+        }
     }
 
     /**
@@ -96,7 +88,9 @@ public class SessionsManager {
     public void addManagementAPIs(String... apiUrls) {
         // TODO Is it better to set it in the config file? http://redis.io/commands/config-set
         //this.jedis.configSet("notify-keyspace-events", "Eg");  // Activate notifications on expiration
-        this.jedis.sadd(AVAILABLE_APIS, apiUrls);
+        try (Jedis jedis = pool.getResource()) {
+            jedis.sadd(AVAILABLE_APIS, apiUrls);
+        }
     }
 
     private String generateSessionId() {
@@ -125,17 +119,19 @@ public class SessionsManager {
         final String rSessionId = toRedisSessionId(sessionId);
         final int expirationAfter = RESERVATION_TIME * 60;
 
-        final Transaction t = this.jedis.multi();
-        // Use hset if more details are needed
-        t.hset(rSessionId, INSTANCE_URL, instanceUrl);
-        t.hset(rSessionId, INSTANCE_HOSTNAME, ptHost);
-        t.hset(rSessionId, INSTANCE_PORT, String.valueOf(ptPort));
+        try (Jedis jedis = pool.getResource()) {
+            final Transaction t = jedis.multi();
+            // Use hset if more details are needed
+            t.hset(rSessionId, INSTANCE_URL, instanceUrl);
+            t.hset(rSessionId, INSTANCE_HOSTNAME, ptHost);
+            t.hset(rSessionId, INSTANCE_PORT, String.valueOf(ptPort));
 
-        // We could also expire the last thing whenever the keyspace events work
-        t.expire(rSessionId, expirationAfter);
-        t.exec();
+            // We could also expire the last thing whenever the keyspace events work
+            t.expire(rSessionId, expirationAfter);
+            t.exec();
 
-        return sessionId;
+            return sessionId;
+        }
     }
 
     /**
@@ -143,44 +139,52 @@ public class SessionsManager {
      * @return The new session id.
      */
     public String createSession() throws NoPTInstanceAvailableException {
-        for (String apiUrl : this.jedis.smembers(AVAILABLE_APIS)) {
-            try {
-                final PTManagementClient cli = new PTManagementClient(apiUrl);
-                final Instance i = cli.createInstance();
-                return createSession(i.getUrl(), i.getPacketTracerHostname(), i.getPacketTracerPort());
-            } catch (NoPTInstanceAvailableException e) {
-                // Let's try with the next API...
+        try (Jedis jedis = pool.getResource()) {
+            for (String apiUrl : jedis.smembers(AVAILABLE_APIS)) {
+                try {
+                    final PTManagementClient cli = new PTManagementClient(apiUrl);
+                    final Instance i = cli.createInstance();
+                    return createSession(i.getUrl(), i.getPacketTracerHostname(), i.getPacketTracerPort());
+                } catch (NoPTInstanceAvailableException e) {
+                    // Let's try with the next API...
+                }
             }
+            throw new NoPTInstanceAvailableException();
         }
-        throw new NoPTInstanceAvailableException();
     }
 
     public Set<String> getCurrentSessions() {
         final Set<String> ret = new HashSet<String>();
-        for (String rSessionId: this.jedis.keys(SESSION_PREFIX + "*")) {
-            ret.add(fromRedisSessionId(rSessionId));
+        try (Jedis jedis = pool.getResource()) {
+            for (String rSessionId : jedis.keys(SESSION_PREFIX + "*")) {
+                ret.add(fromRedisSessionId(rSessionId));
+            }
+            return ret;
         }
-        return ret;
     }
 
     protected  PTInstanceDetails getInstanceWithRSessionId(String rSessionId) {
-        final Map<String, String> details = this.jedis.hgetAll(rSessionId);
-        if (details!=null && details.containsKey(INSTANCE_URL) &&
-                details.containsKey(INSTANCE_HOSTNAME) && details.containsKey(INSTANCE_PORT)) {
-            return new PTInstanceDetails(details.get(INSTANCE_URL),
-                    details.get(INSTANCE_HOSTNAME),
-                    Integer.valueOf(details.get(INSTANCE_PORT)));
+        try (Jedis jedis = pool.getResource()) {
+            final Map<String, String> details = jedis.hgetAll(rSessionId);
+            if (details != null && details.containsKey(INSTANCE_URL) &&
+                    details.containsKey(INSTANCE_HOSTNAME) && details.containsKey(INSTANCE_PORT)) {
+                return new PTInstanceDetails(details.get(INSTANCE_URL),
+                        details.get(INSTANCE_HOSTNAME),
+                        Integer.valueOf(details.get(INSTANCE_PORT)));
+            }
+            return null;
         }
-        return null;
     }
 
     public PTInstanceDetails getInstance(String sessionId) {
-        return getInstanceWithRSessionId( toRedisSessionId(sessionId) );
+        return getInstanceWithRSessionId(toRedisSessionId(sessionId));
     }
 
     public boolean doesExist(String sessionId) {
         final String rSessionId = toRedisSessionId(sessionId);
-        return this.jedis.exists(rSessionId);
+        try (Jedis jedis = pool.getResource()) {
+            return jedis.exists(rSessionId);
+        }
     }
 
     /**
@@ -189,24 +193,26 @@ public class SessionsManager {
      */
     public void deleteSession(String sessionId) {
         final String rSessionId = toRedisSessionId(sessionId);
-        if (this.jedis.exists(rSessionId)) {
-            final Map<String, String> instanceDetails = this.jedis.hgetAll(rSessionId);
-
-            final Transaction t = this.jedis.multi();
-            final String instanceUrl = instanceDetails.get(INSTANCE_URL);
-            final InstanceResourceClient cli = new InstanceResourceClient(instanceUrl);
-            cli.delete();  // If it throws an exception the element is not deleted.
-            this.jedis.del(rSessionId);
+        try (Jedis jedis = pool.getResource()) {
+            if (jedis.exists(rSessionId)) {
+                final Map<String, String> instanceDetails = jedis.hgetAll(rSessionId);
+                final String instanceUrl = instanceDetails.get(INSTANCE_URL);
+                final InstanceResourceClient cli = new InstanceResourceClient(instanceUrl);
+                cli.delete();  // If it throws an exception the element is not deleted.
+                jedis.del(rSessionId);
+            }
         }
     }
 
     /* Methods to ease webapp management */
     public Set<PTInstanceDetails> getAllInstances() {
         final Set<PTInstanceDetails> ret = new HashSet<PTInstanceDetails>();
-        for(String rSessionId: this.jedis.keys(SESSION_PREFIX + "*")) {
-            final PTInstanceDetails details = getInstanceWithRSessionId(rSessionId);
-            if (details!=null) ret.add(details);
+        try (Jedis jedis = pool.getResource()) {
+            for (String rSessionId : jedis.keys(SESSION_PREFIX + "*")) {
+                final PTInstanceDetails details = getInstanceWithRSessionId(rSessionId);
+                if (details != null) ret.add(details);
+            }
+            return ret;
         }
-        return ret;
     }
 }
