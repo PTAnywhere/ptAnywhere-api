@@ -2,7 +2,6 @@ package uk.ac.open.kmi.forge.webPacketTracer.api.http;
 
 import uk.ac.open.kmi.forge.webPacketTracer.analytics.InteractionRecord;
 import uk.ac.open.kmi.forge.webPacketTracer.api.http.exceptions.NoPTInstanceAvailableException;
-import uk.ac.open.kmi.forge.webPacketTracer.session.BusyInstancesException;
 import uk.ac.open.kmi.forge.webPacketTracer.session.SessionsManager;
 import static uk.ac.open.kmi.forge.webPacketTracer.api.http.URLFactory.SESSION_PARAM;
 import javax.servlet.ServletContext;
