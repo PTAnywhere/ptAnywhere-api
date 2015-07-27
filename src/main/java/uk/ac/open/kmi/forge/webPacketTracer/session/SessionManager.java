@@ -1,6 +1,6 @@
 package uk.ac.open.kmi.forge.webPacketTracer.session;
 
-import uk.ac.open.kmi.forge.webPacketTracer.api.http.SessionNotFoundException;
+import uk.ac.open.kmi.forge.webPacketTracer.api.http.exceptions.SessionNotFoundException;
 
 /**
  * SessionsManager with a default sessionId.

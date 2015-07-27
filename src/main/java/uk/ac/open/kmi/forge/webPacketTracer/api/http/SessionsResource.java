@@ -1,6 +1,7 @@
 package uk.ac.open.kmi.forge.webPacketTracer.api.http;
 
 import uk.ac.open.kmi.forge.webPacketTracer.analytics.InteractionRecord;
+import uk.ac.open.kmi.forge.webPacketTracer.api.http.exceptions.NoPTInstanceAvailableException;
 import uk.ac.open.kmi.forge.webPacketTracer.session.BusyInstancesException;
 import uk.ac.open.kmi.forge.webPacketTracer.session.SessionsManager;
 import static uk.ac.open.kmi.forge.webPacketTracer.api.http.URLFactory.SESSION_PARAM;
@@ -37,16 +38,12 @@ public class SessionsResource {
     @Produces(MediaType.APPLICATION_JSON)
     // TODO Even better if we use:
     // https://jersey.java.net/documentation/latest/user-guide.html#declarative-linking
-    public Response createSession(@Context ServletContext servletContext) throws URISyntaxException {
-        try {
-            final String id = this.sm.createSession();
-            final InteractionRecord ir = Utils.createInteractionRecord(servletContext);
-            ir.interactionStarted(id);
-            return Response.created(new URI(getSessionRelativeURI(id))).
-                    links(getItemLink(id)).build();
-        } catch(BusyInstancesException e) {
-            return Response.serverError().build();
-        }
+    public Response createSession(@Context ServletContext servletContext) throws URISyntaxException, NoPTInstanceAvailableException {
+        final String id = this.sm.createSession();  // May throw NoPTInstanceAvailableException
+        final InteractionRecord ir = Utils.createInteractionRecord(servletContext);
+        ir.interactionStarted(id);
+        return Response.created(new URI(getSessionRelativeURI(id))).
+                links(getItemLink(id)).build();
     }
 
     // FIXME Read this: https://jersey.java.net/documentation/latest/user-guide.html#uris-and-links
