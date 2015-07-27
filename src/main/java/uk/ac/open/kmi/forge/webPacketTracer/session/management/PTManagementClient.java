@@ -1,6 +1,8 @@
 package uk.ac.open.kmi.forge.webPacketTracer.session.management;
 
+import uk.ac.open.kmi.forge.webPacketTracer.api.http.exceptions.NoPTInstanceAvailableException;
 import javax.ws.rs.NotFoundException;
+import javax.ws.rs.ServiceUnavailableException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
@@ -16,30 +18,39 @@ public class PTManagementClient {
 
     final WebTarget target;
 
+
+    public PTManagementClient(WebTarget target) {
+        this.target = target;
+    }
+
     public PTManagementClient(String managementApiUrl) {
         final Client client = ClientBuilder.newClient();
         this.target = client.target(managementApiUrl);
     }
 
-    public Instance createInstance() {
+    public Instance createInstance() throws NoPTInstanceAvailableException {
         /*  .path("resource/helloworld")
             .queryParam("greeting", "Hi World!")
             .request(MediaType.TEXT_PLAIN_TYPE)
             .header("some-header", "true")
             .get(String.class);
         */
-        final Response response = this.target.path(INSTANCES_PATH)
-            //.queryParam()
-            .request(MediaType.APPLICATION_JSON)
-            //.header("some-header", "true")
-            .post(null);
+        try {
+            final Response response = this.target.path(INSTANCES_PATH)
+                    //.queryParam()
+                    .request(MediaType.APPLICATION_JSON)
+                            //.header("some-header", "true")
+                    .post(null);
             // List<Customer> customers = .get(new GenericType<List<Customer>>(){});
-        return response.readEntity(Instance.class);
+            return response.readEntity(Instance.class);
+        } catch(ServiceUnavailableException e) {
+            throw new NoPTInstanceAvailableException(e.getMessage());
+        }
     }
 
     public Instance deleteInstance(int instanceId) throws NotFoundException {
-        return this.target.path(INSTANCE_PATH.replace("{" + INSTANCE_PARAM + "}", String.valueOf(instanceId)))
-                .request(MediaType.APPLICATION_JSON)
-                .delete(Instance.class);
+        final InstanceResourceClient irc = new InstanceResourceClient(
+                this.target.path(INSTANCE_PATH.replace("{" + INSTANCE_PARAM + "}", String.valueOf(instanceId))) );
+        return irc.delete();
     }
 }

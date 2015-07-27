@@ -8,26 +8,26 @@ public class Instance {
     int id;
     String url;
     String dockerId;
-    int pt_port;
-    String vnc_port;
-    String created_at;
-    String deleted_at;
+    String packetTracer;
+    String vnc;
+    String createdAt;
+    String deletedAt;
 
     public Instance() {
     }
 
     protected static Instance clone(Instance toClone) {
-        return new Instance(toClone.id, toClone.url, toClone.dockerId, toClone.pt_port, toClone.vnc_port, toClone.created_at, toClone.deleted_at);
+        return new Instance(toClone.id, toClone.url, toClone.dockerId, toClone.packetTracer, toClone.vnc, toClone.createdAt, toClone.deletedAt);
     }
 
 
-    public Instance(int id, String url, String dockerId, int pt_port, String vnc_port, String created_at, String deleted_at) {
+    public Instance(int id, String url, String dockerId, String packetTracerHost, String vnc, String createdAt, String deletedAt) {
         this.id = id;
         this.dockerId = dockerId;
-        this.pt_port = pt_port;
-        this.vnc_port = vnc_port;
-        this.created_at = created_at;
-        this.deleted_at = deleted_at;
+        this.packetTracer = packetTracerHost;
+        this.vnc = vnc;
+        this.createdAt = createdAt;
+        this.deletedAt = deletedAt;
     }
 
     public int getId() {
@@ -54,36 +54,44 @@ public class Instance {
         this.dockerId = dockerId;
     }
 
-    public int getPt_port() {
-        return pt_port;
+    public String getPacketTracer() {
+        return packetTracer;
     }
 
-    public void setPt_port(int pt_port) {
-        this.pt_port = pt_port;
+    public String getPacketTracerHostname() {
+        return packetTracer.split(":")[0];
     }
 
-    public String getVnc_port() {
-        return vnc_port;
+    public int getPacketTracerPort() {
+        return Integer.valueOf(packetTracer.split(":")[1]);
     }
 
-    public void setVnc_port(String vnc_port) {
-        this.vnc_port = vnc_port;
+    public void setPacketTracer(String packetTracer) {
+        this.packetTracer = packetTracer;
     }
 
-    public String getCreated_at() {
-        return created_at;
+    public String getVnc() {
+        return vnc;
     }
 
-    public void setCreated_at(String created_at) {
-        this.created_at = created_at;
+    public void setVnc(String vnc) {
+        this.vnc = vnc;
     }
 
-    public String getDeleted_at() {
-        return deleted_at;
+    public String getCreatedAt() {
+        return createdAt;
     }
 
-    public void setDeleted_at(String deleted_at) {
-        this.deleted_at = deleted_at;
+    public void setCreatedAt(String createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public String getDeletedAt() {
+        return deletedAt;
+    }
+
+    public void setDeletedAt(String deletedAt) {
+        this.deletedAt = deletedAt;
     }
 
     @Override
@@ -94,21 +102,25 @@ public class Instance {
         Instance instance = (Instance) o;
 
         if (id != instance.id) return false;
-        if (pt_port != instance.pt_port) return false;
+        if (url != null ? !url.equals(instance.url) : instance.url != null) return false;
         if (dockerId != null ? !dockerId.equals(instance.dockerId) : instance.dockerId != null) return false;
-        if (vnc_port != null ? !vnc_port.equals(instance.vnc_port) : instance.vnc_port != null) return false;
-        if (created_at != null ? !created_at.equals(instance.created_at) : instance.created_at != null) return false;
-        return !(deleted_at != null ? !deleted_at.equals(instance.deleted_at) : instance.deleted_at != null);
+        if (packetTracer != null ? !packetTracer.equals(instance.packetTracer) : instance.packetTracer != null)
+            return false;
+        if (vnc != null ? !vnc.equals(instance.vnc) : instance.vnc != null) return false;
+        if (createdAt != null ? !createdAt.equals(instance.createdAt) : instance.createdAt != null) return false;
+        return !(deletedAt != null ? !deletedAt.equals(instance.deletedAt) : instance.deletedAt != null);
+
     }
 
     @Override
     public int hashCode() {
         int result = id;
+        result = 31 * result + (url != null ? url.hashCode() : 0);
         result = 31 * result + (dockerId != null ? dockerId.hashCode() : 0);
-        result = 31 * result + pt_port;
-        result = 31 * result + (vnc_port != null ? vnc_port.hashCode() : 0);
-        result = 31 * result + (created_at != null ? created_at.hashCode() : 0);
-        result = 31 * result + (deleted_at != null ? deleted_at.hashCode() : 0);
+        result = 31 * result + (packetTracer != null ? packetTracer.hashCode() : 0);
+        result = 31 * result + (vnc != null ? vnc.hashCode() : 0);
+        result = 31 * result + (createdAt != null ? createdAt.hashCode() : 0);
+        result = 31 * result + (deletedAt != null ? deletedAt.hashCode() : 0);
         return result;
     }
 }

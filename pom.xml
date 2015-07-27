@@ -57,9 +57,9 @@
                 </property>
             </activation>
             <properties>
-                <tomcat.url>http://localhost:8080/manager/text</tomcat.url>
-                <tomcat.server>developmentServer</tomcat.server>
-            <!--<tomcat.server>vagrantServer</tomcat.server>-->
+                <tomcat.url>http://192.168.34.201:8080/manager/text</tomcat.url>
+                <!--<tomcat.server>developmentServer</tomcat.server>-->
+                <tomcat.server>vagrantServer</tomcat.server>
             <tomcat.path>/webPacketTracer</tomcat.path>
         </properties>
         <build>
@@ -160,13 +160,14 @@
         </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.containers</groupId>
-            <!-- <artifactId>jersey-container-servlet-core</artifactId>-->
+            <!-- <artifactId>jersey-container-servlet-core</artifactId> -->
             <!-- use the following artifactId if you don't need servlet 2.x compatibility -->
             <artifactId>jersey-container-servlet</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.glassfish.jersey.containers</groupId>
-            <artifactId>jersey-container-grizzly2-http</artifactId>
+            <groupId>org.glassfish.jersey.test-framework.providers</groupId>
+            <artifactId>jersey-test-framework-provider-inmemory</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.media</groupId>
@@ -214,7 +215,7 @@
         <dependency>
             <groupId>redis.clients</groupId>
             <artifactId>jedis</artifactId>
-            <version>2.7.0</version>
+            <version>2.7.2</version>
         </dependency>
         <dependency>
             <groupId>com.cisco.pt</groupId>

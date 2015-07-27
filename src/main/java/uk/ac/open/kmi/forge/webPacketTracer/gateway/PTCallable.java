@@ -6,7 +6,6 @@ import java.util.concurrent.Callable;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import uk.ac.open.kmi.forge.webPacketTracer.api.http.SessionNotFoundException;
 import uk.ac.open.kmi.forge.webPacketTracer.session.PTInstanceDetails;
 import uk.ac.open.kmi.forge.webPacketTracer.session.SessionManager;
 
