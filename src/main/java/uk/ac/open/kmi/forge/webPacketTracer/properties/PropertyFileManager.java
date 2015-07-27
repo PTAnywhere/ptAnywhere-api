@@ -12,6 +12,7 @@ public class PropertyFileManager {
 
     private static final Log LOGGER = LogFactory.getLog(PropertyFileManager.class);
 
+    public static final String defaultAPI = "http://localhost/";
     public static final String defaultHostname = "localhost";
     public static final int defaultPTPort = 39000;
 
@@ -47,6 +48,27 @@ public class PropertyFileManager {
         } else {
             return new PacketTracerInstanceProperties(s.trim(), 39000);
         }
+    }
+
+    public Set<String> getPacketTracerManagementAPIs() {
+        final Set<String> apis = new HashSet<String>();
+        final String unparsed = this.props.getProperty("pt-apis", PropertyFileManager.defaultAPI);
+        if (unparsed.contains(",")) {
+            for(String api: unparsed.split(",")) {
+                try {
+                    apis.add(api);
+                } catch(Exception e) {
+                    LOGGER.error(e.getMessage());
+                }
+            }
+        } else {
+            try {
+                apis.add(unparsed);
+            } catch(Exception e) {
+                LOGGER.error(e.getMessage());
+            }
+        }
+        return apis;
     }
 
     public Set<PacketTracerInstanceProperties> getPacketTracerInstancesDetails() {
