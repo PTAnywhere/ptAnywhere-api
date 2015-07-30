@@ -2,10 +2,7 @@ package uk.ac.open.kmi.forge.webPacketTracer.session;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.JedisPoolConfig;
-import redis.clients.jedis.Transaction;
+import redis.clients.jedis.*;
 import uk.ac.open.kmi.forge.webPacketTracer.api.http.Utils;
 import uk.ac.open.kmi.forge.webPacketTracer.api.http.exceptions.NoPTInstanceAvailableException;
 import uk.ac.open.kmi.forge.webPacketTracer.properties.PropertyFileManager;
@@ -31,7 +28,7 @@ public class SessionsManager {
     /**
      * Minutes that a reservation will last.
      */
-    private static final int RESERVATION_TIME = 1;
+    private static final int RESERVATION_TIME = 5;
 
 
     private static final String AVAILABLE_APIS = "apis";
@@ -47,7 +44,7 @@ public class SessionsManager {
 
     // Pool usage recommended in the official documentation:
     //   "You can store the pool somewhere statically, it is thread-safe."
-    private static JedisPool pool;
+    protected static JedisPool pool;
 
 
     protected SessionsManager() {
@@ -65,14 +62,26 @@ public class SessionsManager {
         }, "__keyevent@*__:expired");*/  // Read: http://redis.io/topics/notifications
     }
 
-    public static SessionsManager create() {
-        if(pool==null) {
+    private static void createPoolIfNeeded() {
+        if (pool==null) {
             final PropertyFileManager pfm = new PropertyFileManager();
             final RedisConnectionProperties rcp = pfm.getRedisConnectionDetails();
             // 2000 and null are the default values used in JedisPool...
             pool = new JedisPool(new JedisPoolConfig(), rcp.getHostname(), rcp.getPort(), 2000, null, rcp.getDbNumber());
         }
+    }
+
+    public static SessionsManager create() {
+        createPoolIfNeeded();
         return new SessionsManager();
+    }
+
+    /**
+     * WARNING: Returns a runnable which calls to a Jedis blocking operation.
+     */
+    public static ExpirationSubscriber createExpirationSubscription() {
+        createPoolIfNeeded();
+        return new ExpirationSubscriberImpl();
     }
 
     public void clear() {
@@ -214,5 +223,40 @@ public class SessionsManager {
             }
             return ret;
         }
+    }
+
+    public void testWriting(String key, String value) {
+        try (Jedis jedis = pool.getResource()) {
+            jedis.set(key, value);
+            jedis.close();
+        }
+    }
+}
+
+
+class ExpirationListener extends JedisPubSub {
+    @Override
+    public void onPMessage(String pattern, String channel, String message) {
+        final SessionsManager sessionManager = SessionsManager.create();
+        sessionManager.testWriting("BLABLAH" + message, channel);
+    }
+}
+
+class ExpirationSubscriberImpl implements ExpirationSubscriber {
+    final ExpirationListener listener = new ExpirationListener();
+
+    @Override
+    public void run() {
+        try (Jedis jedis = SessionsManager.pool.getResource()) {
+            // Recommended readings:
+            //   + http://redis.io/topics/notifications
+            //   + https://github.com/xetorthio/jedis/wiki/AdvancedUsage
+            jedis.psubscribe(this.listener, "__keyevent@*__:expired");
+        }
+    }
+
+    @Override
+    public void stop() {
+        this.listener.unsubscribe();
     }
 }

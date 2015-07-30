@@ -23,6 +23,6 @@ public class SessionManager {
     }
 
     public String getSessionId() {
-        return sessionId;
+        return this.sessionId;
     }
 }
