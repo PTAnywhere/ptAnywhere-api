@@ -36,38 +36,28 @@ public class SessionsManager {
     private static final String INSTANCE_URL = "url";
     private static final String INSTANCE_HOSTNAME = "hostname";
     private static final String INSTANCE_PORT = "port";
+    protected static int dbNumber;
 
     /**
      * List of IDs of session that ever existed
      */
     private static final String SESSION_PREFIX = "session:";
+    private static final String URL_PREFIX = INSTANCE_URL + ":";
 
     // Pool usage recommended in the official documentation:
     //   "You can store the pool somewhere statically, it is thread-safe."
     protected static JedisPool pool;
 
 
-    protected SessionsManager() {
-        // From docs:
-        // Note that subscribe is a blocking operation because it will poll Redis for responses on the thread that calls subscribe.
-        // A single JedisPubSub instance can be used to subscribe to multiple channels.
-        // You can call subscribe or psubscribe on an existing JedisPubSub instance to change your subscriptions.
-        /*this.jedis.psubscribe(new JedisPubSub() {
-            @Override
-            public void onPMessage(String pattern, String channel, String message) {
-                final Jedis otherJedis = jedisFactory.create();
-                otherJedis.set("BLABLAH" + message, channel);
-                otherJedis.close();
-            }
-        }, "__keyevent@*__:expired");*/  // Read: http://redis.io/topics/notifications
-    }
+    protected SessionsManager() {}
 
     private static void createPoolIfNeeded() {
         if (pool==null) {
             final PropertyFileManager pfm = new PropertyFileManager();
             final RedisConnectionProperties rcp = pfm.getRedisConnectionDetails();
+            dbNumber = rcp.getDbNumber();
             // 2000 and null are the default values used in JedisPool...
-            pool = new JedisPool(new JedisPoolConfig(), rcp.getHostname(), rcp.getPort(), 2000, null, rcp.getDbNumber());
+            pool = new JedisPool(new JedisPoolConfig(), rcp.getHostname(), rcp.getPort(), 2000, null, dbNumber);
         }
     }
 
@@ -81,7 +71,7 @@ public class SessionsManager {
      */
     public static ExpirationSubscriber createExpirationSubscription() {
         createPoolIfNeeded();
-        return new ExpirationSubscriberImpl();
+        return new ExpirationSubscriberImpl(dbNumber);
     }
 
     public void clear() {
@@ -95,9 +85,9 @@ public class SessionsManager {
      * @param apiUrls
      */
     public void addManagementAPIs(String... apiUrls) {
-        // TODO Is it better to set it in the config file? http://redis.io/commands/config-set
-        //this.jedis.configSet("notify-keyspace-events", "Eg");  // Activate notifications on expiration
         try (Jedis jedis = pool.getResource()) {
+            // Is it better to set it in the config file? http://redis.io/commands/config-set
+            jedis.configSet("notify-keyspace-events", "Ex");  // Activate notifications on expiration
             jedis.sadd(AVAILABLE_APIS, apiUrls);
         }
     }
@@ -134,9 +124,12 @@ public class SessionsManager {
             t.hset(rSessionId, INSTANCE_URL, instanceUrl);
             t.hset(rSessionId, INSTANCE_HOSTNAME, ptHost);
             t.hset(rSessionId, INSTANCE_PORT, String.valueOf(ptPort));
-
             // We could also expire the last thing whenever the keyspace events work
             t.expire(rSessionId, expirationAfter);
+            // Also stored in a separate key to ensure that we still have the URL after the key expires
+            // (to be able to delete the Docker container in the expiration listener!).
+            t.set(URL_PREFIX + rSessionId, instanceUrl);
+
             t.exec();
 
             return sessionId;
@@ -202,13 +195,24 @@ public class SessionsManager {
      */
     public void deleteSession(String sessionId) {
         final String rSessionId = toRedisSessionId(sessionId);
+        deleteRSession(rSessionId);
+    }
+
+    protected void deleteRSession(String rSessionId) {
         try (Jedis jedis = pool.getResource()) {
-            if (jedis.exists(rSessionId)) {
-                final Map<String, String> instanceDetails = jedis.hgetAll(rSessionId);
-                final String instanceUrl = instanceDetails.get(INSTANCE_URL);
+            final String instanceUrl = jedis.get(URL_PREFIX + rSessionId);
+            if (instanceUrl!=null) {
                 final InstanceResourceClient cli = new InstanceResourceClient(instanceUrl);
                 cli.delete();  // If it throws an exception the element is not deleted.
-                jedis.del(rSessionId);
+
+                // If everything went well...
+                final Transaction t = jedis.multi();
+                t.del(rSessionId); // If it has expired then no problem?
+                t.del(URL_PREFIX + rSessionId);
+                //t.set(rSessionId + "_DELETED", "true");  // For debuging with redis... 0:-)
+                t.exec();
+
+                LOGGER.debug("Expired instance removed for " + rSessionId + ".");
             }
         }
     }
@@ -224,26 +228,24 @@ public class SessionsManager {
             return ret;
         }
     }
-
-    public void testWriting(String key, String value) {
-        try (Jedis jedis = pool.getResource()) {
-            jedis.set(key, value);
-            jedis.close();
-        }
-    }
 }
 
 
 class ExpirationListener extends JedisPubSub {
     @Override
     public void onPMessage(String pattern, String channel, String message) {
+        // channel == "__keyevent@0__:expired" and message == "session:id"
         final SessionsManager sessionManager = SessionsManager.create();
-        sessionManager.testWriting("BLABLAH" + message, channel);
+        sessionManager.deleteRSession(message);
     }
 }
 
 class ExpirationSubscriberImpl implements ExpirationSubscriber {
     final ExpirationListener listener = new ExpirationListener();
+    final int dbNumber;
+    public ExpirationSubscriberImpl(int dbNumber) {
+        this.dbNumber = dbNumber;
+    }
 
     @Override
     public void run() {
@@ -251,7 +253,7 @@ class ExpirationSubscriberImpl implements ExpirationSubscriber {
             // Recommended readings:
             //   + http://redis.io/topics/notifications
             //   + https://github.com/xetorthio/jedis/wiki/AdvancedUsage
-            jedis.psubscribe(this.listener, "__keyevent@*__:expired");
+            jedis.psubscribe(this.listener, "__keyevent@" + this.dbNumber + "__:expired");
         }
     }
 
