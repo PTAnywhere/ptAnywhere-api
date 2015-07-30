@@ -81,31 +81,39 @@ var packetTracer = (function () {
      * @arg callback If it is null, it is simply ignored.
      */
     function getTopology(callback) {
+        var maxRetries = 5;
         $.ajax({
             url: api_url + "/network",
             type : 'GET',
             dataType: 'json',
             success: callback,
             tryCount : 0,
-            retryLimit : 3,
+            retryLimit : maxRetries,
             timeout: 2000,
+            statusCode: {
+                404: function() {
+                    $(".view").html($("#notFound").html());
+                },
+                503: function() {
+                    this.tryCount++;
+                    $("#loadingMessage").text("Instance not yet available. Retry " + this.tryCount + "/" + maxRetries + ".");
+                    if (this.tryCount <= this.retryLimit) {
+                        var thisAjax = this;
+                        setTimeout(function() { $.ajax(thisAjax); }, 2000);  // retry
+                    }
+                },
+            },
             error : function(xhr, textStatus, errorThrown ) {
                 if (textStatus == 'timeout') {
-                    console.error("The topology could not be loaded: timeout.");
                     this.tryCount++;
+                    console.error("The topology could not be loaded: timeout.");
+                    $("#loadingMessage").text("Timeout. Retry " + this.tryCount + "/" + maxRetries + ".");
                     if (this.tryCount <= this.retryLimit) {
-                        //try again
-                        $.ajax(this);
-                        return;
+                        $.ajax(this); //try again
                     }
-                    return;
                 } else {
                     console.error("The topology could not be loaded: " + errorThrown + ".");
-                    if(xhr.status==404) {
-                        $(".view").html($("#notFound").html());
-                    }
                 }
-            }  // Apparently status code 304 is an error for this method :-S
         });
     }
 
