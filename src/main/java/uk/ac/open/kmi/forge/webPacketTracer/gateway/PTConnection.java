@@ -10,6 +10,7 @@ import com.cisco.pt.ptmp.PacketTracerSessionFactory;
 import com.cisco.pt.ptmp.impl.PacketTracerSessionFactoryImpl;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import uk.ac.open.kmi.forge.webPacketTracer.api.http.exceptions.PacketTracerConnectionException;
 import uk.ac.open.kmi.forge.webPacketTracer.properties.PacketTracerInstanceProperties;
 import uk.ac.open.kmi.forge.webPacketTracer.properties.PropertyFileManager;
 
@@ -55,7 +56,7 @@ public class PTConnection {
     }
 
     protected void before() throws IOException {
-        PacketTracerSessionFactory sessionFactory = PacketTracerSessionFactoryImpl.getInstance();
+        final PacketTracerSessionFactory sessionFactory = PacketTracerSessionFactoryImpl.getInstance();
         this.packetTracerSession = createSession(sessionFactory);
         this.ipcFactory = new IPCFactory(this.packetTracerSession);
     }
@@ -67,12 +68,18 @@ public class PTConnection {
     }
 
     protected PacketTracerSession createSession(PacketTracerSessionFactory sessionFactory)
-            throws IOException {
+            throws IOException, PacketTracerConnectionException {
         final ConnectionNegotiationProperties negotiationProperties = getNegotiationProperties();
-        if (negotiationProperties == null) {
-            return createDefaultSession(sessionFactory);
+        try {
+            if (negotiationProperties == null) {
+                return createDefaultSession(sessionFactory);
+            }
+            return createSession(sessionFactory, negotiationProperties);
+        } catch(Error e) {
+            if (e.getMessage().equals("Unable to connect to Packet Tracer"))
+                throw new PacketTracerConnectionException();
+            throw e;  // else
         }
-        return createSession(sessionFactory, negotiationProperties);
     }
 
     protected PacketTracerSession createDefaultSession(PacketTracerSessionFactory sessionFactory)
@@ -81,7 +88,7 @@ public class PTConnection {
     }
 
     protected PacketTracerSession createSession(PacketTracerSessionFactory sessionFactory, ConnectionNegotiationProperties negotiationProperties)
-            throws IOException {
+            throws IOException, PacketTracerConnectionException {
         return sessionFactory.openSession(this.hostName, this.port, negotiationProperties);
     }
 
