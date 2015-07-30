@@ -1,5 +1,6 @@
 package uk.ac.open.kmi.forge.webPacketTracer.session.management;
 
+import uk.ac.open.kmi.forge.webPacketTracer.api.http.exceptions.ErrorBean;
 import uk.ac.open.kmi.forge.webPacketTracer.api.http.exceptions.NoPTInstanceAvailableException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.ServiceUnavailableException;
@@ -35,17 +36,16 @@ public class PTManagementClient {
             .header("some-header", "true")
             .get(String.class);
         */
-        try {
-            final Response response = this.target.path(INSTANCES_PATH)
-                    //.queryParam()
-                    .request(MediaType.APPLICATION_JSON)
-                            //.header("some-header", "true")
-                    .post(null);
-            // List<Customer> customers = .get(new GenericType<List<Customer>>(){});
-            return response.readEntity(Instance.class);
-        } catch(ServiceUnavailableException e) {
-            throw new NoPTInstanceAvailableException(e.getMessage());
+        final Response response = this.target.path(INSTANCES_PATH)
+                //.queryParam()
+                .request(MediaType.APPLICATION_JSON)
+                        //.header("some-header", "true")
+                .post(null);
+        // List<Customer> customers = .get(new GenericType<List<Customer>>(){});
+        if (response.getStatus()==Response.Status.SERVICE_UNAVAILABLE.getStatusCode()) {
+            throw new NoPTInstanceAvailableException(response.readEntity(ErrorBean.class).getErrorMsg());
         }
+        return response.readEntity(Instance.class);
     }
 
     public Instance deleteInstance(int instanceId) throws NotFoundException {

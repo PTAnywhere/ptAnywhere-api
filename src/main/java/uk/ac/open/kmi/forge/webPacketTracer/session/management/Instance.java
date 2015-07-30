@@ -21,10 +21,10 @@ public class Instance {
     }
 
 
-    public Instance(int id, String url, String dockerId, String packetTracerHost, String vnc, String createdAt, String deletedAt) {
+    public Instance(int id, String url, String dockerId, String packetTracer, String vnc, String createdAt, String deletedAt) {
         this.id = id;
         this.dockerId = dockerId;
-        this.packetTracer = packetTracerHost;
+        this.packetTracer = packetTracer;
         this.vnc = vnc;
         this.createdAt = createdAt;
         this.deletedAt = deletedAt;

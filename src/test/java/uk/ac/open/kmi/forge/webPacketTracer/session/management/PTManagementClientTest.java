@@ -3,6 +3,7 @@ package uk.ac.open.kmi.forge.webPacketTracer.session.management;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.junit.Test;
+import uk.ac.open.kmi.forge.webPacketTracer.api.http.exceptions.NoPTInstanceAvailableException;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.Application;
@@ -23,12 +24,15 @@ public class PTManagementClientTest extends JerseyTest {
 
     @Path(INSTANCES_PATH)
     public static class FakeInstanceResource {
-        static Instance createdInstance;
+        static Instance createdInstance;  // If null, unavailable
         static final Map<Integer, Instance> instances = new HashMap<Integer, Instance>();
 
         @POST
         @Produces(MediaType.APPLICATION_JSON)
         public Response createInstance() {
+            if (createdInstance==null) {
+                throw new NoPTInstanceAvailableException();
+            }
             return Response.ok(createdInstance).build();
         }
 
@@ -62,6 +66,12 @@ public class PTManagementClientTest extends JerseyTest {
     @Test
     public void testCreateInstance() {
         assertEquals(FakeInstanceResource.createdInstance, this.client.createInstance());
+    }
+
+    @Test(expected = NoPTInstanceAvailableException.class)
+    public void testCreateInstanceUnavailable() {
+        FakeInstanceResource.createdInstance = null;
+        this.client.createInstance();
     }
 
     @Test
