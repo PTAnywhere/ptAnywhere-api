@@ -96,8 +96,8 @@ var packetTracer = (function () {
                 },
                 503: function() {
                     this.tryCount++;
-                    $("#loadingMessage").text("Instance not yet available. Retry " + this.tryCount + "/" + maxRetries + ".");
                     if (this.tryCount <= this.retryLimit) {
+                        $("#loadingMessage").text("Instance not yet available. Attempt " + this.tryCount + "/" + maxRetries + ".");
                         var thisAjax = this;
                         setTimeout(function() { $.ajax(thisAjax); }, 2000);  // retry
                     }
@@ -107,13 +107,14 @@ var packetTracer = (function () {
                 if (textStatus == 'timeout') {
                     this.tryCount++;
                     console.error("The topology could not be loaded: timeout.");
-                    $("#loadingMessage").text("Timeout. Retry " + this.tryCount + "/" + maxRetries + ".");
                     if (this.tryCount <= this.retryLimit) {
+                        $("#loadingMessage").text("Timeout. Attempt " + this.tryCount + "/" + maxRetries + ".");
                         $.ajax(this); //try again
                     }
                 } else {
                     console.error("The topology could not be loaded: " + errorThrown + ".");
                 }
+            }
         });
     }
 
