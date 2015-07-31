@@ -3,7 +3,7 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>uk.ac.open.kmi.forge.webPacketTracer</groupId>
+    <groupId>uk.ac.open.kmi.forge.ptAnywhere</groupId>
     <artifactId>ptAnywhere</artifactId>
     <packaging>war</packaging>
     <version>0.4-SNAPSHOT</version>
