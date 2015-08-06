@@ -29,7 +29,9 @@
                 <configuration>
                     <executable>mvn</executable>
                     <arguments>
-                        <argument>clean</argument>
+                        <!-- To ensure that the properties are loaded before the redeploy without
+                            making the goal dependant of any phase (e.g., clean). -->
+                        <argument>properties:read-project-properties</argument>
                         <argument>tomcat7:redeploy</argument>
                     </arguments>
                 </configuration>
@@ -38,19 +40,13 @@
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>properties-maven-plugin</artifactId>
                 <version>1.0-alpha-2</version>
-                <executions>
-                    <execution>
-                        <phase>clean</phase>
-                        <goals>
-                            <goal>read-project-properties</goal>
-                        </goals>
-                        <configuration>
-                            <files>
-                                <file>${project.basedir}/src/main/resources/${profile.property-file}</file>
-                            </files>
-                        </configuration>
-                    </execution>
-                </executions>
+                <configuration>
+                    <files>
+                        <file>${project.basedir}/src/main/resources/${profile.property-file}</file>
+                    </files>
+                    <outputFile/>
+                    <properties/>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.tomcat.maven</groupId>
