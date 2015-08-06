@@ -27,6 +27,17 @@ public class PropertyFileManager {
     }
 
     /**
+     * @return
+     *  Application path under the webserver.
+     *  For example: "/" or "context1/"
+     */
+    public  String getApplicationPath() {
+        final String prop = this.props.getProperty("tomcat.path", "/");
+        if (prop.endsWith("/")) return prop;
+        return prop + "/";
+    }
+
+    /**
      * By default, the Redis server runs in the same machine as the web server.
      */
     public  RedisConnectionProperties getRedisConnectionDetails() {
