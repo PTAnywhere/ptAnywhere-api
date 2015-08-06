@@ -5,10 +5,7 @@ import io.swagger.jaxrs.config.BeanConfig;
 import io.swagger.jaxrs.config.ReflectiveJaxrsScanner;
 import io.swagger.jaxrs.listing.ApiListingResource;
 import io.swagger.jaxrs.listing.SwaggerSerializers;
-import io.swagger.models.Contact;
-import io.swagger.models.Info;
-import io.swagger.models.License;
-import io.swagger.models.Swagger;
+import io.swagger.models.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -83,6 +80,9 @@ public class APIApplication extends ResourceConfig {
                         .name("Apache 2.0")
                         .url("http://www.apache.org/licenses/LICENSE-2.0.html"));*/
         final Swagger swagger = new Swagger().info(info).basePath(appPath + "api");
+        swagger.tag(new Tag()
+                .name("session")
+                .description("Operations to manage sessions"));
         context.setAttribute("swagger", swagger);
     }
 

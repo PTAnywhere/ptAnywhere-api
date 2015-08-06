@@ -1,5 +1,10 @@
 package uk.ac.open.kmi.forge.ptAnywhere.api.http;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import uk.ac.open.kmi.forge.ptAnywhere.api.http.exceptions.ErrorBean;
 import uk.ac.open.kmi.forge.ptAnywhere.api.http.exceptions.SessionNotFoundException;
 import uk.ac.open.kmi.forge.ptAnywhere.session.SessionManager;
 import uk.ac.open.kmi.forge.ptAnywhere.session.SessionsManager;
@@ -14,6 +19,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.*;
 
 
+@Api
 public class SessionResource {
 
     final UriInfo uri;
@@ -45,6 +51,11 @@ public class SessionResource {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(value = "Retrieves information of a session", tags = "session")
+    @ApiResponses(value = {
+       @ApiResponse(code = 200, response = String.class, message = "Successful operation"),
+       @ApiResponse(code = 404, response = ErrorBean.class, message = "No active session exists with the given id")
+    })
     public Response getSession(@PathParam(SESSION_PARAM) String sessionId) {
         final String requestUri = Utils.getURIWithSlashRemovingQuery(this.uri.getRequestUri());
         if (!this.sm.doesExist(sessionId))
@@ -58,6 +69,11 @@ public class SessionResource {
 
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(value = "Deletes a session", tags = "session")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, response = String.class, message = "Successful operation"),
+            @ApiResponse(code = 404, response = ErrorBean.class, message = "No active session exists with the given id")
+    })
     public Response removeDevice(@PathParam(SESSION_PARAM) String sessionId) {
         final String requestUri = Utils.getURIWithSlashRemovingQuery(this.uri.getRequestUri());
         if (this.sm.doesExist(sessionId)) {
