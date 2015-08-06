@@ -15,11 +15,9 @@ public class InteractionRecordFactory {
     private final ExecutorService executor;  // This executor is not handled by this class.
     private final InteractionRecordingProperties irp;
 
-    public InteractionRecordFactory(ExecutorService executor) {
+    public InteractionRecordFactory(ExecutorService executor, InteractionRecordingProperties props) {
         this.executor = executor;
-        // Only an object is created per application, so we are not reading the file over and over again.
-        final PropertyFileManager pfm = new PropertyFileManager();
-        this.irp = pfm.getInteractionRecordingDetails();
+        this.irp = props;
     }
 
     public InteractionRecord create() {
