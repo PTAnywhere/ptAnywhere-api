@@ -9,6 +9,13 @@
     <version>0.4-SNAPSHOT</version>
     <name>PTAnywhere</name>
 
+
+    <properties>
+        <jersey.version>2.18</jersey.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <env>devel</env>  <!-- Default environment: development. -->
+    </properties>
+
     <build>
         <finalName>ptAnywhere</finalName>
         <plugins>
@@ -33,6 +40,7 @@
                             making the goal dependant of any phase (e.g., clean). -->
                         <argument>properties:read-project-properties</argument>
                         <argument>tomcat7:redeploy</argument>
+                        <argument>-Denv=${env}</argument>
                     </arguments>
                 </configuration>
             </plugin>
@@ -94,6 +102,7 @@
             <id>env-development</id>
             <!-- Activated by default or when -Denv=devel is given as parameter. -->
             <activation>
+                <!-- Note: this seems redundant as I already set it as the default value in the properties section. -->
                 <activeByDefault>true</activeByDefault>
                 <property>
                     <name>env</name>
@@ -240,10 +249,5 @@
             <version>2.1.1</version>
         </dependency>-->
     </dependencies>
-
-    <properties>
-        <jersey.version>2.18</jersey.version>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
 
 </project>
