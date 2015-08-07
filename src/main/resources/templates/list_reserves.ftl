@@ -3,7 +3,7 @@
 <head>
     <title>List of current sessions</title>
 
-    <link rel="icon" type="image/png" href="${base}app.png">
+    <link rel="icon" type="image/png" href="${base}icon.png">
 
     <link rel="stylesheet" href="${base}jquery/jquery-ui.min.css">
     <link rel="stylesheet" href="${base}jquery/jquery-ui.structure.min.css">

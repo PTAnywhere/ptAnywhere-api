@@ -3,7 +3,7 @@
 <head>
     <title>${title}</title>
 
-    <link rel="icon" type="image/png" href="${base}app.png">
+    <link rel="icon" type="image/png" href="${base}icon.png">
 
     <link rel="stylesheet" href="${base}jquery/jquery-ui.min.css">
     <link rel="stylesheet" href="${base}jquery/jquery-ui.structure.min.css">
@@ -25,7 +25,7 @@
 <body>
 <div class="widget-header">
     <h2>
-        <img src="${base}app.png" alt="PacketTracer icon" >
+        <img src="${base}PTAnywhere-logo.png" alt="PacketTracer icon" >
         ${title}
     </h2>
 </div>

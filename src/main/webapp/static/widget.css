@@ -40,13 +40,12 @@ fieldset {
 /* General Layout */
 
 div.widget-header {
-    margin: 10px;
+    margin: 2px;
 }
 
 div.widget-header img {
     vertical-align: middle;
-    width: 24px;
-    height: 24px;
+    height: 32px;
     margin-right: 5px;
 }
 
