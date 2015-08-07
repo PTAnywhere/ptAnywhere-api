@@ -26,13 +26,14 @@
                 });
             });
             $("button.release").button().click(function () {
-                var liEl = $(this).parent();
+                //var liEl = $(this).parent();
                 var url = $(this).attr("formaction");
                 $.ajax({
                     type: 'DELETE',
                     url: url,
                     success: function () {
-                        liEl.remove();
+                        //liEl.remove();
+                        window.location.reload(true);
                     }
                 });
             });
@@ -61,16 +62,18 @@
         <p>No sessions have been initiated.</p>
     </#if>
 
-    <h1>PT instances used by the application</h1>
-    <table>
-        <tr>
-            <th>Host</th><th>Port</th>
-        </tr>
-        <#list instances as instance>
-        <tr>
-            <td>${instance.host}</td><td>${instance.port}</td>
-        </tr>
-        </#list>
-    </table>
+    <#if (instances?size > 0) >
+        <h3>PT instances used by the application</h3>
+        <table>
+            <tr>
+                <th>Host</th><th>Port</th>
+            </tr>
+            <#list instances as instance>
+            <tr>
+                <td>${instance.host}</td><td>${instance.port}</td>
+            </tr>
+            </#list>
+        </table>
+    </#if>
 </body>
 </html>
