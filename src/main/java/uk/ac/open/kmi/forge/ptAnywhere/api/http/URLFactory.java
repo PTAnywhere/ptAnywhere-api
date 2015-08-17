@@ -1,6 +1,9 @@
 package uk.ac.open.kmi.forge.ptAnywhere.api.http;
 
+import uk.ac.open.kmi.forge.ptAnywhere.api.websocket.ConsoleEndpoint;
+import javax.websocket.server.ServerEndpoint;
 import java.net.URI;
+
 
 // TODO read the following and refactor:
 // https://jersey.java.net/documentation/latest/user-guide.html#d0e10659
@@ -19,24 +22,22 @@ public class URLFactory {
     static public final String PORT_PARAM = "port";
     static public final String PORT_LINK_PATH = "link";
 
-    final String baseUri;
+    final URI baseUri;
     final String sessionId;
     final String deviceId;
 
     URLFactory(URI baseUri, String sessionId) {
-        this.baseUri = Utils.getURIWithSlashRemovingQuery(baseUri);
-        this.sessionId = sessionId;
-        this.deviceId = null;
+        this(baseUri, sessionId, null);
     }
 
     URLFactory(URI baseUri, String sessionId, String deviceId) {
-        this.baseUri = Utils.getURIWithSlashRemovingQuery(baseUri);
+        this.baseUri = baseUri;
         this.sessionId = sessionId;
         this.deviceId = deviceId;
     }
 
     public String getSessionURL() {
-        return this.baseUri + SESSION_PATH + "/" + this.sessionId + "/";
+        return Utils.getURIWithSlashRemovingQuery(this.baseUri) + SESSION_PATH + "/" + this.sessionId + "/";
     }
 
     public String getDevicesURL() {
@@ -45,6 +46,26 @@ public class URLFactory {
 
     public String createDeviceURL(String id) {
         return getDevicesURL() + id + "/";
+    }
+
+    // To avoid pointing to Apache's reverse proxy in the URL (this creates problems with Websockets)
+    private String fixPort(URI uri) {
+        if (uri.getAuthority().endsWith("forge.kmi.open.ac.uk")) {
+            return uri.toString().replace("forge.kmi.open.ac.uk", "forge.kmi.open.ac.uk:8080");
+        }
+        return uri.toString();
+    }
+
+    private String getPathToEndpoint(String sessionId, String deviceId) {
+        final ServerEndpoint annotation = ConsoleEndpoint.class.getAnnotation(ServerEndpoint.class);
+        return annotation.value().
+                replace("{session}", sessionId).
+                replace("{device}", deviceId).
+                substring(1);  // Remove first slash because it will already be included in the App root URL
+    }
+
+    public String createConsoleEndpoint(String deviceId) {
+        return fixPort(this.baseUri).replace("http://", "ws://") + getPathToEndpoint(sessionId, deviceId);
     }
 
     public String createLinkURL(String id) {

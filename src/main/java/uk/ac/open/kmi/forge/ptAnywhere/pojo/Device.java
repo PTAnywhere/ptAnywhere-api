@@ -3,15 +3,15 @@ package uk.ac.open.kmi.forge.ptAnywhere.pojo;
 import com.cisco.pt.ipc.sim.Cloud;
 import com.cisco.pt.ipc.sim.Pc;
 import com.cisco.pt.ipc.sim.Router;
-import uk.ac.open.kmi.forge.ptAnywhere.api.http.AbstractWebRepresentable;
 import uk.ac.open.kmi.forge.ptAnywhere.api.http.Utils;
+import uk.ac.open.kmi.forge.ptAnywhere.api.http.WebRepresentableDevice;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.List;
 
 
 @XmlRootElement
-public class Device extends AbstractWebRepresentable<Device> {
+public class Device extends WebRepresentableDevice {
     // Shorter version of the identifier (URL) for vis.js
     // TODO check if this is useful at all regarding the widget performance.
     // This is the main identifier inside the webapp.
@@ -76,6 +76,12 @@ public class Device extends AbstractWebRepresentable<Device> {
     public String getUrl() {
         if (this.uf==null) return null;
         return this.uf.createDeviceURL(this.id);
+    }
+
+    @Override
+    public String getConsoleEndpoint() {
+        if (this.uf==null) return null;
+        return this.uf.createConsoleEndpoint(this.id);
     }
 
     public String getLabel() {
