@@ -19,7 +19,6 @@ public class WidgetResource extends CustomAbstractResource {
     @GET
     @Produces(MediaType.TEXT_HTML)
     public Response getWidget(@PathParam("session") String sessionId) {
-        final String apiUrl = getAppRootURL().toString() + "api/";
         final Map<String, Object> map = new HashMap<String, Object>();
         map.put("title", getApplicationTitle());
         map.put("session_api", getAPIURL() + "sessions/" + sessionId);
