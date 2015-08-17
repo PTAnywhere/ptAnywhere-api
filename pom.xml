@@ -14,6 +14,8 @@
         <jersey.version>2.18</jersey.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <env>devel</env>  <!-- Default environment: development. -->
+        <propFile>null</propFile>
+        <property-file.path.default>${project.basedir}/src/main/resources</property-file.path.default>
     </properties>
 
     <build>
@@ -41,6 +43,7 @@
                         <argument>properties:read-project-properties</argument>
                         <argument>tomcat7:redeploy</argument>
                         <argument>-Denv=${env}</argument>
+                        <argument>-Dcustom.propFile=${propFile}</argument>
                     </arguments>
                 </configuration>
             </plugin>
@@ -50,7 +53,7 @@
                 <version>1.0-alpha-2</version>
                 <configuration>
                     <files>
-                        <file>${project.basedir}/src/main/resources/${profile.property-file}</file>
+                        <file>${property-file}</file>
                     </files>
                     <outputFile/>
                     <properties/>
@@ -87,7 +90,7 @@
                         <configuration>
                             <tasks>
                                 <delete file="${project.build.outputDirectory}/environment.properties"/>
-                                <copy file="${project.build.outputDirectory}/${profile.property-file}"
+                                <copy file="${property-file}"
                                       tofile="${project.build.outputDirectory}/environment.properties"/>
                             </tasks>
                         </configuration>
@@ -110,7 +113,7 @@
                 </property>
             </activation>
             <properties>
-                <profile.property-file>environment.dev.properties</profile.property-file>
+                <property-file>${property-file.path.default}/environment.dev.properties</property-file>
             </properties>
         </profile>
         <profile>
@@ -123,7 +126,7 @@
                 </property>
             </activation>
             <properties>
-                <profile.property-file>environment.test.properties</profile.property-file>
+                <property-file>${property-file.path.default}/environment.test.properties</property-file>
             </properties>
         </profile>
         <profile>
@@ -136,7 +139,20 @@
                 </property>
             </activation>
             <properties>
-                <profile.property-file>environment.properties</profile.property-file>
+                <property-file>${property-file.path.default}/environment.properties</property-file>
+            </properties>
+        </profile>
+        <profile>
+            <id>env-customizable</id>
+            <!-- Activated by default or when -Denv=custom is given as parameter. -->
+            <activation>
+                <property>
+                    <name>env</name>
+                    <value>custom</value>
+                </property>
+            </activation>
+            <properties>
+                <property-file>${custom.propFile}</property-file>
             </properties>
         </profile>
     </profiles>
