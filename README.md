@@ -1,4 +1,4 @@
-# PT Anywhere
+# PT Anywhere API
 
 Web API for [PacketTracer](https://www.netacad.com/web/about-us/cisco-packet-tracer).
 This API is being developed as part of the [FORGE](http://ict-forge.eu/) project.
