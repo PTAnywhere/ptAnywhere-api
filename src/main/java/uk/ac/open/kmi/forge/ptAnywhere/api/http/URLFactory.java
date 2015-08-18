@@ -65,7 +65,7 @@ public class URLFactory {
     }
 
     public String createConsoleEndpoint(String deviceId) {
-        return fixPort(this.baseUri).replace("http://", "ws://") + getPathToEndpoint(sessionId, deviceId);
+        return fixPort(this.baseUri.resolve("../")).replace("http://", "ws://") + getPathToEndpoint(sessionId, deviceId);
     }
 
     public String createLinkURL(String id) {
