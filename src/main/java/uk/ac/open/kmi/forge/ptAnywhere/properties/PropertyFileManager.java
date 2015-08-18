@@ -2,11 +2,11 @@ package uk.ac.open.kmi.forge.ptAnywhere.properties;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
+
 
 public class PropertyFileManager {
 
@@ -14,9 +14,8 @@ public class PropertyFileManager {
 
     public static final String defaultAPI = "http://localhost/";
     public static final String defaultHostname = "localhost";
-    public static final int defaultPTPort = 39000;
 
-    Properties props = new Properties();
+    private final Properties props = new Properties();
 
     public PropertyFileManager() {
         try {
@@ -80,27 +79,6 @@ public class PropertyFileManager {
             }
         }
         return apis;
-    }
-
-    public Set<PacketTracerInstanceProperties> getPacketTracerInstancesDetails() {
-        final Set<PacketTracerInstanceProperties> instances = new HashSet<PacketTracerInstanceProperties>();
-        final String unparsed = this.props.getProperty("pt-instances", PropertyFileManager.defaultHostname + ":" + PropertyFileManager.defaultPTPort);
-        if (unparsed.contains(",")) {
-            for(String instance: unparsed.split(",")) {
-                try {
-                    instances.add(getConnectionChunks(instance));
-                } catch(Exception e) {
-                    LOGGER.error(e.getMessage());
-                }
-            }
-        } else {
-            try {
-                instances.add(getConnectionChunks(unparsed));
-            } catch(Exception e) {
-                LOGGER.error(e.getMessage());
-            }
-        }
-        return instances;
     }
 
     /**

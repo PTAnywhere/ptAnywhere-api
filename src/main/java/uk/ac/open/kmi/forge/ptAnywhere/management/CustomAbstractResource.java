@@ -1,4 +1,4 @@
-package uk.ac.open.kmi.forge.ptAnywhere.widget;
+package uk.ac.open.kmi.forge.ptAnywhere.management;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -20,7 +20,7 @@ public abstract class CustomAbstractResource {
     static String RELATIVE_ROOT_PATH = "../";
 
     static {
-        logger = LogFactory.getLog(WidgetResource.class);
+        logger = LogFactory.getLog(CustomAbstractResource.class);
         properties = new Properties();  // It does not change once the app has been deployed.
     }
 
@@ -30,7 +30,7 @@ public abstract class CustomAbstractResource {
 
     protected String getApplicationTitle() {
         try {
-            properties.load(WidgetResource.class.getClassLoader().getResourceAsStream("environment.properties"));
+            properties.load(CustomAbstractResource.class.getClassLoader().getResourceAsStream("environment.properties"));
         } catch (IOException e) {
             logger.error("Host and port of the PT instance could not be read from the properties file, using default values.");
         } finally {
@@ -39,7 +39,7 @@ public abstract class CustomAbstractResource {
     }
 
     URI getAppRootURL() {
-        return this.uri.getBaseUri().resolve(RELATIVE_ROOT_PATH);  // to remove "widget part"
+        return this.uri.getBaseUri().resolve(RELATIVE_ROOT_PATH);  // to remove "management part"
     }
 
     String getAPIURL() {

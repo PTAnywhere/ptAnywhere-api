@@ -36,17 +36,6 @@ public class PTConnection {
         this.port = port;
     }
 
-    public static PTConnection createDefaultPacketTracerGateway() {
-        final PropertyFileManager pfm = new PropertyFileManager();
-        final Iterator<PacketTracerInstanceProperties> it = pfm.getPacketTracerInstancesDetails().iterator();
-        if(!it.hasNext()) {
-            LOGGER.error("PT instances could not be read from the properties file.");
-            throw new RuntimeException("Backend instance not found.");
-        }
-        final PacketTracerInstanceProperties prop = it.next();
-        return new PTConnection(prop.getHostname(), prop.getPort());
-    }
-
     public static PTConnection createPacketTracerGateway(String hostName, int port) {
         return new PTConnection(hostName, port);
     }

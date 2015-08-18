@@ -1,4 +1,4 @@
-package uk.ac.open.kmi.forge.ptAnywhere.widget;
+package uk.ac.open.kmi.forge.ptAnywhere.management;
 
 
 import uk.ac.open.kmi.forge.ptAnywhere.session.SessionsManager;
