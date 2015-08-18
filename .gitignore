@@ -24,7 +24,7 @@ release.properties
 
 # IntelliJ IDEA
 .idea/
-ptAnywhere.iml
+*.iml
 
 # Private (secret) property files
 src/main/resources/private
