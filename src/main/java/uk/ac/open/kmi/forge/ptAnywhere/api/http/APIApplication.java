@@ -43,7 +43,7 @@ public class APIApplication extends ResourceConfig {
 
 
     public APIApplication(@Context ServletContext servletContext) {
-        LOGGER.debug("Creating API webapp.");
+        LOGGER.info("Creating API webapp.");
 
         // Only an object is created per application, so we are not reading the file over and over again.
         final PropertyFileManager pfm = new PropertyFileManager();
@@ -93,7 +93,7 @@ public class APIApplication extends ResourceConfig {
     //@PostConstruct
     @PreDestroy
     public void stop() {
-        LOGGER.debug("Destroying API webapp.");
+        LOGGER.info("Destroying API webapp.");
         this.es.stop();  // Destroying the Executor would do the work too, but just in case.
         this.executor.shutdownNow();
     }

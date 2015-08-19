@@ -1,8 +1,6 @@
 package uk.ac.open.kmi.forge.ptAnywhere.gateway;
 
 import com.cisco.pt.ipc.IPCError;
-
-import java.io.IOException;
 import java.util.concurrent.Callable;
 
 import org.apache.commons.logging.Log;
