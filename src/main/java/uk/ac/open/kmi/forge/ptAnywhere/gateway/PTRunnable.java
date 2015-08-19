@@ -3,6 +3,7 @@ package uk.ac.open.kmi.forge.ptAnywhere.gateway;
 import com.cisco.pt.ipc.IPCError;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import uk.ac.open.kmi.forge.ptAnywhere.api.http.exceptions.PacketTracerConnectionException;
 import uk.ac.open.kmi.forge.ptAnywhere.session.PTInstanceDetails;
 import uk.ac.open.kmi.forge.ptAnywhere.session.SessionManager;
 
@@ -31,11 +32,18 @@ public abstract class PTRunnable implements Runnable {
             internalRun();
         } catch (IPCError ipcError) {
             this.connection.getLog().error("\n\n\nAn IPC error occurred:\n\t" + ipcError.getMessage() + "\n\n\n");
+            throw new PacketTracerConnectionException(ipcError.getMessage(), ipcError);
+        } catch (PacketTracerConnectionException ptce) {
+            throw ptce;
         } catch (Throwable t) {
-            if ((t instanceof ThreadDeath)) {
+            // More general errors...
+            if (t instanceof ThreadDeath) {
                 throw ((ThreadDeath) t);
             }
-            LOGGER.error(t);
+            // Awful errors in the library.
+            // Simply log them (maybe in the future I'll be able to contribute to that library) and then move on.
+            LOGGER.error(t.getMessage(), t);
+            throw new PacketTracerConnectionException();
         } finally {
             this.connection.close();
         }
