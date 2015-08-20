@@ -25,7 +25,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
 
-@ApplicationPath("api")
+@ApplicationPath("v1")
 public class APIApplication extends ResourceConfig {
 
     private static final String INTERACTION_RECORD_FACTORY = "interactionRecordFactory";
