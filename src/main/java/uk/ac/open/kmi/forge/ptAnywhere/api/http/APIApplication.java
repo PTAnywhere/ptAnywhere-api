@@ -1,7 +1,6 @@
 package uk.ac.open.kmi.forge.ptAnywhere.api.http;
 
 import io.swagger.config.ScannerFactory;
-import io.swagger.jaxrs.config.BeanConfig;
 import io.swagger.jaxrs.config.ReflectiveJaxrsScanner;
 import io.swagger.jaxrs.listing.ApiListingResource;
 import io.swagger.jaxrs.listing.SwaggerSerializers;
@@ -19,7 +18,6 @@ import javax.annotation.PreDestroy;
 import javax.servlet.ServletContext;
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -79,10 +77,13 @@ public class APIApplication extends ResourceConfig {
                 .license(new License()
                         .name("Apache 2.0")
                         .url("http://www.apache.org/licenses/LICENSE-2.0.html"));*/
-        final Swagger swagger = new Swagger().info(info).basePath(appPath + "api");
+        final Swagger swagger = new Swagger().info(info).basePath(appPath + "v1");
         swagger.tag(new Tag()
                 .name("session")
                 .description("Operations to manage sessions"));
+        swagger.tag(new Tag()
+                .name("network")
+                .description("Operation to get network topology"));
         context.setAttribute("swagger", swagger);
     }
 
