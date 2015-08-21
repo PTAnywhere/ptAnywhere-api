@@ -10,6 +10,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import uk.ac.open.kmi.forge.ptAnywhere.api.http.exceptions.ErrorBean;
 import uk.ac.open.kmi.forge.ptAnywhere.gateway.PTCallable;
 import uk.ac.open.kmi.forge.ptAnywhere.pojo.Network;
 import uk.ac.open.kmi.forge.ptAnywhere.session.SessionManager;
@@ -46,8 +47,8 @@ public class NetworkResource {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Retrieves information of the current network topology", response = Network.class)
     @ApiResponses(value = {
-        @ApiResponse(code = 503, message = "Error connecting to the PT instance"),
-        @ApiResponse(code = 404, message = "No active session exists with the given id")
+        @ApiResponse(code = 503, response = ErrorBean.class, message = "Error connecting to the PT instance"),
+        @ApiResponse(code = 404, response = ErrorBean.class, message = "No active session exists with the given id")
     })
 
     public Response getAll() {
