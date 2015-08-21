@@ -52,7 +52,6 @@ public class NetworkResource {
         @ApiResponse(code = PacketTracerConnectionException.status, response = ErrorBean.class, message = PacketTracerConnectionException.description),
         @ApiResponse(code = SessionNotFoundException.status, response = ErrorBean.class, message = SessionNotFoundException.description)
     })
-
     public Response getAll() {
         final Network network = new NetworkGetter(this.sm, this.uri.getBaseUri()).call();  // No Threads
         return addDefaultLinks(Response.ok(network)).build();

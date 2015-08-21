@@ -1,10 +1,16 @@
 package uk.ac.open.kmi.forge.ptAnywhere.api.http;
 
+import io.swagger.annotations.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import uk.ac.open.kmi.forge.ptAnywhere.analytics.InteractionRecord;
+import uk.ac.open.kmi.forge.ptAnywhere.api.http.exceptions.ErrorBean;
+import uk.ac.open.kmi.forge.ptAnywhere.api.http.exceptions.NoPTInstanceAvailableException;
+import uk.ac.open.kmi.forge.ptAnywhere.api.http.exceptions.PacketTracerConnectionException;
+import uk.ac.open.kmi.forge.ptAnywhere.api.http.exceptions.SessionNotFoundException;
 import uk.ac.open.kmi.forge.ptAnywhere.gateway.PTCallable;
 import uk.ac.open.kmi.forge.ptAnywhere.pojo.Device;
+import uk.ac.open.kmi.forge.ptAnywhere.pojo.Network;
 import uk.ac.open.kmi.forge.ptAnywhere.session.SessionManager;
 
 import static uk.ac.open.kmi.forge.ptAnywhere.api.http.URLFactory.DEVICE_PARAM;
@@ -55,6 +61,8 @@ class DevicePoster extends PTCallable<Device> {
     }
 }
 
+
+@Api(hidden = true, tags = "network")
 public class DevicesResource {
 
     private static final Log LOGGER = LogFactory.getLog(DevicesResource.class);
@@ -77,8 +85,17 @@ public class DevicesResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response createDevice(Device newDevice,
-                                 @Context ServletContext servletContext) throws URISyntaxException {
+    @ApiOperation(value = "Creates a new device")
+    @ApiResponses(value = {
+        @ApiResponse(code = 201, message = "Device created successfully",
+                responseHeaders = { @ResponseHeader(name = "location", description = "URL for the newly created device", response=String.class) } ),
+        @ApiResponse(code = PacketTracerConnectionException.status, response = ErrorBean.class, message = PacketTracerConnectionException.description),
+        @ApiResponse(code = SessionNotFoundException.status, response = ErrorBean.class, message = SessionNotFoundException.description)
+    })
+    public Response createDevice( @Context ServletContext servletContext,
+            @ApiParam(value = "Device to be created. <br> 'port' and 'url' fields are not expected " +
+                            "to be completed and therefore they will be ignored.") Device newDevice)
+            throws URISyntaxException {
         final Device device = new DevicePoster(this.sm, newDevice, this.uri.getBaseUri()).call();
         if (device==null)
             return addDefaultLinks(Response.status(Response.Status.BAD_REQUEST).entity(newDevice)).build();
@@ -93,6 +110,11 @@ public class DevicesResource {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(value = "Retrieves all the existing devices", response = Device.class, responseContainer = "set")
+    @ApiResponses(value = {
+        @ApiResponse(code = PacketTracerConnectionException.status, response = ErrorBean.class, message = PacketTracerConnectionException.description),
+        @ApiResponse(code = SessionNotFoundException.status, response = ErrorBean.class, message = SessionNotFoundException.description)
+    })
     public Response getJson() {
         final Collection<Device> d = new DevicesGetter(this.sm, this.uri.getBaseUri()).call();  // Not using a new Thread
         // To array because otherwise Response does not know how to serialize Collection<Device>

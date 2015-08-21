@@ -1,9 +1,6 @@
 package uk.ac.open.kmi.forge.ptAnywhere.api.http;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.*;
 import uk.ac.open.kmi.forge.ptAnywhere.api.http.exceptions.ErrorBean;
 import uk.ac.open.kmi.forge.ptAnywhere.api.http.exceptions.SessionNotFoundException;
 import uk.ac.open.kmi.forge.ptAnywhere.session.SessionManager;
@@ -58,7 +55,8 @@ public class SessionResource {
        @ApiResponse(code=200, message="Successful operation."),
        @ApiResponse(code=SessionNotFoundException.status, response=ErrorBean.class, message=SessionNotFoundException.description)
     })
-    public Response getSession(@PathParam(SESSION_PARAM) String sessionId) {
+    public Response getSession(
+            @ApiParam(value = "Identifier of the session to be retrieved.") @PathParam(SESSION_PARAM) String sessionId) {
         final String requestUri = Utils.getURIWithSlashRemovingQuery(this.uri.getRequestUri());
         if (!this.sm.doesExist(sessionId))
             throw new SessionNotFoundException(sessionId, getSessionsLink());
@@ -76,7 +74,8 @@ public class SessionResource {
             @ApiResponse(code = 200, message = "Successful operation"),
             @ApiResponse(code = SessionNotFoundException.status, response = ErrorBean.class, message = SessionNotFoundException.description)
     })
-    public Response removeDevice(@PathParam(SESSION_PARAM) String sessionId) {
+    public Response removeDevice(
+        @ApiParam(value = "Identifier of the session to be deleted.") @PathParam(SESSION_PARAM) String sessionId) {
         final String requestUri = Utils.getURIWithSlashRemovingQuery(this.uri.getRequestUri());
         if (this.sm.doesExist(sessionId)) {
             this.sm.deleteSession(sessionId);

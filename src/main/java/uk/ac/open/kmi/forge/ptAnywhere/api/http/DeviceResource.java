@@ -1,6 +1,10 @@
 package uk.ac.open.kmi.forge.ptAnywhere.api.http;
 
+import io.swagger.annotations.*;
 import uk.ac.open.kmi.forge.ptAnywhere.analytics.InteractionRecord;
+import uk.ac.open.kmi.forge.ptAnywhere.api.http.exceptions.ErrorBean;
+import uk.ac.open.kmi.forge.ptAnywhere.api.http.exceptions.PacketTracerConnectionException;
+import uk.ac.open.kmi.forge.ptAnywhere.api.http.exceptions.SessionNotFoundException;
 import uk.ac.open.kmi.forge.ptAnywhere.gateway.PTCallable;
 import uk.ac.open.kmi.forge.ptAnywhere.pojo.Device;
 import uk.ac.open.kmi.forge.ptAnywhere.session.SessionManager;
@@ -69,6 +73,8 @@ class DeviceModifier extends AbstractDeviceHandler {
     }
 }
 
+
+@Api(hidden = true, tags = "network")
 public class DeviceResource {
 
     final UriInfo uri;
@@ -86,9 +92,14 @@ public class DeviceResource {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(value = "Retrieves the details of the device", response = Device.class)
+    @ApiResponses(value = {
+        @ApiResponse(code = PacketTracerConnectionException.status, response = ErrorBean.class, message = PacketTracerConnectionException.description),
+        @ApiResponse(code = SessionNotFoundException.status, response = ErrorBean.class, message = SessionNotFoundException.description)
+    })
     public Response getDevice(
-        @PathParam(DEVICE_PARAM) String deviceId,
-        @DefaultValue("false") @QueryParam("byName") boolean byName) {
+        @ApiParam(value = "Name or identifier of the device.") @PathParam(DEVICE_PARAM) String deviceId,
+        @ApiParam(value = "Is the 'device' parameter the device name? (otherwise, it will be handled as its identifier)") @DefaultValue("false") @QueryParam("byName") boolean byName) {
         final Device d = new DeviceGetter(this.sm, deviceId, byName, this.uri.getBaseUri()).call();  // Not using a new Thread
         if (d==null)
             return Response.noContent().
@@ -102,11 +113,17 @@ public class DeviceResource {
     // FIXME DELETE and PUT should also consider the 'byName' parameter.
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
-    public Response removeDevice(@PathParam(DEVICE_PARAM) String deviceId,
-                                 @Context ServletContext servletContext) {
+    @ApiOperation(value = "Deletes the device", response = Device.class)
+    @ApiResponses(value = {
+        @ApiResponse(code = 404, response = ErrorBean.class, message = "The device does not exist"),
+        @ApiResponse(code = PacketTracerConnectionException.status, response = ErrorBean.class, message = PacketTracerConnectionException.description),
+        @ApiResponse(code = SessionNotFoundException.status, response = ErrorBean.class, message = SessionNotFoundException.description)
+    })
+    public Response removeDevice(@Context ServletContext servletContext,
+            @ApiParam(value = "Identifier of the device to be deleted.") @PathParam(DEVICE_PARAM) String deviceId) {
         final Device d = new DeviceDeleter(this.sm, deviceId, this.uri.getBaseUri()).call();  // Not using a new Thread
         if (d==null)
-            return Response.noContent().
+            return Response.status(404).
                     links(getDevicesLink()).build();
 
         final InteractionRecord ir = APIApplication.createInteractionRecord(servletContext);
@@ -117,13 +134,19 @@ public class DeviceResource {
 
     @PUT
     @Produces(MediaType.APPLICATION_JSON)
-    public Response modifyDevice(
-            Device modification,
-            @PathParam(DEVICE_PARAM) String deviceId,
-            @Context ServletContext servletContext) {
+    @ApiOperation(value = "Updates the device information", response = Device.class)
+    @ApiResponses(value = {
+            @ApiResponse(code = 404, response = ErrorBean.class, message = "The device does not exist"),
+            @ApiResponse(code = PacketTracerConnectionException.status, response = ErrorBean.class, message = PacketTracerConnectionException.description),
+            @ApiResponse(code = SessionNotFoundException.status, response = ErrorBean.class, message = SessionNotFoundException.description)
+    })
+    public Response modifyDevice(@Context ServletContext servletContext,
+            @ApiParam(value = "Identifier of the device to be updated.") @PathParam(DEVICE_PARAM) String deviceId,
+            @ApiParam(value = "Device to be updated. Only the 'label' and the 'defaultGateway' (if it is a PC) fields " +
+                    "can be updated. The rest will be simply ignored.") Device modification) {
         final Device d = new DeviceModifier(this.sm, deviceId, modification, this.uri.getBaseUri()).call();  // Not using a new Thread
         if (d==null)
-            return Response.noContent().
+            return Response.status(404).
                     links(getDevicesLink()).build();
         final InteractionRecord ir = APIApplication.createInteractionRecord(servletContext);
         ir.deviceModified(this.sm.getSessionId(), this.uri.getRequestUri().toString(), d.getLabel(), d.getGroup());
