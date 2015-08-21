@@ -1,5 +1,11 @@
 package uk.ac.open.kmi.forge.ptAnywhere.api.http;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import uk.ac.open.kmi.forge.ptAnywhere.api.http.exceptions.ErrorBean;
+import uk.ac.open.kmi.forge.ptAnywhere.api.http.exceptions.SessionNotFoundException;
 import uk.ac.open.kmi.forge.ptAnywhere.gateway.PTCallable;
 import uk.ac.open.kmi.forge.ptAnywhere.pojo.InnerLink;
 import uk.ac.open.kmi.forge.ptAnywhere.pojo.Link;
@@ -29,6 +35,7 @@ class LinkGetter extends PTCallable<InnerLink> {
 }
 
 
+@Api(hidden = true, tags = "network")
 public class LinkResource {
 
     UriInfo uri;
@@ -40,6 +47,12 @@ public class LinkResource {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(value = "Retrieves information for a link/connection between two devices",
+            notes = "The 'endpoints' field has two elements: one for each endpoint of a link.")
+    @ApiResponses(value = {
+        @ApiResponse(code = 200, message="Successful operation.", response = Link.class),
+        @ApiResponse(code = SessionNotFoundException.status, response = ErrorBean.class, message = SessionNotFoundException.description)
+    })
     public Response getLink(@PathParam(LINK_PARAM) String linkId) {
         final InnerLink l = new LinkGetter(this.sm, linkId).call();  // Same thread
         if (l==null) {

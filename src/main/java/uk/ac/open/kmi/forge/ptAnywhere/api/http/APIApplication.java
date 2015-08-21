@@ -83,7 +83,7 @@ public class APIApplication extends ResourceConfig {
                 .description("Operations to manage sessions"));
         swagger.tag(new Tag()
                 .name("network")
-                .description("Operation to get network topology"));
+                .description("Network topology related operations"));
         context.setAttribute("swagger", swagger);
     }
 
