@@ -1,5 +1,6 @@
 package uk.ac.open.kmi.forge.ptAnywhere.gateway;
 
+import java.io.IOException;
 import com.cisco.pt.ipc.IPCError;
 import com.cisco.pt.ipc.IPCFactory;
 import com.cisco.pt.ipc.events.TerminalLineEventRegistry;
@@ -11,11 +12,6 @@ import com.cisco.pt.ptmp.impl.PacketTracerSessionFactoryImpl;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import uk.ac.open.kmi.forge.ptAnywhere.api.http.exceptions.PacketTracerConnectionException;
-import uk.ac.open.kmi.forge.ptAnywhere.properties.PacketTracerInstanceProperties;
-import uk.ac.open.kmi.forge.ptAnywhere.properties.PropertyFileManager;
-
-import java.io.IOException;
-import java.util.Iterator;
 
 
 /**

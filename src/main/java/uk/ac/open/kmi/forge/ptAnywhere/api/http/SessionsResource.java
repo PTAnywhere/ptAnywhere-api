@@ -12,6 +12,8 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
 
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import uk.ac.open.kmi.forge.ptAnywhere.analytics.InteractionRecord;
 import uk.ac.open.kmi.forge.ptAnywhere.api.http.exceptions.NoPTInstanceAvailableException;
 import uk.ac.open.kmi.forge.ptAnywhere.session.SessionsManager;
@@ -46,6 +48,9 @@ public class SessionsResource {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Retrieve information of the newly created session", tags="session", response = String.class,
                     notes = "The returned string corresponds to the identifier of the session")
+    @ApiResponses(value = {
+        @ApiResponse(code = 503, message = "Limit reached in PT instance creation. Please wait before trying it again.")
+    })
     // TODO Even better if we use:
     // https://jersey.java.net/documentation/latest/user-guide.html#declarative-linking
     public Response createSession(@Context ServletContext servletContext) throws URISyntaxException, NoPTInstanceAvailableException {
