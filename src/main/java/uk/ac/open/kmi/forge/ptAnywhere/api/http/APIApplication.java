@@ -66,6 +66,8 @@ public class APIApplication extends ResourceConfig {
         scanner.setResourcePackage(getClass().getPackage().getName());
         ScannerFactory.setScanner(scanner);
 
+        // It would be clearer to use the SwaggerDefinition annotation, but I does not seem to work
+        // and I cannot find a working example in the official documentation.
         final Info info = new Info()
                 .title("PTAnywhere API")
                 .description("API for consuming PTAnywhere.")
