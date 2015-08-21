@@ -19,7 +19,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.*;
 
 
-@Api
+@Api(hidden = true)
 public class SessionResource {
 
     final UriInfo uri;

@@ -32,7 +32,7 @@ class NetworkGetter extends PTCallable<Network> {
 }
 
 
-@Api(tags = "network")
+@Api(hidden = true, tags = "network")
 public class NetworkResource {
 
     final UriInfo uri;
