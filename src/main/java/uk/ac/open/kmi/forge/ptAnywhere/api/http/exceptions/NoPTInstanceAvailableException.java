@@ -5,13 +5,17 @@ import javax.ws.rs.core.Response;
 
 
 public class NoPTInstanceAvailableException extends WebApplicationException {
+
+    // BEGIN: used mainly for swagger doc.
+    final public static int status = 503; // Response.Status.SERVICE_UNAVAILABLE.getStatusCode() is not a constant for Java
+    final public static String description = "Limit reached in PT instance creation";
+    // END: used mainly for swagger doc.
+
     public NoPTInstanceAvailableException() {
-        this("Limit reached in PT instance creation. Please wait before trying it again.");
+        this(NoPTInstanceAvailableException.description + ". Please retry again.");
     }
 
     public NoPTInstanceAvailableException(String message) {
-        super(Response.status(Response.Status.SERVICE_UNAVAILABLE).
-                entity(new ErrorBean(
-                        Response.Status.SERVICE_UNAVAILABLE.getStatusCode(), message)).build());
+        super(ErrorBean.createError(Response.Status.SERVICE_UNAVAILABLE, message));
     }
 }

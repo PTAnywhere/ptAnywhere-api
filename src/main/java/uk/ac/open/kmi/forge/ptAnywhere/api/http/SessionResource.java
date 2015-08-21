@@ -15,6 +15,7 @@ import static uk.ac.open.kmi.forge.ptAnywhere.api.http.URLFactory.LINKS_PATH;
 import static uk.ac.open.kmi.forge.ptAnywhere.api.http.URLFactory.LINK_PARAM;
 import static uk.ac.open.kmi.forge.ptAnywhere.api.http.URLFactory.CONTEXT_PATH;
 
+import javax.json.JsonString;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
 
@@ -51,10 +52,11 @@ public class SessionResource {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Retrieves information of a session", tags = "session")
+    @ApiOperation(value = "Retrieves information of a session", tags = "session",
+            notes = "It returns the identifier of the session in a JSON string format.")
     @ApiResponses(value = {
-       @ApiResponse(code = 200, response = String.class, message = "Successful operation"),
-       @ApiResponse(code = 404, response = ErrorBean.class, message = "No active session exists with the given id")
+       @ApiResponse(code=200, message="Successful operation."),
+       @ApiResponse(code=SessionNotFoundException.status, response=ErrorBean.class, message=SessionNotFoundException.description)
     })
     public Response getSession(@PathParam(SESSION_PARAM) String sessionId) {
         final String requestUri = Utils.getURIWithSlashRemovingQuery(this.uri.getRequestUri());
@@ -71,8 +73,8 @@ public class SessionResource {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Deletes a session", tags = "session")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, response = String.class, message = "Successful operation"),
-            @ApiResponse(code = 404, response = ErrorBean.class, message = "No active session exists with the given id")
+            @ApiResponse(code = 200, message = "Successful operation"),
+            @ApiResponse(code = SessionNotFoundException.status, response = ErrorBean.class, message = SessionNotFoundException.description)
     })
     public Response removeDevice(@PathParam(SESSION_PARAM) String sessionId) {
         final String requestUri = Utils.getURIWithSlashRemovingQuery(this.uri.getRequestUri());

@@ -1,7 +1,6 @@
 package uk.ac.open.kmi.forge.ptAnywhere.api.http;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.*;
 
 import javax.servlet.ServletContext;
 import javax.ws.rs.*;
@@ -12,9 +11,8 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
 
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
 import uk.ac.open.kmi.forge.ptAnywhere.analytics.InteractionRecord;
+import uk.ac.open.kmi.forge.ptAnywhere.api.http.exceptions.ErrorBean;
 import uk.ac.open.kmi.forge.ptAnywhere.api.http.exceptions.NoPTInstanceAvailableException;
 import uk.ac.open.kmi.forge.ptAnywhere.session.SessionsManager;
 import static uk.ac.open.kmi.forge.ptAnywhere.api.http.URLFactory.SESSION_PARAM;
@@ -35,7 +33,7 @@ public class SessionsResource {
     }
 
     @GET
-    @ApiOperation(value = "Get all the current sessions", tags="session",
+    @ApiOperation(value = "Get all the current sessions", tags = "session",
                     response = String.class, responseContainer = "set",
                     notes = "The returned strings correspond to the identifiers of the sessions")
     @Produces(MediaType.APPLICATION_JSON)
@@ -46,10 +44,12 @@ public class SessionsResource {
 
     @POST
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Retrieve information of the newly created session", tags="session", response = String.class,
-                    notes = "The returned string corresponds to the identifier of the session")
+    @ApiOperation(value = "Retrieve information of the newly created session", tags="session")
     @ApiResponses(value = {
-        @ApiResponse(code = 503, message = "Limit reached in PT instance creation. Please wait before trying it again.")
+        @ApiResponse(code = 201, message = "Session created successfully",
+                responseHeaders = { @ResponseHeader(name = "location", description = "URL for the newly created session", response=String.class) } ),
+        @ApiResponse(code = NoPTInstanceAvailableException.status, response = ErrorBean.class,
+                message = NoPTInstanceAvailableException.description)
     })
     // TODO Even better if we use:
     // https://jersey.java.net/documentation/latest/user-guide.html#declarative-linking
