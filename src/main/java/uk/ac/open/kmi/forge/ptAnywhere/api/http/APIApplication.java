@@ -72,9 +72,9 @@ public class APIApplication extends ResourceConfig {
                 .title("PTAnywhere API")
                 .description("API for consuming PTAnywhere.")
                 .version("1.0.1")
-                .termsOfService("http://swagger.io/terms/")
+                //.termsOfService("http://swagger.io/terms/")
                 .contact(new Contact()
-                        .name("Aitor")
+                        .name("Aitor Gomez-Goiri")
                         .email("aitor.gomez-goiri@open.ac.uk"));/*
                 .license(new License()
                         .name("Apache 2.0")
