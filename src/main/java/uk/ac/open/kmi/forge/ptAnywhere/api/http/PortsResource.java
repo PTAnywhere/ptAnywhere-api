@@ -1,6 +1,11 @@
 package uk.ac.open.kmi.forge.ptAnywhere.api.http;
 
+import io.swagger.annotations.*;
+import uk.ac.open.kmi.forge.ptAnywhere.api.http.exceptions.ErrorBean;
+import uk.ac.open.kmi.forge.ptAnywhere.api.http.exceptions.PacketTracerConnectionException;
+import uk.ac.open.kmi.forge.ptAnywhere.api.http.exceptions.SessionNotFoundException;
 import uk.ac.open.kmi.forge.ptAnywhere.gateway.PTCallable;
+import uk.ac.open.kmi.forge.ptAnywhere.pojo.Device;
 import uk.ac.open.kmi.forge.ptAnywhere.pojo.Port;
 import uk.ac.open.kmi.forge.ptAnywhere.session.SessionManager;
 import static uk.ac.open.kmi.forge.ptAnywhere.api.http.URLFactory.PORT_PARAM;
@@ -35,6 +40,8 @@ class PortsGetter extends PTCallable<Collection<Port>> {
     }
 }
 
+
+@Api(hidden = true)
 public class PortsResource {
 
     final UriInfo uri;
@@ -52,10 +59,18 @@ public class PortsResource {
     // TODO return 'self' links (at least when byName==true)
     @GET
     @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(value = "Retrieves all the ports of a device", response = Port.class, responseContainer = "set",
+                    tags = "device")
+    @ApiResponses(value = {
+        @ApiResponse(code = PacketTracerConnectionException.status, response = ErrorBean.class, message = PacketTracerConnectionException.description),
+        @ApiResponse(code = SessionNotFoundException.status, response = ErrorBean.class, message = SessionNotFoundException.description)
+    })
     public Response getPorts(
-            @PathParam(DEVICE_PARAM) String deviceId,
-            @DefaultValue("false") @QueryParam("byName") boolean byName,
-            @DefaultValue("false") @QueryParam("free") boolean filterFree) {
+            @ApiParam(value = "Name or identifier of the device.") @PathParam(DEVICE_PARAM) String deviceId,
+            @ApiParam(value = "Is the 'device' parameter the device name? (otherwise, it will be handled as its identifier)")
+                @DefaultValue("false") @QueryParam("byName") boolean byName,
+            @ApiParam(value = "Is the port available (i.e., not connected to another port)?")
+                @DefaultValue("false") @QueryParam("free") boolean filterFree) {
         final Collection<Port> p = new PortsGetter(this.sm, deviceId, this.uri.getBaseUri(), byName, filterFree).call();
         // To array because otherwise Response does not know how to serialize Collection<Device>
         return Response.ok(p.toArray(new Port[p.size()])).

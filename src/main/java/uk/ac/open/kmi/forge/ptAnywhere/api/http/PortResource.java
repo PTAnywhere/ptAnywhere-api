@@ -1,5 +1,9 @@
 package uk.ac.open.kmi.forge.ptAnywhere.api.http;
 
+import io.swagger.annotations.*;
+import uk.ac.open.kmi.forge.ptAnywhere.api.http.exceptions.ErrorBean;
+import uk.ac.open.kmi.forge.ptAnywhere.api.http.exceptions.PacketTracerConnectionException;
+import uk.ac.open.kmi.forge.ptAnywhere.api.http.exceptions.SessionNotFoundException;
 import uk.ac.open.kmi.forge.ptAnywhere.gateway.PTCallable;
 import uk.ac.open.kmi.forge.ptAnywhere.pojo.Port;
 import uk.ac.open.kmi.forge.ptAnywhere.session.SessionManager;
@@ -53,6 +57,8 @@ class PortModifier extends AbstractPortHandler {
     }
 }
 
+
+@Api(hidden = true)
 public class PortResource {
 
     final UriInfo uri;
@@ -70,9 +76,14 @@ public class PortResource {
     // Consider byName==true (or at least put a redirection or self element)
     @GET
     @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(value = "Retrieves the details of the port", response = Port.class, tags = "device")
+    @ApiResponses(value = {
+        @ApiResponse(code = PacketTracerConnectionException.status, response = ErrorBean.class, message = PacketTracerConnectionException.description),
+        @ApiResponse(code = SessionNotFoundException.status, response = ErrorBean.class, message = SessionNotFoundException.description)
+    })
     public Response getPort(
-            @PathParam(DEVICE_PARAM) String deviceId,
-            @PathParam(PORT_PARAM) String portName) {
+            @ApiParam(value = "Identifier of the device.") @PathParam(DEVICE_PARAM) String deviceId,
+            @ApiParam(value = "Name of the port inside the device.") @PathParam(PORT_PARAM) String portName) {
         final Port p = new PortGetter(this.sm, deviceId, Utils.unescapePort(portName), this.uri.getBaseUri()).call();  // Not using a new Thread
         if (p==null)
             return Response.noContent().
@@ -87,10 +98,17 @@ public class PortResource {
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(value = "Updates the details of the port", response = Port.class, tags = "device")
+    @ApiResponses(value = {
+        @ApiResponse(code = PacketTracerConnectionException.status, response = ErrorBean.class, message = PacketTracerConnectionException.description),
+        @ApiResponse(code = SessionNotFoundException.status, response = ErrorBean.class, message = SessionNotFoundException.description)
+    })
     public Response modifyPort(
-            Port modification,
-            @PathParam(DEVICE_PARAM) String deviceId,
-            @PathParam(PORT_PARAM) String portName) {
+            @ApiParam(value = "Port to be modified. Only the IP address and the subnet mask can be updated " +
+                    "(providing this makes sense for this type of device). " +
+                    "The rest of the fields will be ignored.") Port modification,
+            @ApiParam(value = "Identifier of the device.") @PathParam(DEVICE_PARAM) String deviceId,
+            @ApiParam(value = "Name of the port inside the device.") @PathParam(PORT_PARAM) String portName) {
         // The portName should be provided in the URL, not in the body (i.e., JSON sent).
         if (modification.getPortName()==null) {
             modification.setPortName(Utils.unescapePort(portName));

@@ -74,7 +74,7 @@ class DeviceModifier extends AbstractDeviceHandler {
 }
 
 
-@Api(hidden = true, tags = "network")
+@Api(hidden = true)
 public class DeviceResource {
 
     final UriInfo uri;
@@ -92,7 +92,7 @@ public class DeviceResource {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Retrieves the details of the device", response = Device.class)
+    @ApiOperation(value = "Retrieves the details of the device", response = Device.class, tags = "device")
     @ApiResponses(value = {
         @ApiResponse(code = PacketTracerConnectionException.status, response = ErrorBean.class, message = PacketTracerConnectionException.description),
         @ApiResponse(code = SessionNotFoundException.status, response = ErrorBean.class, message = SessionNotFoundException.description)
@@ -113,7 +113,7 @@ public class DeviceResource {
     // FIXME DELETE and PUT should also consider the 'byName' parameter.
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Deletes the device", response = Device.class)
+    @ApiOperation(value = "Deletes the device", response = Device.class, tags = "network")
     @ApiResponses(value = {
         @ApiResponse(code = 404, response = ErrorBean.class, message = "The device does not exist"),
         @ApiResponse(code = PacketTracerConnectionException.status, response = ErrorBean.class, message = PacketTracerConnectionException.description),
@@ -134,7 +134,7 @@ public class DeviceResource {
 
     @PUT
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Updates the device information", response = Device.class)
+    @ApiOperation(value = "Updates the device information", response = Device.class, tags = "device")
     @ApiResponses(value = {
             @ApiResponse(code = 404, response = ErrorBean.class, message = "The device does not exist"),
             @ApiResponse(code = PacketTracerConnectionException.status, response = ErrorBean.class, message = PacketTracerConnectionException.description),

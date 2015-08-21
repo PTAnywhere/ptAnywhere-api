@@ -84,6 +84,9 @@ public class APIApplication extends ResourceConfig {
         swagger.tag(new Tag()
                 .name("network")
                 .description("Network topology related operations"));
+        swagger.tag(new Tag()
+                .name("device")
+                .description("Device-centric operations"));
         context.setAttribute("swagger", swagger);
     }
 
