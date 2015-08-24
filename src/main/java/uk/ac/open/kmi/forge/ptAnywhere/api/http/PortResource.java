@@ -1,9 +1,7 @@
 package uk.ac.open.kmi.forge.ptAnywhere.api.http;
 
 import io.swagger.annotations.*;
-import uk.ac.open.kmi.forge.ptAnywhere.exceptions.ErrorBean;
-import uk.ac.open.kmi.forge.ptAnywhere.exceptions.PacketTracerConnectionException;
-import uk.ac.open.kmi.forge.ptAnywhere.exceptions.SessionNotFoundException;
+import uk.ac.open.kmi.forge.ptAnywhere.exceptions.*;
 import uk.ac.open.kmi.forge.ptAnywhere.gateway.PTCallable;
 import uk.ac.open.kmi.forge.ptAnywhere.pojo.Port;
 import uk.ac.open.kmi.forge.ptAnywhere.session.SessionManager;
@@ -78,6 +76,7 @@ public class PortResource {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Retrieves the details of the port", response = Port.class, tags = "device")
     @ApiResponses(value = {
+        @ApiResponse(code = PortNotFoundException.status, response = ErrorBean.class, message = PortNotFoundException.description),
         @ApiResponse(code = PacketTracerConnectionException.status, response = ErrorBean.class, message = PacketTracerConnectionException.description),
         @ApiResponse(code = SessionNotFoundException.status, response = ErrorBean.class, message = SessionNotFoundException.description)
     })
@@ -85,9 +84,7 @@ public class PortResource {
             @ApiParam(value = "Identifier of the device.") @PathParam(DEVICE_PARAM) String deviceId,
             @ApiParam(value = "Name of the port inside the device.") @PathParam(PORT_PARAM) String portName) {
         final Port p = new PortGetter(this.sm, deviceId, Utils.unescapePort(portName), this.uri.getBaseUri()).call();  // Not using a new Thread
-        if (p==null)
-            return Response.noContent().
-                    links(getPortsLink()).build();
+        // TODO add links to not found exception
         return Response.ok(p).
                 links(getPortsLink()).
                 // Link resource returned even if it does not exist because
@@ -100,6 +97,7 @@ public class PortResource {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Updates the details of the port", response = Port.class, tags = "device")
     @ApiResponses(value = {
+        @ApiResponse(code = PortNotFoundException.status, response = ErrorBean.class, message = PortNotFoundException.description),
         @ApiResponse(code = PacketTracerConnectionException.status, response = ErrorBean.class, message = PacketTracerConnectionException.description),
         @ApiResponse(code = SessionNotFoundException.status, response = ErrorBean.class, message = SessionNotFoundException.description)
     })
@@ -113,6 +111,7 @@ public class PortResource {
         if (modification.getPortName()==null) {
             modification.setPortName(Utils.unescapePort(portName));
             final Port ret = new PortModifier(this.sm, deviceId, modification, this.uri.getBaseUri()).call();  // Not using a new Thread
+            // TODO add links to not found exception
             return Response.ok(ret).
                     links(getPortsLink()).
                     links(getLinkLink()).build();

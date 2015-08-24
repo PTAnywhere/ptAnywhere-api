@@ -7,7 +7,7 @@ public class PortNotFoundException extends PTAnywhereException {
 
     // BEGIN: used mainly for swagger doc.
     final public static int status = 404; // Response.Status.NOT_FOUND.getStatusCode() is not a constant for Java
-    final public static String description = "No port exists with the given id.";
+    final public static String description = "Either the port or the device does not exist";
     // END: used mainly for swagger doc.
 
     public PortNotFoundException(String deviceId, String portId) {
