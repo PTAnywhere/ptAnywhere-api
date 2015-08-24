@@ -4,6 +4,7 @@ import com.cisco.pt.ipc.IPCError;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import uk.ac.open.kmi.forge.ptAnywhere.api.http.exceptions.PacketTracerConnectionException;
+import uk.ac.open.kmi.forge.ptAnywhere.api.http.exceptions.SessionNotFoundException;
 import uk.ac.open.kmi.forge.ptAnywhere.session.PTInstanceDetails;
 import uk.ac.open.kmi.forge.ptAnywhere.session.SessionManager;
 
@@ -30,11 +31,12 @@ public abstract class PTRunnable implements Runnable {
         try {
             this.connection.before();
             internalRun();
+        } catch (PacketTracerConnectionException e) {
+            // Simply throw the app's own exceptions...
+            throw e;
         } catch (IPCError ipcError) {
             this.connection.getLog().error("\n\n\nAn IPC error occurred:\n\t" + ipcError.getMessage() + "\n\n\n");
             throw new PacketTracerConnectionException(ipcError.getMessage(), ipcError);
-        } catch (PacketTracerConnectionException ptce) {
-            throw ptce;
         } catch (Throwable t) {
             // More general errors...
             if (t instanceof ThreadDeath) {

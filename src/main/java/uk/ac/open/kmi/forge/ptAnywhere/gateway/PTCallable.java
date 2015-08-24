@@ -34,11 +34,12 @@ public abstract class PTCallable<V> implements Callable<V> {
         try {
             this.connection.before();
             return internalRun();
+        } catch (PacketTracerConnectionException e) {
+            // Simply throw the app's own exceptions...
+            throw e;
         } catch (IPCError ipcError) {
             this.connection.getLog().error("\n\n\nAn IPC error occurred:\n\t" + ipcError.getMessage() + "\n\n\n");
             throw new PacketTracerConnectionException(ipcError.getMessage(), ipcError);
-        } catch (PacketTracerConnectionException ptce) {
-            throw ptce;
         } catch (Throwable t) {
             // More general errors...
             if (t instanceof ThreadDeath) {

@@ -4,6 +4,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.glassfish.jersey.server.mvc.Viewable;
 
+import javax.servlet.ServletContext;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
 import java.io.IOException;
@@ -24,9 +25,8 @@ public abstract class CustomAbstractResource {
         properties = new Properties();  // It does not change once the app has been deployed.
     }
 
-
     @Context
-    UriInfo uri;
+    ServletContext servletContext;
 
     protected String getApplicationTitle() {
         try {
@@ -38,12 +38,12 @@ public abstract class CustomAbstractResource {
         }
     }
 
-    URI getAppRootURL() {
-        return this.uri.getBaseUri().resolve(RELATIVE_ROOT_PATH);  // to remove "management part"
+    String getAppRootURL() {
+        return (String) this.servletContext.getAttribute(ManagementApplication.APP_ROOT);
     }
 
     String getAPIURL() {
-        return getAppRootURL().toString() + "api/";
+        return getAppRootURL().toString() + "v1/";
     }
 
     public Viewable getPreFilled(String path) {
