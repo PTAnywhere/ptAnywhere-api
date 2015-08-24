@@ -1,8 +1,8 @@
 package uk.ac.open.kmi.forge.ptAnywhere.api.http;
 
 import io.swagger.annotations.*;
-import uk.ac.open.kmi.forge.ptAnywhere.api.http.exceptions.ErrorBean;
-import uk.ac.open.kmi.forge.ptAnywhere.api.http.exceptions.SessionNotFoundException;
+import uk.ac.open.kmi.forge.ptAnywhere.exceptions.ErrorBean;
+import uk.ac.open.kmi.forge.ptAnywhere.exceptions.SessionNotFoundException;
 import uk.ac.open.kmi.forge.ptAnywhere.session.SessionManager;
 import uk.ac.open.kmi.forge.ptAnywhere.session.SessionsManager;
 import static uk.ac.open.kmi.forge.ptAnywhere.api.http.URLFactory.SESSION_PARAM;
@@ -12,7 +12,6 @@ import static uk.ac.open.kmi.forge.ptAnywhere.api.http.URLFactory.LINKS_PATH;
 import static uk.ac.open.kmi.forge.ptAnywhere.api.http.URLFactory.LINK_PARAM;
 import static uk.ac.open.kmi.forge.ptAnywhere.api.http.URLFactory.CONTEXT_PATH;
 
-import javax.json.JsonString;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
 

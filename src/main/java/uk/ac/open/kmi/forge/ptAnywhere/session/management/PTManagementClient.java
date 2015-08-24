@@ -1,7 +1,7 @@
 package uk.ac.open.kmi.forge.ptAnywhere.session.management;
 
-import uk.ac.open.kmi.forge.ptAnywhere.api.http.exceptions.ErrorBean;
-import uk.ac.open.kmi.forge.ptAnywhere.api.http.exceptions.NoPTInstanceAvailableException;
+import uk.ac.open.kmi.forge.ptAnywhere.exceptions.ErrorBean;
+import uk.ac.open.kmi.forge.ptAnywhere.exceptions.NoPTInstanceAvailableException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;

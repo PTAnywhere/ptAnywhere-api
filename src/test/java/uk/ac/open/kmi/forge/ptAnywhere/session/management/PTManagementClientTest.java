@@ -3,7 +3,7 @@ package uk.ac.open.kmi.forge.ptAnywhere.session.management;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.junit.Test;
-import uk.ac.open.kmi.forge.ptAnywhere.api.http.exceptions.NoPTInstanceAvailableException;
+import uk.ac.open.kmi.forge.ptAnywhere.exceptions.NoPTInstanceAvailableException;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.Application;

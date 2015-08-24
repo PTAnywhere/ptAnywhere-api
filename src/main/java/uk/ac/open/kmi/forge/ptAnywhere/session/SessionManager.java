@@ -1,6 +1,6 @@
 package uk.ac.open.kmi.forge.ptAnywhere.session;
 
-import uk.ac.open.kmi.forge.ptAnywhere.api.http.exceptions.SessionNotFoundException;
+import uk.ac.open.kmi.forge.ptAnywhere.exceptions.SessionNotFoundException;
 
 /**
  * SessionsManager with a default sessionId.

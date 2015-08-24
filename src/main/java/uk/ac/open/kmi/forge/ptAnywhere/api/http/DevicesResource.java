@@ -4,13 +4,11 @@ import io.swagger.annotations.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import uk.ac.open.kmi.forge.ptAnywhere.analytics.InteractionRecord;
-import uk.ac.open.kmi.forge.ptAnywhere.api.http.exceptions.ErrorBean;
-import uk.ac.open.kmi.forge.ptAnywhere.api.http.exceptions.NoPTInstanceAvailableException;
-import uk.ac.open.kmi.forge.ptAnywhere.api.http.exceptions.PacketTracerConnectionException;
-import uk.ac.open.kmi.forge.ptAnywhere.api.http.exceptions.SessionNotFoundException;
+import uk.ac.open.kmi.forge.ptAnywhere.exceptions.ErrorBean;
+import uk.ac.open.kmi.forge.ptAnywhere.exceptions.PacketTracerConnectionException;
+import uk.ac.open.kmi.forge.ptAnywhere.exceptions.SessionNotFoundException;
 import uk.ac.open.kmi.forge.ptAnywhere.gateway.PTCallable;
 import uk.ac.open.kmi.forge.ptAnywhere.pojo.Device;
-import uk.ac.open.kmi.forge.ptAnywhere.pojo.Network;
 import uk.ac.open.kmi.forge.ptAnywhere.session.SessionManager;
 
 import static uk.ac.open.kmi.forge.ptAnywhere.api.http.URLFactory.DEVICE_PARAM;

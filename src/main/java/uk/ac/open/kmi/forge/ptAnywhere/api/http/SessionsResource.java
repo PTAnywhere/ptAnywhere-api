@@ -12,8 +12,8 @@ import java.util.Iterator;
 import java.util.Set;
 
 import uk.ac.open.kmi.forge.ptAnywhere.analytics.InteractionRecord;
-import uk.ac.open.kmi.forge.ptAnywhere.api.http.exceptions.ErrorBean;
-import uk.ac.open.kmi.forge.ptAnywhere.api.http.exceptions.NoPTInstanceAvailableException;
+import uk.ac.open.kmi.forge.ptAnywhere.exceptions.ErrorBean;
+import uk.ac.open.kmi.forge.ptAnywhere.exceptions.NoPTInstanceAvailableException;
 import uk.ac.open.kmi.forge.ptAnywhere.session.SessionsManager;
 import static uk.ac.open.kmi.forge.ptAnywhere.api.http.URLFactory.SESSION_PARAM;
 

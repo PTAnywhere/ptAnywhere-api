@@ -1,4 +1,4 @@
-package uk.ac.open.kmi.forge.ptAnywhere.api.http.exceptions;
+package uk.ac.open.kmi.forge.ptAnywhere.exceptions;
 
 import javax.ws.rs.core.Response;
 
@@ -8,18 +8,14 @@ public class ErrorBean {
 
     public ErrorBean() {}
 
-    public ErrorBean(Response.Status statusCode, String errorMsg) {
-        this(statusCode.getStatusCode(), errorMsg);
-    }
-
-    public ErrorBean(int errorCode, String errorMsg) {
+    private ErrorBean(int errorCode, String errorMsg) {
         this.errorCode = errorCode;
         this.errorMsg = errorMsg;
     }
 
-    public static Response createError(Response.Status status, String message) {
+    public static Response.ResponseBuilder createError(Response.Status status, String message) {
         return Response.status(status).
-                entity(new ErrorBean(status.getStatusCode(), message)).build();
+                entity(new ErrorBean(status.getStatusCode(), message));
     }
 
     public String getErrorMsg() {

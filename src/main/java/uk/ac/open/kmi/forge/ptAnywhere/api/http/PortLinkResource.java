@@ -2,14 +2,13 @@ package uk.ac.open.kmi.forge.ptAnywhere.api.http;
 
 import io.swagger.annotations.*;
 import uk.ac.open.kmi.forge.ptAnywhere.analytics.InteractionRecord;
-import uk.ac.open.kmi.forge.ptAnywhere.api.http.exceptions.ErrorBean;
-import uk.ac.open.kmi.forge.ptAnywhere.api.http.exceptions.PacketTracerConnectionException;
-import uk.ac.open.kmi.forge.ptAnywhere.api.http.exceptions.SessionNotFoundException;
+import uk.ac.open.kmi.forge.ptAnywhere.exceptions.ErrorBean;
+import uk.ac.open.kmi.forge.ptAnywhere.exceptions.PacketTracerConnectionException;
+import uk.ac.open.kmi.forge.ptAnywhere.exceptions.SessionNotFoundException;
 import uk.ac.open.kmi.forge.ptAnywhere.gateway.PTCallable;
 import uk.ac.open.kmi.forge.ptAnywhere.pojo.HalfLink;
 import uk.ac.open.kmi.forge.ptAnywhere.pojo.InnerLink;
 import uk.ac.open.kmi.forge.ptAnywhere.pojo.Link;
-import uk.ac.open.kmi.forge.ptAnywhere.pojo.Port;
 import uk.ac.open.kmi.forge.ptAnywhere.session.SessionManager;
 
 import static uk.ac.open.kmi.forge.ptAnywhere.api.http.URLFactory.PORT_PARAM;

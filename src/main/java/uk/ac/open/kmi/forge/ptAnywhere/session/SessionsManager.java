@@ -4,7 +4,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import redis.clients.jedis.*;
 import uk.ac.open.kmi.forge.ptAnywhere.api.http.Utils;
-import uk.ac.open.kmi.forge.ptAnywhere.api.http.exceptions.NoPTInstanceAvailableException;
+import uk.ac.open.kmi.forge.ptAnywhere.exceptions.NoPTInstanceAvailableException;
 import uk.ac.open.kmi.forge.ptAnywhere.properties.PropertyFileManager;
 import uk.ac.open.kmi.forge.ptAnywhere.properties.RedisConnectionProperties;
 import uk.ac.open.kmi.forge.ptAnywhere.session.management.Instance;

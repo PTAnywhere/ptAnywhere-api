@@ -1,10 +1,9 @@
-package uk.ac.open.kmi.forge.ptAnywhere.api.http.exceptions;
+package uk.ac.open.kmi.forge.ptAnywhere.exceptions;
 
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 
 
-public class PacketTracerConnectionException extends WebApplicationException {
+public class PacketTracerConnectionException extends PTAnywhereException {
 
     // BEGIN: used mainly for swagger doc.
     final public static int status = 503; // Response.Status.SERVICE_UNAVAILABLE.getStatusCode() is not a constant for Java
@@ -16,10 +15,10 @@ public class PacketTracerConnectionException extends WebApplicationException {
     }
 
     public PacketTracerConnectionException(String message) {
-        super(ErrorBean.createError(Response.Status.SERVICE_UNAVAILABLE, message));
+        super(Response.Status.SERVICE_UNAVAILABLE, message);
     }
 
     public PacketTracerConnectionException(String message, Throwable t) {
-        super(t, ErrorBean.createError(Response.Status.SERVICE_UNAVAILABLE, message));
+        super(Response.Status.SERVICE_UNAVAILABLE, message, t);
     }
 }
