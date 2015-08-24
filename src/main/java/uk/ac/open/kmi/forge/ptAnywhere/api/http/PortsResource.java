@@ -1,6 +1,7 @@
 package uk.ac.open.kmi.forge.ptAnywhere.api.http;
 
 import io.swagger.annotations.*;
+import uk.ac.open.kmi.forge.ptAnywhere.exceptions.DeviceNotFoundException;
 import uk.ac.open.kmi.forge.ptAnywhere.exceptions.ErrorBean;
 import uk.ac.open.kmi.forge.ptAnywhere.exceptions.PacketTracerConnectionException;
 import uk.ac.open.kmi.forge.ptAnywhere.exceptions.SessionNotFoundException;
@@ -61,6 +62,7 @@ public class PortsResource {
     @ApiOperation(value = "Retrieves all the ports of a device", response = Port.class, responseContainer = "set",
                     tags = "device")
     @ApiResponses(value = {
+        @ApiResponse(code = DeviceNotFoundException.status, response = ErrorBean.class, message = DeviceNotFoundException.description),
         @ApiResponse(code = PacketTracerConnectionException.status, response = ErrorBean.class, message = PacketTracerConnectionException.description),
         @ApiResponse(code = SessionNotFoundException.status, response = ErrorBean.class, message = SessionNotFoundException.description)
     })
@@ -71,6 +73,7 @@ public class PortsResource {
             @ApiParam(value = "Is the port available (i.e., not connected to another port)?")
                 @DefaultValue("false") @QueryParam("free") boolean filterFree) {
         final Collection<Port> p = new PortsGetter(this.sm, deviceId, this.uri.getBaseUri(), byName, filterFree).call();
+        // TODO add links to not found exception
         // To array because otherwise Response does not know how to serialize Collection<Device>
         return Response.ok(p.toArray(new Port[p.size()])).
                 links(getDeviceLink(deviceId)).
