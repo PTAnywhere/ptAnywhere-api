@@ -3,6 +3,7 @@ package uk.ac.open.kmi.forge.ptAnywhere.api.http;
 import io.swagger.annotations.*;
 import uk.ac.open.kmi.forge.ptAnywhere.analytics.InteractionRecord;
 import uk.ac.open.kmi.forge.ptAnywhere.exceptions.ErrorBean;
+import uk.ac.open.kmi.forge.ptAnywhere.exceptions.LinkNotFoundException;
 import uk.ac.open.kmi.forge.ptAnywhere.exceptions.PacketTracerConnectionException;
 import uk.ac.open.kmi.forge.ptAnywhere.exceptions.SessionNotFoundException;
 import uk.ac.open.kmi.forge.ptAnywhere.gateway.PTCallable;
@@ -99,16 +100,14 @@ public class PortLinkResource {
     @ApiOperation(value = "Retrieves the details of the connection (i.e., the link) of the port", response = Link.class,
                     tags = "device")
     @ApiResponses(value = {
-            @ApiResponse(code = 404, response = ErrorBean.class, message = "This port is disconnected and therefore there is no link to retrieve."),
+            @ApiResponse(code = LinkNotFoundException.status, response = ErrorBean.class, message = LinkNotFoundException.description),
             @ApiResponse(code = PacketTracerConnectionException.status, response = ErrorBean.class, message = PacketTracerConnectionException.description),
             @ApiResponse(code = SessionNotFoundException.status, response = ErrorBean.class, message = SessionNotFoundException.description)
     })
     public Response getLink(@ApiParam(value = "Identifier of the device.") @PathParam(DEVICE_PARAM) String deviceId,
                             @ApiParam(value = "Name of the port inside the device.") @PathParam(PORT_PARAM) String portName) {
         final Link l = new PortLinkGetter(this.sm, deviceId, Utils.unescapePort(portName), this.uri.getBaseUri()).call();
-        if (l==null)
-            return Response.status(404).
-                    links(getPortLink()).build();
+        // TODO add links to not found exception
         return Response.ok(l).
                 links(getPortLink()).build();
                 // TODO create endpoints links
@@ -118,7 +117,8 @@ public class PortLinkResource {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Disconnects a port (i.e., destroys its link)", response = Link.class, tags = "device")
     @ApiResponses(value = {
-            @ApiResponse(code = 404, response = ErrorBean.class, message = "There is no link to delete. The port was already disconnected."),
+            @ApiResponse(code = LinkNotFoundException.status, response = ErrorBean.class, message = LinkNotFoundException.description),
+            @ApiResponse(code = 500, response = ErrorBean.class, message = "The link could not be removed"),
             @ApiResponse(code = PacketTracerConnectionException.status, response = ErrorBean.class, message = PacketTracerConnectionException.description),
             @ApiResponse(code = SessionNotFoundException.status, response = ErrorBean.class, message = SessionNotFoundException.description)
     })
@@ -126,8 +126,9 @@ public class PortLinkResource {
                                @ApiParam(value = "Name of the port inside the device.") @PathParam(PORT_PARAM) String portName,
                                @Context ServletContext servletContext) {
         final Link deletedLink = new LinkDeleter(this.sm, deviceId, Utils.unescapePort(portName), this.uri.getBaseUri()).call();
-        if (deletedLink==null)
-            return Response.status(Response.Status.NOT_FOUND).entity(deletedLink).
+        // TODO add links to not found exception
+        if (deletedLink==null)  // It exists, couldn't be removed
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(deletedLink).
                     links(getPortLink()).build();
         final InteractionRecord ir =  APIApplication.createInteractionRecord(servletContext);
         ir.deviceDisconnected(this.sm.getSessionId(), deletedLink.getUrl(), deletedLink.getEndpoints());
@@ -140,6 +141,7 @@ public class PortLinkResource {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Connects the port to other (i.e., it creates a link)", response = Link.class, tags = "device")
     @ApiResponses(value = {
+            @ApiResponse(code = LinkNotFoundException.status, response = ErrorBean.class, message = LinkNotFoundException.description),
             @ApiResponse(code = 406, response = ErrorBean.class, message = "There link could not be created."),
             @ApiResponse(code = PacketTracerConnectionException.status, response = ErrorBean.class, message = PacketTracerConnectionException.description),
             @ApiResponse(code = SessionNotFoundException.status, response = ErrorBean.class, message = SessionNotFoundException.description)

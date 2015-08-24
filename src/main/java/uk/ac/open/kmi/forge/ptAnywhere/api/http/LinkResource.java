@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import uk.ac.open.kmi.forge.ptAnywhere.exceptions.ErrorBean;
+import uk.ac.open.kmi.forge.ptAnywhere.exceptions.LinkNotFoundException;
 import uk.ac.open.kmi.forge.ptAnywhere.exceptions.SessionNotFoundException;
 import uk.ac.open.kmi.forge.ptAnywhere.gateway.PTCallable;
 import uk.ac.open.kmi.forge.ptAnywhere.pojo.InnerLink;
@@ -51,14 +52,12 @@ public class LinkResource {
             notes = "The 'endpoints' field has two elements: one for each endpoint of a link.")
     @ApiResponses(value = {
         @ApiResponse(code = 200, message="Successful operation.", response = Link.class),
+        @ApiResponse(code = LinkNotFoundException.status, response = ErrorBean.class, message = LinkNotFoundException.description2),
         @ApiResponse(code = SessionNotFoundException.status, response = ErrorBean.class, message = SessionNotFoundException.description)
     })
     public Response getLink(@PathParam(LINK_PARAM) String linkId) {
         final InnerLink l = new LinkGetter(this.sm, linkId).call();  // Same thread
-        if (l==null) {
-            return addDefaultLinks(Response.noContent()).build();
-        }
-
+        // TODO add links to not found exception
         final URLFactory uf = new URLFactory(this.uri.getBaseUri(), sm.getSessionId());
         final Link rl = Link.createFromInnerLink(l, uf);
 

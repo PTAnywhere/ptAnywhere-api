@@ -16,6 +16,7 @@ import org.apache.commons.logging.LogFactory;
 import uk.ac.open.kmi.forge.ptAnywhere.api.http.URLFactory;
 import uk.ac.open.kmi.forge.ptAnywhere.api.http.Utils;
 import uk.ac.open.kmi.forge.ptAnywhere.exceptions.DeviceNotFoundException;
+import uk.ac.open.kmi.forge.ptAnywhere.exceptions.LinkNotFoundException;
 import uk.ac.open.kmi.forge.ptAnywhere.exceptions.PortNotFoundException;
 import uk.ac.open.kmi.forge.ptAnywhere.pojo.*;
 import uk.ac.open.kmi.forge.ptAnywhere.pojo.Device;
@@ -245,7 +246,7 @@ public class PacketTracerDAO {
         return Port.fromCiscoObject(p);
     }
 
-    public InnerLink getLink(String linkId) {
+    public InnerLink getLink(String linkId) throws LinkNotFoundException {
         if (linkId!=null) {
             final InnerLink ret = new InnerLink(linkId);
             for (int i = 0; i < this.network.getDeviceCount(); i++) {
@@ -264,10 +265,10 @@ public class PacketTracerDAO {
                 }
             }
         }
-        return null;
+        throw new LinkNotFoundException(linkId);
     }
 
-    public InnerLink getLink(String deviceId, String portName) {
+    public InnerLink getLink(String deviceId, String portName) throws LinkNotFoundException {
         final String linkId = getPort(deviceId, portName).getLink();
         if (linkId!=null) {
             final InnerLink ret = new InnerLink(linkId);
@@ -286,7 +287,7 @@ public class PacketTracerDAO {
                     }
             }
         }
-        return null;
+        throw new LinkNotFoundException(deviceId, portName);
     }
 
     public boolean createLink(String fromDeviceId, String fromPortName, HalfLink newLink) {
