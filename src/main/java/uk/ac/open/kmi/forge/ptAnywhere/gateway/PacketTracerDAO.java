@@ -16,6 +16,7 @@ import org.apache.commons.logging.LogFactory;
 import uk.ac.open.kmi.forge.ptAnywhere.api.http.URLFactory;
 import uk.ac.open.kmi.forge.ptAnywhere.api.http.Utils;
 import uk.ac.open.kmi.forge.ptAnywhere.exceptions.DeviceNotFoundException;
+import uk.ac.open.kmi.forge.ptAnywhere.exceptions.PortNotFoundException;
 import uk.ac.open.kmi.forge.ptAnywhere.pojo.*;
 import uk.ac.open.kmi.forge.ptAnywhere.pojo.Device;
 import uk.ac.open.kmi.forge.ptAnywhere.pojo.Network;
@@ -215,14 +216,14 @@ public class PacketTracerDAO {
             return getPorts(getSimDeviceById(Utils.toCiscoUUID(deviceId)), filterFree);
     }
 
-    protected com.cisco.pt.ipc.sim.port.Port getSimPort(com.cisco.pt.ipc.sim.Device device, String portName) {
+    protected com.cisco.pt.ipc.sim.port.Port getSimPort(com.cisco.pt.ipc.sim.Device device, String portName) throws PortNotFoundException {
         for (int i = 0; i < device.getPortCount(); i++) {
             final com.cisco.pt.ipc.sim.port.Port port = device.getPortAt(i);
             if (portName.equals(port.getName())) {
                 return port;
             }
         }
-        return null;
+        throw new PortNotFoundException(device.getName(), portName);
     }
 
     protected com.cisco.pt.ipc.sim.port.Port getSimPort(String deviceId, String portName) {
@@ -235,15 +236,13 @@ public class PacketTracerDAO {
 
     public Port modifyPort(String deviceId, Port modification) {
         final com.cisco.pt.ipc.sim.port.Port p = getSimPort(deviceId, modification.getPortName());
-        if (p!=null) {
-            if (p instanceof HostPort) {
-                final IPAddress ip = new IPAddressImpl(modification.getPortIpAddress());
-                final IPAddress subnet = new IPAddressImpl(modification.getPortSubnetMask());
-                ((HostPort) p).setIpSubnetMask(ip, subnet);
-            }
-            return Port.fromCiscoObject(p);
+        // p!=null because otherwise the previous method would have thrown a PortNotFoundException.
+        if (p instanceof HostPort) {
+            final IPAddress ip = new IPAddressImpl(modification.getPortIpAddress());
+            final IPAddress subnet = new IPAddressImpl(modification.getPortSubnetMask());
+            ((HostPort) p).setIpSubnetMask(ip, subnet);
         }
-        return null;
+        return Port.fromCiscoObject(p);
     }
 
     public InnerLink getLink(String linkId) {
