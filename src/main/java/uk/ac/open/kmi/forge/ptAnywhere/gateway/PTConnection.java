@@ -11,7 +11,7 @@ import com.cisco.pt.ptmp.PacketTracerSessionFactory;
 import com.cisco.pt.ptmp.impl.PacketTracerSessionFactoryImpl;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import uk.ac.open.kmi.forge.ptAnywhere.api.http.exceptions.PacketTracerConnectionException;
+import uk.ac.open.kmi.forge.ptAnywhere.exceptions.PacketTracerConnectionException;
 
 
 /**

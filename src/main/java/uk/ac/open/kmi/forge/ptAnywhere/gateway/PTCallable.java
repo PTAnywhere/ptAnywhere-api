@@ -5,8 +5,9 @@ import java.util.concurrent.Callable;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import uk.ac.open.kmi.forge.ptAnywhere.api.http.exceptions.PacketTracerConnectionException;
-import uk.ac.open.kmi.forge.ptAnywhere.api.http.exceptions.SessionNotFoundException;
+import uk.ac.open.kmi.forge.ptAnywhere.exceptions.PTAnywhereException;
+import uk.ac.open.kmi.forge.ptAnywhere.exceptions.PacketTracerConnectionException;
+import uk.ac.open.kmi.forge.ptAnywhere.exceptions.SessionNotFoundException;
 import uk.ac.open.kmi.forge.ptAnywhere.session.PTInstanceDetails;
 import uk.ac.open.kmi.forge.ptAnywhere.session.SessionManager;
 
@@ -34,7 +35,7 @@ public abstract class PTCallable<V> implements Callable<V> {
         try {
             this.connection.before();
             return internalRun();
-        } catch (PacketTracerConnectionException e) {
+        } catch (PTAnywhereException e) {
             // Simply throw the app's own exceptions...
             throw e;
         } catch (IPCError ipcError) {

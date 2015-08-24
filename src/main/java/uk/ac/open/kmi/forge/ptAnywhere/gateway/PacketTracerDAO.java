@@ -15,6 +15,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import uk.ac.open.kmi.forge.ptAnywhere.api.http.URLFactory;
 import uk.ac.open.kmi.forge.ptAnywhere.api.http.Utils;
+import uk.ac.open.kmi.forge.ptAnywhere.exceptions.DeviceNotFoundException;
 import uk.ac.open.kmi.forge.ptAnywhere.pojo.*;
 import uk.ac.open.kmi.forge.ptAnywhere.pojo.Device;
 import uk.ac.open.kmi.forge.ptAnywhere.pojo.Network;
@@ -127,18 +128,20 @@ public class PacketTracerDAO {
         return ret;
     }
 
-    public com.cisco.pt.ipc.sim.Device getSimDeviceById(UUID deviceId) {
+    public com.cisco.pt.ipc.sim.Device getSimDeviceById(UUID deviceId) throws DeviceNotFoundException {
         for (int i=0; i<this.network.getDeviceCount(); i++) {
             final com.cisco.pt.ipc.sim.Device ret = this.network.getDeviceAt(i);
             if (deviceId.equals(ret.getObjectUUID())) {
                 return ret;
             }
         }
-        return null;
+        throw new DeviceNotFoundException(deviceId.toString());
     }
 
-    protected com.cisco.pt.ipc.sim.Device getSimDeviceByName(String deviceName) {
-        return this.network.getDevice(deviceName);
+    protected com.cisco.pt.ipc.sim.Device getSimDeviceByName(String deviceName) throws DeviceNotFoundException {
+        final com.cisco.pt.ipc.sim.Device ret = this.network.getDevice(deviceName);
+        if (ret!=null) return ret;
+        throw new DeviceNotFoundException(deviceName);
     }
 
     public Device getDeviceById(String deviceId) {
