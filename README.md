@@ -7,4 +7,5 @@ For more information about _PT Anywhere_, please check [its official website](ht
 
 If you are you looking for a client-side application which uses this API check [this project](https://github.com/PTAnywhere/ptAnywhere-widgets).
 
-See the building instructions [here](https://github.com/PTAnywhere/ptAnywhere-api/wiki/Build-application) or go to the [wiki](https://github.com/PTAnywhere/ptAnywhere-api/wiki) for more detailed documentation.
+Check the application building and deploying instructions [here](https://github.com/PTAnywhere/ptAnywhere-api/wiki/Build-application).
+For other documentation, please go to our [wiki frontpage](https://github.com/PTAnywhere/ptAnywhere-api/wiki).
