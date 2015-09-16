@@ -5,7 +5,6 @@ import java.util.concurrent.ExecutorService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import uk.ac.open.kmi.forge.ptAnywhere.properties.InteractionRecordingProperties;
-import uk.ac.open.kmi.forge.ptAnywhere.properties.PropertyFileManager;
 
 
 public class InteractionRecordFactory {
@@ -20,7 +19,7 @@ public class InteractionRecordFactory {
         this.irp = props;
     }
 
-    public InteractionRecord create() {
+    protected InteractionRecord create() {
         if (this.irp==null) new NoTracker();
         try {
             return new TinCanAPI(this.irp.getEndpoint(), this.irp.getUsername(), this.irp.getPassword(), this.executor);
@@ -28,5 +27,18 @@ public class InteractionRecordFactory {
             LOGGER.error(e.getMessage());
             return new NoTracker();
         }
+    }
+
+    public InteractionRecord create(String sessionId) {
+        final InteractionRecord ir = create();
+        ir.setSession(sessionId);
+        return ir;
+    }
+
+    public InteractionRecord create(String widgetURI, String sessionId) {
+        final InteractionRecord ir = create();
+        ir.setWidget(widgetURI);
+        ir.setSession(sessionId);
+        return ir;
     }
 }

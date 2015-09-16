@@ -43,7 +43,8 @@ public class TinCanAPI extends InteractionRecord {
     /* Objects */
     // TODO get it from the HTTP API requester?
     // So far only one activity, but for each widget a new one should be created!
-    private static final String WIDGET = "http://ict-forge.eu/widget/packerTracer";
+    private static final String WIDGET = "http://ict-forge.eu/packerTracer";  // default
+    private static final String DEFAULT_WIDGET = WIDGET + "/default";  // default
     private static final String DEVICE_TYPE = WIDGET + "/devices/type/";
     /** Objects -> Actitivies **/
     private static final String SIMULATION = "http://adlnet.gov/expapi/activities/simulation";
@@ -58,12 +59,25 @@ public class TinCanAPI extends InteractionRecord {
     final RemoteLRS lrs = new RemoteLRS();
     final ExecutorService executor;
 
+    private String widgetURI = DEFAULT_WIDGET;  // It can be overriden in setWidget
+    private String sessionId;
+
+
     protected TinCanAPI(String endpoint, String username, String password, ExecutorService executor) throws MalformedURLException {
         this.executor = executor;
         this.lrs.setEndpoint(endpoint);
         this.lrs.setVersion(TCAPIVersion.V100);
         this.lrs.setUsername(username);
         this.lrs.setPassword(password);
+    }
+
+    public void setWidget(String widgetURI) {
+        if (widgetURI!=null)
+            this.widgetURI = widgetURI;
+    }
+
+    public void setSession(String sessionId) {
+        this.sessionId = sessionId;
     }
 
     private void record(final Statement statement) {
@@ -88,18 +102,18 @@ public class TinCanAPI extends InteractionRecord {
         this.executor.submit(saveTask);
     }
 
-    private Agent getAnonymousUser(String sessionId) {
+    private Agent getAnonymousUser() {
         final AgentAccount aa = new AgentAccount();
         // This could be set to the real URL where the app is deployed.
         aa.setHomePage("http://forge.kmi.open.ac.uk/pt/widget");
-        aa.setName("anonymous_" + sessionId);
+        aa.setName("anonymous_" + this.sessionId);
         Agent agent = new Agent();
         agent.setAccount(aa);
         return agent;
     }
 
     private Activity getWidgetActivity() throws URISyntaxException {
-        final Activity ret = new Activity(new URI(WIDGET));
+        final Activity ret = new Activity(new URI(this.widgetURI));
         final ActivityDefinition definition = new ActivityDefinition();
         definition.setType(SIMULATION);
         ret.setDefinition(definition);
@@ -111,9 +125,9 @@ public class TinCanAPI extends InteractionRecord {
     for reporting sessions.
     However, in the future user might be de-anonymized.
      */
-    private Context getContext(String sessionId) {
+    private Context getContext() {
         final Context context = new Context();
-        context.setRegistration(Utils.toUUID(sessionId));
+        context.setRegistration(Utils.toUUID(this.sessionId));
         return context;
     }
 
@@ -126,16 +140,16 @@ public class TinCanAPI extends InteractionRecord {
         return context;
     }
 
-    public Statement getPrefilledStatement(String sessionId) {
+    public Statement getPrefilledStatement() {
         final Statement st = new Statement();
-        st.setActor(getAnonymousUser(sessionId));
-        st.setContext(getContext(sessionId));
+        st.setActor(getAnonymousUser());
+        st.setContext(getContext());
         return st;
     }
 
-    public void interactionStarted(String sessionId) {
+    public void interactionStarted() {
         try {
-            final Statement st = getPrefilledStatement(sessionId);
+            final Statement st = getPrefilledStatement();
             st.setVerb(new Verb(INITIALIZED));
             st.setObject(getWidgetActivity());
             record(st);
@@ -162,9 +176,9 @@ public class TinCanAPI extends InteractionRecord {
         return ret;
     }
 
-    public void deviceCreated(String sessionId, String deviceUri, String deviceName, String deviceType) {
+    public void deviceCreated(String deviceUri, String deviceName, String deviceType) {
         try {
-            final Statement st = getPrefilledStatement(sessionId);
+            final Statement st = getPrefilledStatement();
             st.setVerb(new Verb(CREATED));
             st.setObject(createDeviceObject(deviceUri, deviceName, deviceType));
 
@@ -174,9 +188,9 @@ public class TinCanAPI extends InteractionRecord {
         }
     }
 
-    public void deviceDeleted(String sessionId, String deviceUri, String deviceName, String deviceType) {
+    public void deviceDeleted(String deviceUri, String deviceName, String deviceType) {
         try {
-            final Statement st = getPrefilledStatement(sessionId);
+            final Statement st = getPrefilledStatement();
             st.setVerb(new Verb(DELETED));
             st.setObject(createDeviceObject(deviceUri, deviceName, deviceType));
 
@@ -186,9 +200,9 @@ public class TinCanAPI extends InteractionRecord {
         }
     }
 
-    public void deviceModified(String sessionId, String deviceUri, String deviceName, String deviceType) {
+    public void deviceModified(String deviceUri, String deviceName, String deviceType) {
         try {
-            final Statement st = getPrefilledStatement(sessionId);
+            final Statement st = getPrefilledStatement();
             st.setVerb(new Verb(UPDATED));
             st.setObject(createDeviceObject(deviceUri, deviceName, deviceType));
 
@@ -216,9 +230,9 @@ public class TinCanAPI extends InteractionRecord {
      *
      * I will use the first one as it seems more symmetric and I don't invent new verbs (connect).
      */
-    public void deviceConnected(String sessionId, String linkUri, String[] endpointURLs) {
+    public void deviceConnected(String linkUri, String[] endpointURLs) {
         try {
-            final Statement st = getPrefilledStatement(sessionId);
+            final Statement st = getPrefilledStatement();
             st.setVerb(new Verb(CREATED));
             st.setObject( createLinkObject(linkUri) );
             final Extensions ext = new Extensions();
@@ -231,9 +245,9 @@ public class TinCanAPI extends InteractionRecord {
         }
     }
 
-    public void deviceDisconnected(String sessionId, String linkUri, String[] endpointURLs) {
+    public void deviceDisconnected(String linkUri, String[] endpointURLs) {
         try {
-            final Statement st = getPrefilledStatement(sessionId);
+            final Statement st = getPrefilledStatement();
             st.setVerb(new Verb(DELETED));
             st.setObject( createLinkObject(linkUri) );
             final Extensions ext = new Extensions();
@@ -246,10 +260,10 @@ public class TinCanAPI extends InteractionRecord {
         }
     }
 
-    private Activity createCommandLineObject(String deviceUri) throws URISyntaxException, IllegalArgumentException,
+    private Activity createCommandLineObject(String deviceUri, String deviceName) throws URISyntaxException, IllegalArgumentException,
             UriBuilderException {
         final LanguageMap lm = new LanguageMap();
-        lm.put("en-GB", "Command line"); // TODO of device X
+        lm.put("en-GB", deviceName + "'s command line ");
         final ActivityDefinition definition = new ActivityDefinition();
         definition.setName(lm);
         definition.setType(COMMAND_LINE);
@@ -261,10 +275,16 @@ public class TinCanAPI extends InteractionRecord {
         return ret;
     }
 
-    protected Statement createCommandLine(String sessionId, String deviceUri, String verb) throws URISyntaxException {
-        final Statement st = getPrefilledStatement(sessionId);
+    protected String getDeviceURI(String deviceName) {
+        final URIFactory uf = new URIFactory(this.widgetURI);
+        return uf.getDeviceURI(deviceName);
+    }
+
+    protected Statement createCommandLine(String deviceName, String verb) throws URISyntaxException {
+        final Statement st = getPrefilledStatement();
         st.setVerb(new Verb(verb));
-        st.setObject(createCommandLineObject(deviceUri));
+        final String deviceUri = getDeviceURI(deviceName);
+        st.setObject(createCommandLineObject(deviceUri, deviceName));
         // Note from docs:
         //  "A Statement defined entirely by its extensions becomes meaningless as no other system can make sense of it."
         final Extensions ext = new Extensions();
@@ -274,18 +294,17 @@ public class TinCanAPI extends InteractionRecord {
         return st;
     }
 
-    public void commandLineStarted(String sessionId, String deviceUri) {
+    public void commandLineStarted(String deviceName) {
         try {
-            final Statement st = createCommandLine(sessionId, deviceUri, INITIALIZED);
-            record( createCommandLine(sessionId, deviceUri, INITIALIZED) );
+            record( createCommandLine(deviceName, INITIALIZED) );
         } catch(URISyntaxException | IllegalArgumentException | UriBuilderException e) {
             LOGGER.error(e.getMessage());
         }
     }
 
-    public void commandLineUsed(String sessionId, String deviceUri, String input) {
+    public void commandLineUsed(String deviceName, String input) {
         try {
-            final Statement st = createCommandLine(sessionId, deviceUri, USED);
+            final Statement st = createCommandLine(deviceName, USED);
             final Result result = new Result();
             result.setResponse(input);
             st.setResult(result);
@@ -296,9 +315,9 @@ public class TinCanAPI extends InteractionRecord {
         }
     }
 
-    public void commandLineEnded(String sessionId, String deviceUri) {
+    public void commandLineEnded(String deviceName) {
         try {
-            record( createCommandLine(sessionId, deviceUri, TERMINATED) );
+            record( createCommandLine(deviceName, TERMINATED) );
         } catch(URISyntaxException | IllegalArgumentException | UriBuilderException e) {
             LOGGER.error(e.getMessage());
         }

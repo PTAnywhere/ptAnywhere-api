@@ -130,8 +130,8 @@ public class PortLinkResource {
         if (deletedLink==null)  // It exists, couldn't be removed
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(deletedLink).
                     links(getPortLink()).build();
-        final InteractionRecord ir =  APIApplication.createInteractionRecord(servletContext);
-        ir.deviceDisconnected(this.sm.getSessionId(), deletedLink.getUrl(), deletedLink.getEndpoints());
+        final InteractionRecord ir =  APIApplication.createInteractionRecord(servletContext, this.sm.getSessionId());
+        ir.deviceDisconnected(deletedLink.getUrl(), deletedLink.getEndpoints());
         return Response.ok(deletedLink).
                 links(getPortLink()).build();
     }
@@ -155,8 +155,8 @@ public class PortLinkResource {
         if (createdLink==null)
             return Response.status(Response.Status.NOT_ACCEPTABLE).entity(newLink).
                     links(getPortLink()).build();
-        final InteractionRecord ir =  APIApplication.createInteractionRecord(servletContext);
-        ir.deviceConnected(sm.getSessionId(), createdLink.getUrl(), createdLink.getEndpoints());
+        final InteractionRecord ir =  APIApplication.createInteractionRecord(servletContext, sm.getSessionId());
+        ir.deviceConnected(createdLink.getUrl(), createdLink.getEndpoints());
         return Response.created(this.uri.getRequestUri()).entity(createdLink).
                 links(getPortLink()).build();
                 // TODO create endpoints links

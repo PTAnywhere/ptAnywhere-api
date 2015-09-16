@@ -93,8 +93,8 @@ public class APIApplication extends ResourceConfig {
         context.setAttribute("swagger", swagger);
     }
 
-    public static InteractionRecord createInteractionRecord(ServletContext servletContext) {
-        return ((InteractionRecordFactory) servletContext.getAttribute(APIApplication.INTERACTION_RECORD_FACTORY)).create();
+    public static InteractionRecord createInteractionRecord(ServletContext servletContext, String sessionId) {
+        return ((InteractionRecordFactory) servletContext.getAttribute(APIApplication.INTERACTION_RECORD_FACTORY)).create(sessionId);
     }
 
     //@PostConstruct

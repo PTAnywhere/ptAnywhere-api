@@ -123,8 +123,8 @@ public class DeviceResource {
             @ApiParam(value = "Identifier of the device to be deleted.") @PathParam(DEVICE_PARAM) String deviceId) {
         final Device d = new DeviceDeleter(this.sm, deviceId, this.uri.getBaseUri()).call();  // Not using a new Thread
         // TODO add getDevicesLink() to not found exception
-        final InteractionRecord ir = APIApplication.createInteractionRecord(servletContext);
-        ir.deviceDeleted(this.sm.getSessionId(), this.uri.getRequestUri().toString(), d.getLabel(), d.getGroup());
+        final InteractionRecord ir = APIApplication.createInteractionRecord(servletContext, this.sm.getSessionId());
+        ir.deviceDeleted(this.uri.getRequestUri().toString(), d.getLabel(), d.getGroup());
         return Response.ok(d).
                 links(getDevicesLink()).build();
     }
@@ -143,8 +143,8 @@ public class DeviceResource {
                     "can be updated. The rest will be simply ignored.") Device modification) {
         final Device d = new DeviceModifier(this.sm, deviceId, modification, this.uri.getBaseUri()).call();  // Not using a new Thread
         // TODO add getDevicesLink() to not found exception
-        final InteractionRecord ir = APIApplication.createInteractionRecord(servletContext);
-        ir.deviceModified(this.sm.getSessionId(), this.uri.getRequestUri().toString(), d.getLabel(), d.getGroup());
+        final InteractionRecord ir = APIApplication.createInteractionRecord(servletContext, this.sm.getSessionId());
+        ir.deviceModified(this.uri.getRequestUri().toString(), d.getLabel(), d.getGroup());
         return Response.ok(d).
                 links(getDevicesLink()).
                 links(getPortsLink(d)).build();

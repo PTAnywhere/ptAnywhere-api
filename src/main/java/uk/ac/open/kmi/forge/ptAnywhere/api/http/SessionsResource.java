@@ -55,8 +55,8 @@ public class SessionsResource {
     // https://jersey.java.net/documentation/latest/user-guide.html#declarative-linking
     public Response createSession(@Context ServletContext servletContext) throws URISyntaxException, NoPTInstanceAvailableException {
         final String id = this.sm.createSession();  // May throw NoPTInstanceAvailableException
-        final InteractionRecord ir = APIApplication.createInteractionRecord(servletContext);
-        ir.interactionStarted(id);
+        final InteractionRecord ir = APIApplication.createInteractionRecord(servletContext, id);
+        ir.interactionStarted();
         return Response.created(new URI(getSessionRelativeURI(id))).
                 links(getItemLink(id)).build();
     }
