@@ -2,7 +2,7 @@ package uk.ac.open.kmi.forge.ptAnywhere.analytics;
 
 
 public abstract class InteractionRecord {
-    public void setWidget(String widgetURI) {}
+    public void setURIFactory(URIFactory factory) {}
     public void setSession(String sessionId) {}
     public void interactionStarted() {}
     public void deviceCreated(String deviceUri, String deviceName, String deviceType) {}

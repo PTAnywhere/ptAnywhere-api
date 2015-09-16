@@ -31,13 +31,14 @@ public class InteractionRecordFactory {
 
     public InteractionRecord create(String sessionId) {
         final InteractionRecord ir = create();
+        ir.setURIFactory(new URIFactory());
         ir.setSession(sessionId);
         return ir;
     }
 
     public InteractionRecord create(String widgetURI, String sessionId) {
         final InteractionRecord ir = create();
-        ir.setWidget(widgetURI);
+        ir.setURIFactory(new URIFactory(widgetURI));
         ir.setSession(sessionId);
         return ir;
     }

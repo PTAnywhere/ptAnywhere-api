@@ -1,6 +1,5 @@
 package uk.ac.open.kmi.forge.ptAnywhere.analytics;
 
-import java.net.URI;
 
 /**
  * URI factory different from the one in "uk.ac.open.kmi.forge.ptAnywhere.api".
@@ -15,8 +14,16 @@ public class URIFactory {
 
     final String widgetUri;
 
+    public URIFactory() {
+        this(TinCanAPI.DEFAULT_WIDGET);
+    }
+
     public URIFactory(String widgetUri) {
         this.widgetUri = (widgetUri.endsWith("/"))? widgetUri: widgetUri + "/";
+    }
+
+    public String getWidgetURI() {
+        return this.widgetUri;
     }
 
     public String getDeviceURI(String deviceName) {

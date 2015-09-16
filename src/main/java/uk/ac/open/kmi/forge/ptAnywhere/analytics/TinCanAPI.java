@@ -44,7 +44,7 @@ public class TinCanAPI extends InteractionRecord {
     // TODO get it from the HTTP API requester?
     // So far only one activity, but for each widget a new one should be created!
     private static final String WIDGET = "http://ict-forge.eu/packerTracer";  // default
-    private static final String DEFAULT_WIDGET = WIDGET + "/default";  // default
+    protected static final String DEFAULT_WIDGET = WIDGET + "/default";  // default
     private static final String DEVICE_TYPE = WIDGET + "/devices/type/";
     /** Objects -> Actitivies **/
     private static final String SIMULATION = "http://adlnet.gov/expapi/activities/simulation";
@@ -59,7 +59,7 @@ public class TinCanAPI extends InteractionRecord {
     final RemoteLRS lrs = new RemoteLRS();
     final ExecutorService executor;
 
-    private String widgetURI = DEFAULT_WIDGET;  // It can be overriden in setWidget
+    private URIFactory factory;
     private String sessionId;
 
 
@@ -71,13 +71,12 @@ public class TinCanAPI extends InteractionRecord {
         this.lrs.setPassword(password);
     }
 
-    public void setWidget(String widgetURI) {
-        if (widgetURI!=null)
-            this.widgetURI = widgetURI;
-    }
-
     public void setSession(String sessionId) {
         this.sessionId = sessionId;
+    }
+
+    public void setURIFactory(URIFactory factory) {
+        this.factory = factory;
     }
 
     private void record(final Statement statement) {
@@ -113,7 +112,7 @@ public class TinCanAPI extends InteractionRecord {
     }
 
     private Activity getWidgetActivity() throws URISyntaxException {
-        final Activity ret = new Activity(new URI(this.widgetURI));
+        final Activity ret = new Activity(new URI(this.factory.getWidgetURI()));
         final ActivityDefinition definition = new ActivityDefinition();
         definition.setType(SIMULATION);
         ret.setDefinition(definition);
@@ -275,15 +274,10 @@ public class TinCanAPI extends InteractionRecord {
         return ret;
     }
 
-    protected String getDeviceURI(String deviceName) {
-        final URIFactory uf = new URIFactory(this.widgetURI);
-        return uf.getDeviceURI(deviceName);
-    }
-
     protected Statement createCommandLine(String deviceName, String verb) throws URISyntaxException {
         final Statement st = getPrefilledStatement();
         st.setVerb(new Verb(verb));
-        final String deviceUri = getDeviceURI(deviceName);
+        final String deviceUri = this.factory.getDeviceURI(deviceName);
         st.setObject(createCommandLineObject(deviceUri, deviceName));
         // Note from docs:
         //  "A Statement defined entirely by its extensions becomes meaningless as no other system can make sense of it."
