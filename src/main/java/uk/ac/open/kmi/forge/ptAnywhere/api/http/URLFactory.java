@@ -26,7 +26,7 @@ public class URLFactory {
     final String sessionId;
     final String deviceId;
 
-    URLFactory(URI baseUri, String sessionId) {
+    public URLFactory(URI baseUri, String sessionId) {
         this(baseUri, sessionId, null);
     }
 

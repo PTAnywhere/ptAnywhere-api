@@ -10,6 +10,7 @@ import org.apache.commons.logging.LogFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 import uk.ac.open.kmi.forge.ptAnywhere.analytics.InteractionRecord;
 import uk.ac.open.kmi.forge.ptAnywhere.analytics.InteractionRecordFactory;
+import uk.ac.open.kmi.forge.ptAnywhere.api.websocket.ConsoleEndpoint;
 import uk.ac.open.kmi.forge.ptAnywhere.properties.PropertyFileManager;
 import uk.ac.open.kmi.forge.ptAnywhere.session.ExpirationSubscriber;
 import uk.ac.open.kmi.forge.ptAnywhere.session.SessionsManager;
@@ -34,8 +35,6 @@ public class APIApplication extends ResourceConfig {
     //   2. Have a blocking Redis subscription object running during the application lifetime.
     private final ExecutorService executor;
 
-    // FIXME not sure whether creating one PropertyFileManager per request could be harmful or desirable.
-    // Just in case, only an object is created per application so we are not reading the file over and over again.
     private final InteractionRecordFactory irf;
     private final ExpirationSubscriber es;
 
@@ -44,6 +43,7 @@ public class APIApplication extends ResourceConfig {
         LOGGER.info("Creating API webapp.");
 
         // Only an object is created per application, so we are not reading the file over and over again.
+        // However, I'm not sure whether creating one PropertyFileManager per request could be harmful or desirable.
         final PropertyFileManager pfm = new PropertyFileManager();
 
         packages(getClass().getPackage().getName());
@@ -52,6 +52,7 @@ public class APIApplication extends ResourceConfig {
         this.executor = Executors.newFixedThreadPool(20, new SimpleDaemonFactory());
         this.irf = new InteractionRecordFactory(this.executor, pfm.getInteractionRecordingDetails());
         this.es =  SessionsManager.createExpirationSubscription();
+        ConsoleEndpoint.setFactory(this.irf);
         servletContext.setAttribute(INTERACTION_RECORD_FACTORY, this.irf);
 
         // WARNING: Blocking thread. It won't stop during the Application lifecycle.

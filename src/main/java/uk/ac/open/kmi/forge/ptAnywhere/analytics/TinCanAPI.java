@@ -6,9 +6,13 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import uk.ac.open.kmi.forge.ptAnywhere.api.http.Utils;
 
+import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.core.UriBuilderException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 
 
@@ -23,20 +27,33 @@ public class TinCanAPI extends InteractionRecord {
     private static final Log LOGGER = LogFactory.getLog(TinCanAPI.class);
 
     // Own vocabulary
-    // TODO get it from the HTTP API requester?
-    private static final String WIDGET = "http://ict-forge.eu/widget/packerTracer";
+    private static final String VOCAB = "http://ict-forge.eu/vocab";
+
+    // Activity http://adlnet.gov/expapi/activities/simulation
 
     /* Verbs */
     private static final String INITIALIZED = "http://adlnet.gov/expapi/verbs/initialized";
+    private static final String TERMINATED = "http://adlnet.gov/expapi/verbs/terminated";
     private static final String CREATED = "http://activitystrea.ms/schema/1.0/create";
     private static final String DELETED = "http://activitystrea.ms/schema/1.0/delete";
     private static final String UPDATED = "http://activitystrea.ms/schema/1.0/update";
+    // For command line, we could also register: "open" or "close"
+    private static final String USED = "http://activitystrea.ms/schema/1.0/use";
 
     /* Objects */
+    // TODO get it from the HTTP API requester?
+    // So far only one activity, but for each widget a new one should be created!
+    private static final String WIDGET = "http://ict-forge.eu/widget/packerTracer";
     private static final String DEVICE_TYPE = WIDGET + "/devices/type/";
+    /** Objects -> Actitivies **/
+    private static final String SIMULATION = "http://adlnet.gov/expapi/activities/simulation";
+    private static final String ACTIVITIES = VOCAB + "/activities";
+    private static final String COMMAND_LINE = ACTIVITIES + "/command-line";
 
     /* Extensions */
-    private static final String ENDPOINTS = WIDGET + "/endpoints";
+    private static final String EXTENSION = VOCAB + "/extensions";
+    private static final String EXT_ENDPOINTS = EXTENSION + "/endpoints";
+    private static final String EXT_DEVICE = EXTENSION + "/device";  // Device whose command line we use
 
     final RemoteLRS lrs = new RemoteLRS();
     final ExecutorService executor;
@@ -60,6 +77,9 @@ public class TinCanAPI extends InteractionRecord {
                 } else {
                     // failure, error information is available in lrsRes.getErrMsg()
                     LOGGER.error("Something went wrong recording the sentence.");
+                    LOGGER.error("    HTTP error: " + lrsRes.getResponse().getStatusMsg());
+                    LOGGER.error("    HTTP response: " + lrsRes.getResponse().getContent());
+                    //LOGGER.error(statement.toJSON());
                 }
             }
         };
@@ -78,6 +98,14 @@ public class TinCanAPI extends InteractionRecord {
         return agent;
     }
 
+    private Activity getWidgetActivity() throws URISyntaxException {
+        final Activity ret = new Activity(new URI(WIDGET));
+        final ActivityDefinition definition = new ActivityDefinition();
+        definition.setType(SIMULATION);
+        ret.setDefinition(definition);
+        return ret;
+    }
+
     /*
     Right now, this information is unnecessary as the user can be used
     for reporting sessions.
@@ -86,6 +114,15 @@ public class TinCanAPI extends InteractionRecord {
     private Context getContext(String sessionId) {
         final Context context = new Context();
         context.setRegistration(Utils.toUUID(sessionId));
+        return context;
+    }
+
+    private Context addParentActivity(Context context) throws URISyntaxException {
+        final List<Activity> parents = new ArrayList<Activity>();
+        parents.add(getWidgetActivity());
+        final ContextActivities ca = new ContextActivities();
+        ca.setParent(parents);
+        context.setContextActivities(ca);
         return context;
     }
 
@@ -100,7 +137,7 @@ public class TinCanAPI extends InteractionRecord {
         try {
             final Statement st = getPrefilledStatement(sessionId);
             st.setVerb(new Verb(INITIALIZED));
-            st.setObject(new Activity(WIDGET));
+            st.setObject(getWidgetActivity());
             record(st);
         } catch(URISyntaxException e) {
             LOGGER.error(e.getMessage());
@@ -119,6 +156,7 @@ public class TinCanAPI extends InteractionRecord {
         if (deviceType!=null)
             definition.setType(DEVICE_TYPE + deviceType);
         definition.setName(lm);
+        // FIXME Should we reuse the same activity type and put deviceUri as extension?
         final Activity ret = new Activity(deviceUri);
         ret.setDefinition(definition);
         return ret;
@@ -184,7 +222,7 @@ public class TinCanAPI extends InteractionRecord {
             st.setVerb(new Verb(CREATED));
             st.setObject( createLinkObject(linkUri) );
             final Extensions ext = new Extensions();
-            ext.put(new URI(ENDPOINTS), endpointURLs);
+            ext.put(EXT_ENDPOINTS, endpointURLs);
             st.getContext().setExtensions(ext);
 
             record(st);
@@ -199,11 +237,69 @@ public class TinCanAPI extends InteractionRecord {
             st.setVerb(new Verb(DELETED));
             st.setObject( createLinkObject(linkUri) );
             final Extensions ext = new Extensions();
-            ext.put(new URI(ENDPOINTS), endpointURLs);
+            ext.put(new URI(EXT_ENDPOINTS), endpointURLs);
             st.getContext().setExtensions(ext);
 
             record(st);
         } catch(URISyntaxException e) {
+            LOGGER.error(e.getMessage());
+        }
+    }
+
+    private Activity createCommandLineObject(String deviceUri) throws URISyntaxException, IllegalArgumentException,
+            UriBuilderException {
+        final LanguageMap lm = new LanguageMap();
+        lm.put("en-GB", "Command line"); // TODO of device X
+        final ActivityDefinition definition = new ActivityDefinition();
+        definition.setName(lm);
+        definition.setType(COMMAND_LINE);
+        // It would be particularly useful to refer to activity types across sessions
+        //   (e.g., opening X console were X is always the same id)
+        final URI clUri = UriBuilder.fromPath(deviceUri).path("console").build();
+        final Activity ret = new Activity(clUri);
+        ret.setDefinition(definition);
+        return ret;
+    }
+
+    protected Statement createCommandLine(String sessionId, String deviceUri, String verb) throws URISyntaxException {
+        final Statement st = getPrefilledStatement(sessionId);
+        st.setVerb(new Verb(verb));
+        st.setObject(createCommandLineObject(deviceUri));
+        // Note from docs:
+        //  "A Statement defined entirely by its extensions becomes meaningless as no other system can make sense of it."
+        final Extensions ext = new Extensions();
+        ext.put(EXT_DEVICE, deviceUri);
+        st.getContext().setExtensions(ext);
+        addParentActivity(st.getContext());
+        return st;
+    }
+
+    public void commandLineStarted(String sessionId, String deviceUri) {
+        try {
+            final Statement st = createCommandLine(sessionId, deviceUri, INITIALIZED);
+            record( createCommandLine(sessionId, deviceUri, INITIALIZED) );
+        } catch(URISyntaxException | IllegalArgumentException | UriBuilderException e) {
+            LOGGER.error(e.getMessage());
+        }
+    }
+
+    public void commandLineUsed(String sessionId, String deviceUri, String input) {
+        try {
+            final Statement st = createCommandLine(sessionId, deviceUri, USED);
+            final Result result = new Result();
+            result.setResponse(input);
+            st.setResult(result);
+
+            record(st);
+        } catch(URISyntaxException | IllegalArgumentException | UriBuilderException e) {
+            LOGGER.error(e.getMessage());
+        }
+    }
+
+    public void commandLineEnded(String sessionId, String deviceUri) {
+        try {
+            record( createCommandLine(sessionId, deviceUri, TERMINATED) );
+        } catch(URISyntaxException | IllegalArgumentException | UriBuilderException e) {
             LOGGER.error(e.getMessage());
         }
     }
