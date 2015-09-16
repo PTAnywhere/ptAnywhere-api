@@ -16,11 +16,13 @@ import uk.ac.open.kmi.forge.ptAnywhere.session.SessionsManager;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
+import java.util.List;
 import javax.websocket.*;
 import javax.websocket.server.ServerEndpoint;
 
 
 @ServerEndpoint("/endpoint/sessions/{session}/devices/{device}/console")
+// Apparently it creates a class for each session + device
 public class ConsoleEndpoint implements TerminalLineEventListener {
 
     private final static Log LOGGER = LogFactory.getLog(ConsoleEndpoint.class);
@@ -33,16 +35,29 @@ public class ConsoleEndpoint implements TerminalLineEventListener {
     TerminalLine cmd;
     Session session;
 
+    private String widgetURI;
+    private String deviceName = null;
+
     public ConsoleEndpoint() {}
+
+    private void registerWidgetURI(Session session) {
+        this.widgetURI = null; // Default value
+        if ( session.getRequestParameterMap().containsKey("widget") ) {
+            final List<String> params = session.getRequestParameterMap().get("widget");
+            if (!params.isEmpty()) {
+                this.widgetURI = params.get(0);
+            }
+        }
+    }
 
     public static void setFactory(InteractionRecordFactory irf) {
         ConsoleEndpoint.lrsFactory = new WeakReference<InteractionRecordFactory>(irf);
     }
 
-    private InteractionRecord createInteractionRecordSession() {
+    private InteractionRecord createInteractionRecordSession(String widgetURI, String sessionId) {
         final InteractionRecordFactory irf = ConsoleEndpoint.lrsFactory.get();
         if (irf==null) return null;
-        return ConsoleEndpoint.lrsFactory.get().create();
+        return ConsoleEndpoint.lrsFactory.get().create(widgetURI, sessionId);
     }
 
     private String getSessionId(Session session) {
@@ -53,12 +68,18 @@ public class ConsoleEndpoint implements TerminalLineEventListener {
         return session.getPathParameters().get("device");
     }
 
-    private String getDeviceURI(Session session) {
-        return "http://forge.kmi.open.ac.uk/pt/" + getDeviceId(session);
+    private String getDeviceName(Session session) {
+        if (this.deviceName==null) {
+            final String deviceId = getDeviceId(session);
+            this.deviceName = this.common.getDataAccessObject().getDeviceById(deviceId).getLabel();
+        }
+        return this.deviceName;
     }
 
     @OnOpen
     public void myOnOpen(final Session session) {
+        registerWidgetURI(session);
+
         this.session = session;  // Important, the first thing
 
         final PTInstanceDetails details = SessionsManager.create().getInstance(getSessionId(session));
@@ -138,35 +159,35 @@ public class ConsoleEndpoint implements TerminalLineEventListener {
     }
 
     private void registerActivityStart(Session session) {
-        final InteractionRecord ir = createInteractionRecordSession();
+        final InteractionRecord ir = createInteractionRecordSession(this.widgetURI, getSessionId(session));
         if (ir==null) {
             if (LOGGER.isInfoEnabled()) {
                 LOGGER.info("No interaction record.");
             }
         } else {
-            ir.commandLineStarted(getSessionId(session), getDeviceURI(session));
+            ir.commandLineStarted(getDeviceName(session));
         }
     }
 
     private void registerInteraction(Session session, String msg) {
-        final InteractionRecord ir = createInteractionRecordSession();
+        final InteractionRecord ir = createInteractionRecordSession(this.widgetURI, getSessionId(session));
         if (ir==null) {
             if (LOGGER.isInfoEnabled()) {
                 LOGGER.info("No interaction record.");
             }
         } else {
-            ir.commandLineUsed(getSessionId(session), getDeviceURI(session), msg);
+            ir.commandLineUsed(getDeviceName(session), msg);
         }
     }
 
     private void registerActivityEnd(Session session) {
-        final InteractionRecord ir = createInteractionRecordSession();
+        final InteractionRecord ir = createInteractionRecordSession(this.widgetURI, getSessionId(session));
         if (ir==null) {
             if (LOGGER.isInfoEnabled()) {
                 LOGGER.info("No interaction record.");
             }
         } else {
-            ir.commandLineEnded(getSessionId(session), getDeviceURI(session));
+            ir.commandLineEnded(getDeviceName(session));
         }
     }
 
