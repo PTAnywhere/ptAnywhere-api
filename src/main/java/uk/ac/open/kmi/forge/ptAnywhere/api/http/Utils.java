@@ -58,7 +58,7 @@ public class Utils {
         // Simple solution which might be slightly slow and memory demanding
         // than other solutions since it creates a intermediate java UUID object.
         final String decorated = uuid.getDecoratedHexString();
-        return toSimplifiedId(java.util.UUID.fromString(decorated.substring(1, decorated.length()-1)) );
+        return toSimplifiedId(java.util.UUID.fromString(decorated.substring(1, decorated.length() - 1)));
     }
 
     /**
@@ -134,6 +134,16 @@ public class Utils {
     }
 
     /**
+     * Utility method to generate an JSON Strings.
+     * @param string
+     * @return
+     *      A string representing a JSON string items.
+     */
+    public static String toJsonString(String string) {
+        return "\"" + string + "\"";
+    }
+
+    /**
      * Utility method to generate an array with Strings.
      *
      * (This is needed because, MOXy seems unable to generate them for String collections or arrays.
@@ -152,7 +162,7 @@ public class Utils {
             } else {
                 ret += ", ";
             }
-            ret += "\"" + s + "\"";
+            ret += toJsonString(s);
         }
         ret += "]";
         return ret;

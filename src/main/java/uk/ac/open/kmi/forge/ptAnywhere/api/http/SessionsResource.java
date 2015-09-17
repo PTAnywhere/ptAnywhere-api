@@ -46,7 +46,7 @@ public class SessionsResource {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Retrieve information of the newly created session", tags="session")
     @ApiResponses(value = {
-        @ApiResponse(code = 201, message = "Session created successfully",
+        @ApiResponse(code = 201, message = "Session created successfully. Identifier of the new session.", response = String.class,
                 responseHeaders = { @ResponseHeader(name = "location", description = "URL for the newly created session", response=String.class) } ),
         @ApiResponse(code = NoPTInstanceAvailableException.status, response = ErrorBean.class,
                 message = NoPTInstanceAvailableException.description)
@@ -57,7 +57,7 @@ public class SessionsResource {
         final String id = this.sm.createSession();  // May throw NoPTInstanceAvailableException
         final InteractionRecord ir = APIApplication.createInteractionRecord(servletContext, id);
         ir.interactionStarted();
-        return Response.created(new URI(getSessionRelativeURI(id))).
+        return Response.created(new URI(getSessionRelativeURI(id))).entity(Utils.toJsonString(id)).
                 links(getItemLink(id)).build();
     }
 
