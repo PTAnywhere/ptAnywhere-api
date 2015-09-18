@@ -124,31 +124,33 @@ public class TinCanAPI extends InteractionRecord {
     for reporting sessions.
     However, in the future user might be de-anonymized.
      */
-    private Context getContext() {
-        final Context context = new Context();
-        context.setRegistration(Utils.toUUID(this.sessionId));
-        return context;
-    }
-
-    private Context addParentActivity(Context context) throws URISyntaxException {
+    private void addParentActivity(Context context) throws URISyntaxException {
         final List<Activity> parents = new ArrayList<Activity>();
         parents.add(getWidgetActivity());
         final ContextActivities ca = new ContextActivities();
         ca.setParent(parents);
         context.setContextActivities(ca);
-        return context;
     }
 
-    public Statement getPrefilledStatement() {
+    public Statement getPrefilledStatement() throws URISyntaxException {
+        return getPrefilledStatement(true);
+    }
+
+    public Statement getPrefilledStatement(boolean subactivity) throws URISyntaxException {
         final Statement st = new Statement();
         st.setActor(getAnonymousUser());
-        st.setContext(getContext());
+        final Context context = new Context();
+        context.setRegistration(Utils.toUUID(this.sessionId));
+        if (subactivity) {
+            addParentActivity(context);
+        }
+        st.setContext(context);
         return st;
     }
 
     public void interactionStarted() {
         try {
-            final Statement st = getPrefilledStatement();
+            final Statement st = getPrefilledStatement(false);
             st.setVerb(new Verb(INITIALIZED));
             st.setObject(getWidgetActivity());
             record(st);
@@ -284,7 +286,6 @@ public class TinCanAPI extends InteractionRecord {
         final Extensions ext = new Extensions();
         ext.put(EXT_DEVICE, deviceUri);
         st.getContext().setExtensions(ext);
-        addParentActivity(st.getContext());
         return st;
     }
 
