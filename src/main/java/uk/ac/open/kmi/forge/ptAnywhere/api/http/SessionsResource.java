@@ -3,13 +3,12 @@ package uk.ac.open.kmi.forge.ptAnywhere.api.http;
 import io.swagger.annotations.*;
 
 import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Set;
+import java.util.*;
 
 import uk.ac.open.kmi.forge.ptAnywhere.analytics.InteractionRecord;
 import uk.ac.open.kmi.forge.ptAnywhere.exceptions.ErrorBean;
@@ -53,9 +52,10 @@ public class SessionsResource {
     })
     // TODO Even better if we use:
     // https://jersey.java.net/documentation/latest/user-guide.html#declarative-linking
-    public Response createSession(@Context ServletContext servletContext) throws URISyntaxException, NoPTInstanceAvailableException {
+    public Response createSession(@Context ServletContext servletContext, @Context HttpServletRequest request)
+            throws URISyntaxException, NoPTInstanceAvailableException {
         final String id = this.sm.createSession();  // May throw NoPTInstanceAvailableException
-        final InteractionRecord ir = APIApplication.createInteractionRecord(servletContext, id);
+        final InteractionRecord ir = APIApplication.createInteractionRecord(servletContext, request, id);
         ir.interactionStarted();
         return Response.created(new URI(getSessionRelativeURI(id))).entity(Utils.toJsonString(id)).
                 links(getItemLink(id)).build();

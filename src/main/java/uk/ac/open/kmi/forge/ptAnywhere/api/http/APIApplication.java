@@ -17,6 +17,7 @@ import uk.ac.open.kmi.forge.ptAnywhere.session.SessionsManager;
 
 import javax.annotation.PreDestroy;
 import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Context;
 import java.util.concurrent.ExecutorService;
@@ -93,8 +94,19 @@ public class APIApplication extends ResourceConfig {
         context.setAttribute("swagger", swagger);
     }
 
-    public static InteractionRecord createInteractionRecord(ServletContext servletContext, String sessionId) {
-        return ((InteractionRecordFactory) servletContext.getAttribute(APIApplication.INTERACTION_RECORD_FACTORY)).create(sessionId);
+    private static String getReferrerWidgetURL(HttpServletRequest request) {
+        final String referrer = request.getHeader("referer");
+        final int paramsAt = referrer.indexOf("?");
+        if (paramsAt==-1) return referrer;
+        return referrer.substring(0, paramsAt);
+    }
+
+    private static InteractionRecordFactory getRecordFactory(ServletContext servletContext) {
+        return ((InteractionRecordFactory) servletContext.getAttribute(APIApplication.INTERACTION_RECORD_FACTORY));
+    }
+
+    public static InteractionRecord createInteractionRecord(ServletContext servletContext, HttpServletRequest request, String sessionId) {
+        return getRecordFactory(servletContext).create(getReferrerWidgetURL(request), sessionId);
     }
 
     //@PostConstruct

@@ -14,6 +14,7 @@ import uk.ac.open.kmi.forge.ptAnywhere.session.SessionManager;
 import static uk.ac.open.kmi.forge.ptAnywhere.api.http.URLFactory.DEVICE_PARAM;
 
 import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
 import java.net.URI;
@@ -90,7 +91,7 @@ public class DevicesResource {
         @ApiResponse(code = PacketTracerConnectionException.status, response = ErrorBean.class, message = PacketTracerConnectionException.description),
         @ApiResponse(code = SessionNotFoundException.status, response = ErrorBean.class, message = SessionNotFoundException.description)
     })
-    public Response createDevice( @Context ServletContext servletContext,
+    public Response createDevice(@Context ServletContext servletContext, @Context HttpServletRequest request,
             @ApiParam(value = "Device to be created. <br> 'port' and 'url' fields are not expected " +
                             "to be completed and therefore they will be ignored.") Device newDevice)
             throws URISyntaxException {
@@ -98,7 +99,7 @@ public class DevicesResource {
         if (device==null)
             return addDefaultLinks(Response.status(Response.Status.BAD_REQUEST).entity(newDevice)).build();
 
-        final InteractionRecord ir = APIApplication.createInteractionRecord(servletContext, sm.getSessionId());
+        final InteractionRecord ir = APIApplication.createInteractionRecord(servletContext, request, sm.getSessionId());
         final String newDeviceUri = this.gen.createDeviceURL(device.getId());
         ir.deviceCreated(newDeviceUri, device.getLabel(), device.getGroup());
         return addDefaultLinks(Response.created(new URI(newDeviceUri))).

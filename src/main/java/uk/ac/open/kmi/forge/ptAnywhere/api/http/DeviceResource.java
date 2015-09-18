@@ -13,6 +13,7 @@ import static uk.ac.open.kmi.forge.ptAnywhere.api.http.URLFactory.DEVICE_PARAM;
 import static uk.ac.open.kmi.forge.ptAnywhere.api.http.URLFactory.PORT_PATH;
 
 import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
 import java.net.URI;
@@ -119,11 +120,11 @@ public class DeviceResource {
         @ApiResponse(code = PacketTracerConnectionException.status, response = ErrorBean.class, message = PacketTracerConnectionException.description),
         @ApiResponse(code = SessionNotFoundException.status, response = ErrorBean.class, message = SessionNotFoundException.description)
     })
-    public Response removeDevice(@Context ServletContext servletContext,
+    public Response removeDevice(@Context ServletContext servletContext, @Context HttpServletRequest request,
             @ApiParam(value = "Identifier of the device to be deleted.") @PathParam(DEVICE_PARAM) String deviceId) {
         final Device d = new DeviceDeleter(this.sm, deviceId, this.uri.getBaseUri()).call();  // Not using a new Thread
         // TODO add getDevicesLink() to not found exception
-        final InteractionRecord ir = APIApplication.createInteractionRecord(servletContext, this.sm.getSessionId());
+        final InteractionRecord ir = APIApplication.createInteractionRecord(servletContext, request, this.sm.getSessionId());
         ir.deviceDeleted(this.uri.getRequestUri().toString(), d.getLabel(), d.getGroup());
         return Response.ok(d).
                 links(getDevicesLink()).build();
@@ -137,13 +138,13 @@ public class DeviceResource {
             @ApiResponse(code = PacketTracerConnectionException.status, response = ErrorBean.class, message = PacketTracerConnectionException.description),
             @ApiResponse(code = SessionNotFoundException.status, response = ErrorBean.class, message = SessionNotFoundException.description)
     })
-    public Response modifyDevice(@Context ServletContext servletContext,
+    public Response modifyDevice(@Context ServletContext servletContext, @Context HttpServletRequest request,
             @ApiParam(value = "Identifier of the device to be updated.") @PathParam(DEVICE_PARAM) String deviceId,
             @ApiParam(value = "Device to be updated. Only the 'label' and the 'defaultGateway' (if it is a PC) fields " +
                     "can be updated. The rest will be simply ignored.") Device modification) {
         final Device d = new DeviceModifier(this.sm, deviceId, modification, this.uri.getBaseUri()).call();  // Not using a new Thread
         // TODO add getDevicesLink() to not found exception
-        final InteractionRecord ir = APIApplication.createInteractionRecord(servletContext, this.sm.getSessionId());
+        final InteractionRecord ir = APIApplication.createInteractionRecord(servletContext, request, this.sm.getSessionId());
         ir.deviceModified(this.uri.getRequestUri().toString(), d.getLabel(), d.getGroup());
         return Response.ok(d).
                 links(getDevicesLink()).

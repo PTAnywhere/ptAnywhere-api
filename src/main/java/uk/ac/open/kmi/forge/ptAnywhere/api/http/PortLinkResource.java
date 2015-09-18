@@ -16,6 +16,7 @@ import static uk.ac.open.kmi.forge.ptAnywhere.api.http.URLFactory.PORT_PARAM;
 import static uk.ac.open.kmi.forge.ptAnywhere.api.http.URLFactory.DEVICE_PARAM;
 
 import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
@@ -122,15 +123,15 @@ public class PortLinkResource {
             @ApiResponse(code = PacketTracerConnectionException.status, response = ErrorBean.class, message = PacketTracerConnectionException.description),
             @ApiResponse(code = SessionNotFoundException.status, response = ErrorBean.class, message = SessionNotFoundException.description)
     })
-    public Response removeLink(@ApiParam(value = "Identifier of the device.") @PathParam(DEVICE_PARAM) String deviceId,
-                               @ApiParam(value = "Name of the port inside the device.") @PathParam(PORT_PARAM) String portName,
-                               @Context ServletContext servletContext) {
+    public Response removeLink(@Context ServletContext servletContext,  @Context HttpServletRequest request,
+                               @ApiParam(value = "Identifier of the device.") @PathParam(DEVICE_PARAM) String deviceId,
+                               @ApiParam(value = "Name of the port inside the device.") @PathParam(PORT_PARAM) String portName) {
         final Link deletedLink = new LinkDeleter(this.sm, deviceId, Utils.unescapePort(portName), this.uri.getBaseUri()).call();
         // TODO add links to not found exception
         if (deletedLink==null)  // It exists, couldn't be removed
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(deletedLink).
                     links(getPortLink()).build();
-        final InteractionRecord ir =  APIApplication.createInteractionRecord(servletContext, this.sm.getSessionId());
+        final InteractionRecord ir =  APIApplication.createInteractionRecord(servletContext, request, this.sm.getSessionId());
         ir.deviceDisconnected(deletedLink.getUrl(), deletedLink.getEndpoints());
         return Response.ok(deletedLink).
                 links(getPortLink()).build();
@@ -146,16 +147,16 @@ public class PortLinkResource {
             @ApiResponse(code = PacketTracerConnectionException.status, response = ErrorBean.class, message = PacketTracerConnectionException.description),
             @ApiResponse(code = SessionNotFoundException.status, response = ErrorBean.class, message = SessionNotFoundException.description)
     })
-    public Response createLink(@ApiParam(value = "The other endpoint of the link. " +
+    public Response createLink(@Context ServletContext servletContext, @Context HttpServletRequest request,
+                               @ApiParam(value = "The other endpoint of the link. " +
                                                     "Only the 'toPort' field will be considered.") HalfLink newLink,
                                @ApiParam(value = "Identifier of the device.") @PathParam(DEVICE_PARAM) String deviceId,
-                               @ApiParam(value = "Name of the port inside the device.") @PathParam(PORT_PARAM) String portName,
-                               @Context ServletContext servletContext) {
+                               @ApiParam(value = "Name of the port inside the device.") @PathParam(PORT_PARAM) String portName) {
         final Link createdLink = new LinkCreator(this.sm, deviceId, Utils.unescapePort(portName), newLink, this.uri.getBaseUri()).call();
         if (createdLink==null)
             return Response.status(Response.Status.NOT_ACCEPTABLE).entity(newLink).
                     links(getPortLink()).build();
-        final InteractionRecord ir =  APIApplication.createInteractionRecord(servletContext, sm.getSessionId());
+        final InteractionRecord ir =  APIApplication.createInteractionRecord(servletContext, request, sm.getSessionId());
         ir.deviceConnected(createdLink.getUrl(), createdLink.getEndpoints());
         return Response.created(this.uri.getRequestUri()).entity(createdLink).
                 links(getPortLink()).build();
