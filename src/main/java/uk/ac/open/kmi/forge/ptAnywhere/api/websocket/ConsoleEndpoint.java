@@ -188,12 +188,18 @@ public class ConsoleEndpoint implements TerminalLineEventListener {
     @OnMessage
     public void typeCommand(Session session, String msg, boolean last) throws IOException {
         // register it in Tin Can API
-        if (LOGGER.isInfoEnabled() && msg.endsWith("\t")) LOGGER.info("Autocompleting command.");
+        if (LOGGER.isInfoEnabled() && msg.endsWith("\t")) {
+            msg = msg.trim() + "\t";
+            LOGGER.info("Autocompleting command.");
+        } else {
+            LOGGER.info("Running normal command.");
+        }
         enterCommand(session, msg, last);
         registerInteraction(session, msg);
     }
 
     public void handleEvent(TerminalLineEvent event) {
+        // Maybe we could use other events: commandAutoCompleted, promptChanged, terminalUpdated, etc.
         if (event.eventName.equals("outputWritten")) {
             try {
                 final String msg = ((TerminalLineEvent.OutputWritten) event).newOutput;
@@ -201,6 +207,8 @@ public class ConsoleEndpoint implements TerminalLineEventListener {
             } catch(IOException e) {
                 LOGGER.error(e.getMessage(), e);
             }
+        } else if (event.eventName.equals("promptChanged")) {
+
         }
     }
 }
