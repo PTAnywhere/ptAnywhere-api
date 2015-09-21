@@ -77,49 +77,53 @@ public class ConsoleEndpoint implements TerminalLineEventListener {
     }
 
     @OnOpen
-    public void myOnOpen(final Session session) {
+    public void myOnOpen(final Session session) throws IOException {
         registerWidgetURI(session);
 
         this.session = session;  // Important, the first thing
 
         final PTInstanceDetails details = SessionsManager.create().getInstance(getSessionId(session));
-        if (details==null) return; // Is it better to throw an exception?
-
-        this.common = PTConnection.createPacketTracerGateway(details.getHost(), details.getPort());
-        this.common.open();
-        final String deviceId = getDeviceId(session);
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info("Opening communication channel for device " + deviceId + "'s command line.");
-        }
-        final Device dev = this.common.getDataAccessObject().getSimDeviceById(Utils.toCiscoUUID(deviceId));
-        if (dev==null) {
-            if(LOGGER.isErrorEnabled()) {
-                LOGGER.error("Device with id " + deviceId + " not found." );
-            }
+        if (details==null) {
+            session.close(new CloseReason(CloseReason.CloseCodes.GOING_AWAY,
+                                            "The session does not exist, it possibly expired."));
         } else {
-            if (DeviceType.PC.equals(dev.getType()) || DeviceType.SWITCH.equals(dev.getType()) ||
-                DeviceType.ROUTER.equals(dev.getType())) {
-                if (DeviceType.PC.equals(dev.getType())) {
-                    this.cmd = ((Pc) dev).getCommandLine();
-                } else {
-                    this.cmd = ((CiscoDevice) dev).getConsoleLine();
-                }
-                try {
-                    final TerminalLineEventRegistry registry = this.common.getTerminalLineEventRegistry();
-                    registry.addListener(this, this.cmd);
-                    registerActivityStart(session);
-                    if (this.cmd.getPrompt().equals("")) {
-                        // Switches and router need a "RETURN" to get started.
-                        // Here, we free the client from doing this task.
-                        enterCommand(session, "", false);
-                    } else
-                        this.session.getBasicRemote().sendText(this.cmd.getPrompt());
-                } catch (IOException e) {
-                    LOGGER.error(e.getMessage(), e);
+            this.common = PTConnection.createPacketTracerGateway(details.getHost(), details.getPort());
+            this.common.open();
+            final String deviceId = getDeviceId(session);
+            if (LOGGER.isInfoEnabled()) {
+                LOGGER.info("Opening communication channel for device " + deviceId + "'s command line.");
+            }
+            final Device dev = this.common.getDataAccessObject().getSimDeviceById(Utils.toCiscoUUID(deviceId));
+            if (dev == null) {
+                session.close(new CloseReason(CloseReason.CloseCodes.CANNOT_ACCEPT, "The device does not exist."));
+                if (LOGGER.isErrorEnabled()) {
+                    LOGGER.error("Device with id " + deviceId + " not found.");
                 }
             } else {
-                if(LOGGER.isErrorEnabled()) {
-                    LOGGER.error("Console could not opened for device type " + dev.getType().name() + ".");
+                if (DeviceType.PC.equals(dev.getType()) || DeviceType.SWITCH.equals(dev.getType()) ||
+                        DeviceType.ROUTER.equals(dev.getType())) {
+                    if (DeviceType.PC.equals(dev.getType())) {
+                        this.cmd = ((Pc) dev).getCommandLine();
+                    } else {
+                        this.cmd = ((CiscoDevice) dev).getConsoleLine();
+                    }
+                    try {
+                        final TerminalLineEventRegistry registry = this.common.getTerminalLineEventRegistry();
+                        registry.addListener(this, this.cmd);
+                        registerActivityStart(session);
+                        if (this.cmd.getPrompt().equals("")) {
+                            // Switches and router need a "RETURN" to get started.
+                            // Here, we free the client from doing this task.
+                            enterCommand(session, "", false);
+                        } else
+                            this.session.getBasicRemote().sendText(this.cmd.getPrompt());
+                    } catch (IOException e) {
+                        LOGGER.error(e.getMessage(), e);
+                    }
+                } else {
+                    if (LOGGER.isErrorEnabled()) {
+                        LOGGER.error("Console could not opened for device type " + dev.getType().name() + ".");
+                    }
                 }
             }
         }
@@ -128,7 +132,6 @@ public class ConsoleEndpoint implements TerminalLineEventListener {
     @OnClose
     public void myOnClose(final CloseReason reason) {
         try {
-            //System.out.println("Closing a WebSocket due to " + reason.getReasonPhrase());
             this.common.getTerminalLineEventRegistry().removeListener(this, this.cmd);
             registerActivityEnd(this.session);
         } catch(IOException e) {
@@ -138,22 +141,13 @@ public class ConsoleEndpoint implements TerminalLineEventListener {
         }
     }
 
-    private void enterCommand(Session session, String msg, boolean last) {
+    private void enterCommand(Session session, String msg, boolean last) throws IOException {
         if (session.isOpen()) {
             final String sessionId = session.getPathParameters().get("session");
             if (SessionsManager.create().doesExist(sessionId)) {
                 this.cmd.enterCommand(msg);
             } else {
-                // The current session no longer has access to the PT instance it was using...
-                final TerminalLineEventRegistry registry = this.common.getTerminalLineEventRegistry();
-                try {
-                    registry.removeListener(this);
-                    session.getBasicRemote().sendText("\n\n\nThis command line does no longer accept commands.");
-                    session.getBasicRemote().sendText("\nYour session might have expired.");
-                    session.close();
-                } catch(IOException e) {
-                    LOGGER.error(e.getMessage(), e);
-                }
+                session.close(new CloseReason(CloseReason.CloseCodes.GOING_AWAY, "The session has expired."));
             }
         }
     }
@@ -192,7 +186,7 @@ public class ConsoleEndpoint implements TerminalLineEventListener {
     }
 
     @OnMessage
-    public void typeCommand(Session session, String msg, boolean last) {
+    public void typeCommand(Session session, String msg, boolean last) throws IOException {
         // register it in Tin Can API
         enterCommand(session, msg, last);
         registerInteraction(session, msg);
