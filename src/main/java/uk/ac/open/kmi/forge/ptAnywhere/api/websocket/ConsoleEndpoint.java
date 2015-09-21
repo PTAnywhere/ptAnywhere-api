@@ -188,6 +188,7 @@ public class ConsoleEndpoint implements TerminalLineEventListener {
     @OnMessage
     public void typeCommand(Session session, String msg, boolean last) throws IOException {
         // register it in Tin Can API
+        if (LOGGER.isInfoEnabled() && msg.endsWith("\t")) LOGGER.info("Autocompleting command.");
         enterCommand(session, msg, last);
         registerInteraction(session, msg);
     }
