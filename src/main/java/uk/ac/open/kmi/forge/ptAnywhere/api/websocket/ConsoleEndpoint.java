@@ -21,7 +21,9 @@ import javax.websocket.*;
 import javax.websocket.server.ServerEndpoint;
 
 
-@ServerEndpoint("/endpoint/sessions/{session}/devices/{device}/console")
+@ServerEndpoint(value = "/endpoint/sessions/{session}/devices/{device}/console",
+                encoders = { OutputWritterEventEncoder.class, HistoryEncoder.class, PromptEncoder.class }
+)
 // Apparently it creates a class for each session + device
 public class ConsoleEndpoint implements TerminalLineEventListener {
 
@@ -77,7 +79,7 @@ public class ConsoleEndpoint implements TerminalLineEventListener {
     }
 
     @OnOpen
-    public void myOnOpen(final Session session) throws IOException {
+    public void myOnOpen(final Session session) throws IOException, EncodeException {
         registerWidgetURI(session);
 
         this.session = session;  // Important, the first thing
@@ -115,8 +117,9 @@ public class ConsoleEndpoint implements TerminalLineEventListener {
                             // Switches and router need a "RETURN" to get started.
                             // Here, we free the client from doing this task.
                             enterCommand(session, "", false);
-                        } else
-                            this.session.getBasicRemote().sendText(this.cmd.getPrompt());
+                        } else {
+                            this.session.getBasicRemote().sendObject(this.cmd.getPrompt());
+                        }
                     } catch (IOException e) {
                         LOGGER.error(e.getMessage(), e);
                     }
@@ -186,29 +189,31 @@ public class ConsoleEndpoint implements TerminalLineEventListener {
     }
 
     @OnMessage
-    public void typeCommand(Session session, String msg, boolean last) throws IOException {
+    public void typeCommand(Session session, String msg, boolean last) throws IOException, EncodeException {
         // register it in Tin Can API
-        if (LOGGER.isInfoEnabled() && msg.endsWith("\t")) {
-            msg = msg.trim() + "\t";
-            LOGGER.info("Autocompleting command.");
+        if (msg.equals("/getHistory")) {
+            session.getBasicRemote().sendObject(this.cmd.getUserHistory().getHistory());
+            // TODO register history check activity
         } else {
-            LOGGER.info("Running normal command.");
+            if (LOGGER.isInfoEnabled() && msg.endsWith("\t")) {
+                msg = msg.trim() + "\t";
+                LOGGER.info("Autocompleting command.");
+            } else {
+                LOGGER.info("Running normal command.");
+            }
+            enterCommand(session, msg, last);
+            registerInteraction(session, msg);
         }
-        enterCommand(session, msg, last);
-        registerInteraction(session, msg);
     }
 
-    public void handleEvent(TerminalLineEvent event) {
+    public void handleEvent(TerminalLineEvent event) throws EncodeException {
         // Maybe we could use other events: commandAutoCompleted, promptChanged, terminalUpdated, etc.
         if (event.eventName.equals("outputWritten")) {
             try {
-                final String msg = ((TerminalLineEvent.OutputWritten) event).newOutput;
-                this.session.getBasicRemote().sendText(msg);
+                this.session.getBasicRemote().sendObject((TerminalLineEvent.OutputWritten) event);
             } catch(IOException e) {
                 LOGGER.error(e.getMessage(), e);
             }
-        } else if (event.eventName.equals("promptChanged")) {
-
         }
     }
 }
