@@ -176,6 +176,12 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.skyscreamer</groupId>
+            <artifactId>jsonassert</artifactId>
+            <version>1.2.3</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.glassfish.jersey.containers</groupId>
             <!-- <artifactId>jersey-container-servlet-core</artifactId> -->
             <!-- use the following artifactId if you don't need servlet 2.x compatibility -->

@@ -156,7 +156,8 @@ public class PortLinkResource {
         if (createdLink==null)
             return Response.status(Response.Status.NOT_ACCEPTABLE).entity(newLink).
                     links(getPortLink()).build();
-        final InteractionRecord ir =  APIApplication.createInteractionRecord(servletContext, request, sm.getSessionId());
+        final InteractionRecord ir =  APIApplication.createInteractionRecord(servletContext, request, this.sm.getSessionId());
+
         ir.deviceConnected(createdLink.getUrl(), createdLink.getEndpoints());
         return Response.created(this.uri.getRequestUri()).entity(createdLink).
                 links(getPortLink()).build();

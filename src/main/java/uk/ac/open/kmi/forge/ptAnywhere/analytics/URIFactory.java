@@ -14,10 +14,6 @@ public class URIFactory {
 
     final String widgetUri;
 
-    public URIFactory() {
-        this(TinCanAPI.DEFAULT_WIDGET);
-    }
-
     public URIFactory(String widgetUri) {
         this.widgetUri = (widgetUri.endsWith("/"))? widgetUri: widgetUri + "/";
     }
