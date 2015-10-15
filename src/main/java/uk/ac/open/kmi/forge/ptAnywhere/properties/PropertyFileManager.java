@@ -47,17 +47,23 @@ public class PropertyFileManager {
         );
     }
 
-    private PacketTracerInstanceProperties getConnectionChunks(String s) throws Exception {
+    private PacketTracerInstanceProperties getConnectionChunks(String s) {
+        if (s==null) return null;
         if (s.contains(":")) {
             final String[] chunks = s.trim().split(":");
             if (chunks.length!=2) {
-                throw new Exception("Incorrect instance name error: " + s + ".");
+                LOGGER.error("Incorrect instance name error: " + s + ".");
+                return null;
             }
             final int port = Integer.parseInt(chunks[1]);
             return new PacketTracerInstanceProperties(chunks[0], port);
         } else {
             return new PacketTracerInstanceProperties(s.trim(), 39000);
         }
+    }
+
+    public PacketTracerInstanceProperties getSharedInstanceDetails() {
+        return getConnectionChunks(this.props.getProperty("pt-shared-instance"));
     }
 
     public Set<String> getPacketTracerManagementAPIs() {

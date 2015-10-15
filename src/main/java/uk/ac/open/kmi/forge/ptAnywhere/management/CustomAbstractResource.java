@@ -3,15 +3,15 @@ package uk.ac.open.kmi.forge.ptAnywhere.management;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.glassfish.jersey.server.mvc.Viewable;
-
+import uk.ac.open.kmi.forge.ptAnywhere.session.SessionsManager;
+import uk.ac.open.kmi.forge.ptAnywhere.session.SessionsManagerFactory;
 import javax.servlet.ServletContext;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.UriInfo;
 import java.io.IOException;
-import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+
 
 public abstract class CustomAbstractResource {
 
@@ -40,6 +40,10 @@ public abstract class CustomAbstractResource {
 
     String getAppRootURL() {
         return (String) this.servletContext.getAttribute(ManagementApplication.APP_ROOT);
+    }
+
+    SessionsManager getSessionsManager() {
+        return ((SessionsManagerFactory) this.servletContext.getAttribute(ManagementApplication.SESSIONS_MANAGER)).create();
     }
 
     String getAPIURL() {

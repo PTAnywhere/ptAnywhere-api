@@ -1,5 +1,10 @@
 package uk.ac.open.kmi.forge.ptAnywhere.api.websocket;
 
+import java.io.IOException;
+import java.lang.ref.WeakReference;
+import java.util.List;
+import javax.websocket.*;
+import javax.websocket.server.ServerEndpoint;
 import com.cisco.pt.ipc.enums.DeviceType;
 import com.cisco.pt.ipc.events.TerminalLineEvent;
 import com.cisco.pt.ipc.events.TerminalLineEventListener;
@@ -12,13 +17,7 @@ import uk.ac.open.kmi.forge.ptAnywhere.analytics.InteractionRecordFactory;
 import uk.ac.open.kmi.forge.ptAnywhere.api.http.Utils;
 import uk.ac.open.kmi.forge.ptAnywhere.gateway.PTConnection;
 import uk.ac.open.kmi.forge.ptAnywhere.session.PTInstanceDetails;
-import uk.ac.open.kmi.forge.ptAnywhere.session.SessionsManager;
-
-import java.io.IOException;
-import java.lang.ref.WeakReference;
-import java.util.List;
-import javax.websocket.*;
-import javax.websocket.server.ServerEndpoint;
+import uk.ac.open.kmi.forge.ptAnywhere.session.SessionsManagerFactory;
 
 
 @ServerEndpoint(value = "/endpoint/sessions/{session}/devices/{device}/console",
@@ -32,6 +31,7 @@ public class ConsoleEndpoint implements TerminalLineEventListener {
     // "lrsFactory" is a weak reference because it is handled by the APIApplication class.
     // TODO better way to access it directly in the APIApplication (which is the manager).
     private static WeakReference<InteractionRecordFactory> lrsFactory;
+    private static WeakReference<SessionsManagerFactory> sessionsManagerFactory;
 
     PTConnection common;
     TerminalLine cmd;
@@ -52,8 +52,12 @@ public class ConsoleEndpoint implements TerminalLineEventListener {
         }
     }
 
-    public static void setFactory(InteractionRecordFactory irf) {
+    public static void setInteractionRecordFactory(InteractionRecordFactory irf) {
         ConsoleEndpoint.lrsFactory = new WeakReference<InteractionRecordFactory>(irf);
+    }
+
+    public static void setSessionsManagerFactory(SessionsManagerFactory smFactory) {
+        ConsoleEndpoint.sessionsManagerFactory = new WeakReference<SessionsManagerFactory>(smFactory);
     }
 
     private InteractionRecord createInteractionRecordSession(String widgetURI, String sessionId) {
@@ -84,7 +88,8 @@ public class ConsoleEndpoint implements TerminalLineEventListener {
 
         this.session = session;  // Important, the first thing
 
-        final PTInstanceDetails details = SessionsManager.create().getInstance(getSessionId(session));
+        final InteractionRecordFactory irf = ConsoleEndpoint.lrsFactory.get();
+        final PTInstanceDetails details = ConsoleEndpoint.sessionsManagerFactory.get().create().getInstance(getSessionId(session));
         if (details==null) {
             session.close(new CloseReason(CloseReason.CloseCodes.GOING_AWAY,
                                             "The session does not exist, it possibly expired."));
@@ -147,7 +152,7 @@ public class ConsoleEndpoint implements TerminalLineEventListener {
     private void enterCommand(Session session, String msg, boolean last) throws IOException {
         if (session.isOpen()) {
             final String sessionId = session.getPathParameters().get("session");
-            if (SessionsManager.create().doesExist(sessionId)) {
+            if (ConsoleEndpoint.sessionsManagerFactory.get().create().doesExist(sessionId)) {
                 this.cmd.enterCommand(msg);
             } else {
                 session.close(new CloseReason(CloseReason.CloseCodes.GOING_AWAY, "The session has expired."));

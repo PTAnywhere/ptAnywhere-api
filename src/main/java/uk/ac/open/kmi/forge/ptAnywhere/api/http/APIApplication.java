@@ -14,6 +14,8 @@ import uk.ac.open.kmi.forge.ptAnywhere.api.websocket.ConsoleEndpoint;
 import uk.ac.open.kmi.forge.ptAnywhere.properties.PropertyFileManager;
 import uk.ac.open.kmi.forge.ptAnywhere.session.ExpirationSubscriber;
 import uk.ac.open.kmi.forge.ptAnywhere.session.SessionsManager;
+import uk.ac.open.kmi.forge.ptAnywhere.session.SessionsManagerFactory;
+import uk.ac.open.kmi.forge.ptAnywhere.session.impl.SessionsManagerFactoryImpl;
 
 import javax.annotation.PreDestroy;
 import javax.servlet.ServletContext;
@@ -28,6 +30,7 @@ import java.util.concurrent.ThreadFactory;
 @ApplicationPath("v1")
 public class APIApplication extends ResourceConfig {
 
+    private static final String SESSIONS_MANAGER_FACTORY = "sessionsManagerFactory";
     private static final String INTERACTION_RECORD_FACTORY = "interactionRecordFactory";
     private static final Log LOGGER = LogFactory.getLog(APIApplication.class);
 
@@ -50,14 +53,20 @@ public class APIApplication extends ResourceConfig {
         packages(getClass().getPackage().getName());
         configSwagger(servletContext, pfm.getApplicationPath());
 
+        final SessionsManagerFactory sessionsManagerFactory = SessionsManagerFactoryImpl.create(pfm);
+        servletContext.setAttribute(SESSIONS_MANAGER_FACTORY, sessionsManagerFactory);
+        ConsoleEndpoint.setSessionsManagerFactory(sessionsManagerFactory);
+        this.es =  sessionsManagerFactory.createExpirationSubscription();  // WARNING: it can return null.
+
         this.executor = Executors.newFixedThreadPool(20, new SimpleDaemonFactory());
         this.irf = new InteractionRecordFactory(this.executor, pfm.getInteractionRecordingDetails());
-        this.es =  SessionsManager.createExpirationSubscription();
-        ConsoleEndpoint.setFactory(this.irf);
+        ConsoleEndpoint.setInteractionRecordFactory(this.irf);
         servletContext.setAttribute(INTERACTION_RECORD_FACTORY, this.irf);
 
-        // WARNING: Blocking thread. It won't stop during the Application lifecycle.
-        this.executor.submit(this.es);
+        if (this.es!=null) {
+            // WARNING: Blocking thread. It won't stop during the Application lifecycle.
+            this.executor.submit(this.es);
+        }
     }
 
     protected void configSwagger(ServletContext context, String appPath) {
@@ -109,11 +118,17 @@ public class APIApplication extends ResourceConfig {
         return getRecordFactory(servletContext).create(getReferrerWidgetURL(request), sessionId);
     }
 
+    public static SessionsManager createSessionsManager(ServletContext servletContext) {
+        return ((SessionsManagerFactory) servletContext.getAttribute(APIApplication.SESSIONS_MANAGER_FACTORY)).create();
+    }
+
     //@PostConstruct
     @PreDestroy
     public void stop() {
         LOGGER.info("Destroying API webapp.");
-        this.es.stop();  // Destroying the Executor would do the work too, but just in case.
+        if (this.es!=null) {
+            this.es.stop();  // Destroying the Executor would do the work too, but just in case.
+        }
         this.executor.shutdownNow();
     }
 }

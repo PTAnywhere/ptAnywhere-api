@@ -14,6 +14,7 @@ import uk.ac.open.kmi.forge.ptAnywhere.analytics.InteractionRecord;
 import uk.ac.open.kmi.forge.ptAnywhere.exceptions.ErrorBean;
 import uk.ac.open.kmi.forge.ptAnywhere.exceptions.NoPTInstanceAvailableException;
 import uk.ac.open.kmi.forge.ptAnywhere.session.SessionsManager;
+import uk.ac.open.kmi.forge.ptAnywhere.session.impl.MultipleSessionsManager;
 import static uk.ac.open.kmi.forge.ptAnywhere.api.http.URLFactory.SESSION_PARAM;
 
 
@@ -24,10 +25,9 @@ public class SessionsResource {
     @Context
     UriInfo uri;
 
-    final SessionsManager sm = SessionsManager.create();
-
     @Path("{" + SESSION_PARAM + "}")
-    public SessionResource getResource(@Context UriInfo u) {
+    public SessionResource getResource(@Context ServletContext servletContext, @Context UriInfo u) {
+        final SessionsManager sm = APIApplication.createSessionsManager(servletContext);
         return new SessionResource(u, sm);
     }
 
@@ -36,8 +36,9 @@ public class SessionsResource {
                     response = String.class, responseContainer = "set",
                     notes = "The returned strings correspond to the identifiers of the sessions")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getAll() {
-        final Set<String> sessions = this.sm.getCurrentSessions();
+    public Response getAll(@Context ServletContext servletContext) {
+        final SessionsManager sm = APIApplication.createSessionsManager(servletContext);
+        final Set<String> sessions = sm.getCurrentSessions();
         return Response.ok(Utils.toJsonStringArray(sessions)).links(createLinks(sessions)).build();
     }
 
@@ -54,7 +55,7 @@ public class SessionsResource {
     // https://jersey.java.net/documentation/latest/user-guide.html#declarative-linking
     public Response createSession(@Context ServletContext servletContext, @Context HttpServletRequest request)
             throws URISyntaxException, NoPTInstanceAvailableException {
-        final String id = this.sm.createSession();  // May throw NoPTInstanceAvailableException
+        final String id = APIApplication.createSessionsManager(servletContext).createSession();  // May throw NoPTInstanceAvailableException
         final InteractionRecord ir = APIApplication.createInteractionRecord(servletContext, request, id);
         ir.interactionStarted();
         return Response.created(new URI(getSessionRelativeURI(id))).entity(Utils.toJsonString(id)).

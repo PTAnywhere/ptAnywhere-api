@@ -4,6 +4,7 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.mvc.MvcFeature;
 import org.glassfish.jersey.server.mvc.freemarker.FreemarkerMvcFeature;
 import uk.ac.open.kmi.forge.ptAnywhere.properties.PropertyFileManager;
+import uk.ac.open.kmi.forge.ptAnywhere.session.impl.SessionsManagerFactoryImpl;
 
 import javax.servlet.ServletContext;
 import javax.ws.rs.ApplicationPath;
@@ -17,6 +18,7 @@ import javax.ws.rs.core.Context;
 public class ManagementApplication extends ResourceConfig {
 
     public static final String APP_ROOT = "path";
+    public static final String SESSIONS_MANAGER = "sessionsMngr";
 
     public ManagementApplication(@Context ServletContext servletContext) {
         super(new ResourceConfig().
@@ -27,5 +29,6 @@ public class ManagementApplication extends ResourceConfig {
         );
         final PropertyFileManager pfm = new PropertyFileManager();
         servletContext.setAttribute(APP_ROOT, pfm.getApplicationPath());
+        servletContext.setAttribute(SESSIONS_MANAGER, SessionsManagerFactoryImpl.create(pfm));
     }
 }

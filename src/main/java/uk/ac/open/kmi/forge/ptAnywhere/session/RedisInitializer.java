@@ -3,6 +3,7 @@ package uk.ac.open.kmi.forge.ptAnywhere.session;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import uk.ac.open.kmi.forge.ptAnywhere.properties.PropertyFileManager;
+import uk.ac.open.kmi.forge.ptAnywhere.session.impl.SessionsManagerFactoryImpl;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
@@ -22,7 +23,7 @@ public class RedisInitializer implements ServletContextListener {
         try {
             final PropertyFileManager pfm = new PropertyFileManager();
             final Set<String> apis = pfm.getPacketTracerManagementAPIs();
-            final SessionsManager session = SessionsManager.create();
+            final SessionsManager session = SessionsManagerFactoryImpl.create(pfm).create();
             session.clear();
             session.addManagementAPIs(apis.toArray(new String[apis.size()]));
         } catch(Exception e) {
