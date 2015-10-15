@@ -20,7 +20,7 @@ public class InteractionRecordFactory {
     }
 
     protected InteractionRecord create() {
-        if (this.irp==null) new NoTracker();
+        if (this.irp==null) return new NoTracker();
         try {
             return new TinCanAPI(this.irp.getEndpoint(), this.irp.getUsername(), this.irp.getPassword(), this.executor);
         } catch(MalformedURLException e) {
