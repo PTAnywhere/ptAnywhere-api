@@ -12,6 +12,7 @@ import com.cisco.pt.ptmp.impl.PacketTracerSessionFactoryImpl;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import uk.ac.open.kmi.forge.ptAnywhere.exceptions.PacketTracerConnectionException;
+import uk.ac.open.kmi.forge.ptAnywhere.gateway.impl.BasicPacketTracerDAO;
 
 
 /**
@@ -86,7 +87,7 @@ public class PTConnection {
     }
 
     public PacketTracerDAO getDataAccessObject() {
-        return new PacketTracerDAO(getIPC());
+        return new BasicPacketTracerDAO(getIPC());
     }
 
     public void open() {
