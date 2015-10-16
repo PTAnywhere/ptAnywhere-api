@@ -1,6 +1,5 @@
 package uk.ac.open.kmi.forge.ptAnywhere.gateway;
 
-import com.cisco.pt.UUID;
 import uk.ac.open.kmi.forge.ptAnywhere.exceptions.DeviceNotFoundException;
 import uk.ac.open.kmi.forge.ptAnywhere.exceptions.LinkNotFoundException;
 import uk.ac.open.kmi.forge.ptAnywhere.pojo.*;
@@ -18,7 +17,7 @@ public interface PacketTracerDAO {
 
     Device createDevice(Device device);
 
-    com.cisco.pt.ipc.sim.Device getSimDeviceById(UUID deviceId) throws DeviceNotFoundException;
+    com.cisco.pt.ipc.sim.Device getSimDeviceById(String simplifiedId) throws DeviceNotFoundException;
 
     Device getDeviceById(String deviceId);
 

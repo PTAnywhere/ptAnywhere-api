@@ -28,7 +28,7 @@ import java.util.*;
 
 
 /**
- * Data access object for PacketTracer.
+ * Basic Data access object for PacketTracer.
  */
 public class BasicPacketTracerDAO implements PacketTracerDAO {
 
@@ -141,7 +141,11 @@ public class BasicPacketTracerDAO implements PacketTracerDAO {
     }
 
     @Override
-    public com.cisco.pt.ipc.sim.Device getSimDeviceById(UUID deviceId) throws DeviceNotFoundException {
+    public com.cisco.pt.ipc.sim.Device getSimDeviceById(String simplifiedId) throws DeviceNotFoundException {
+        return getSimDeviceByCiscoId(Utils.toCiscoUUID(simplifiedId));
+    }
+
+    protected com.cisco.pt.ipc.sim.Device getSimDeviceByCiscoId(UUID deviceId) throws DeviceNotFoundException {
         for (int i=0; i<this.network.getDeviceCount(); i++) {
             final com.cisco.pt.ipc.sim.Device ret = this.network.getDeviceAt(i);
             if (deviceId.equals(ret.getObjectUUID())) {
@@ -151,16 +155,20 @@ public class BasicPacketTracerDAO implements PacketTracerDAO {
         throw new DeviceNotFoundException(deviceId.toString());
     }
 
-    protected Map<String, com.cisco.pt.ipc.sim.Device> getSimDevicesByIds(UUID... deviceIds) throws DeviceNotFoundException {
-        final Map<String, com.cisco.pt.ipc.sim.Device> ret = new HashMap<String, com.cisco.pt.ipc.sim.Device>();
+    protected Map<String, com.cisco.pt.ipc.sim.Device> getSimDevicesByIds(Map<String, com.cisco.pt.ipc.sim.Device> ret, String... deviceIds) throws DeviceNotFoundException {
         for (int i=0; i<this.network.getDeviceCount(); i++) {
             final com.cisco.pt.ipc.sim.Device d = this.network.getDeviceAt(i);
-            if (ArrayUtils.contains(deviceIds, d.getObjectUUID())) {
-                ret.put(Utils.toSimplifiedId(d.getObjectUUID()), d);
+            final String dSimplifiedId = Utils.toSimplifiedId(d.getObjectUUID());
+            if (ArrayUtils.contains(deviceIds, dSimplifiedId)) {
+                ret.put(dSimplifiedId, d);
                 if (ret.size()==deviceIds.length) return ret;
             }
         }
         throw new DeviceNotFoundException(ArrayUtils.toString(deviceIds));
+    }
+
+    protected Map<String, com.cisco.pt.ipc.sim.Device> getSimDevicesByIds(String... deviceIds) throws DeviceNotFoundException {
+        return this.getSimDevicesByIds(new HashMap<String, com.cisco.pt.ipc.sim.Device>(), deviceIds);
     }
 
     protected com.cisco.pt.ipc.sim.Device getSimDeviceByName(String deviceName) throws DeviceNotFoundException {
@@ -176,7 +184,7 @@ public class BasicPacketTracerDAO implements PacketTracerDAO {
 
     @Override
     public Device getDeviceById(String deviceId, boolean loadPorts) {
-        final com.cisco.pt.ipc.sim.Device d = getSimDeviceById(Utils.toCiscoUUID(deviceId));
+        final com.cisco.pt.ipc.sim.Device d = getSimDeviceById(deviceId);
         final Device ret = Device.fromCiscoObject(d);
         if(loadPorts) ret.setPorts(getPorts(d));
         return ret;
@@ -207,7 +215,7 @@ public class BasicPacketTracerDAO implements PacketTracerDAO {
 
     @Override
     public Device modifyDevice(Device modification) {
-        final com.cisco.pt.ipc.sim.Device ret = getSimDeviceById(Utils.toCiscoUUID(modification.getId()));
+        final com.cisco.pt.ipc.sim.Device ret = getSimDeviceById(modification.getId());
         if (ret!=null) {
             ret.setName(modification.getLabel());
             // FIXME distinguish between devices in a more elegant way
@@ -245,7 +253,7 @@ public class BasicPacketTracerDAO implements PacketTracerDAO {
         if (byName)
             return getPorts(getSimDeviceByName(deviceId), filterFree);
         else
-            return getPorts(getSimDeviceById(Utils.toCiscoUUID(deviceId)), filterFree);
+            return getPorts(getSimDeviceById(deviceId), filterFree);
     }
 
     protected com.cisco.pt.ipc.sim.port.Port getSimPort(com.cisco.pt.ipc.sim.Device device, String portName) throws PortNotFoundException {
@@ -259,7 +267,7 @@ public class BasicPacketTracerDAO implements PacketTracerDAO {
     }
 
     protected com.cisco.pt.ipc.sim.port.Port getSimPort(String deviceId, String portName) {
-        return getSimPort(getSimDeviceById(Utils.toCiscoUUID(deviceId)), portName);
+        return getSimPort(getSimDeviceById(deviceId), portName);
     }
 
     @Override
@@ -279,25 +287,29 @@ public class BasicPacketTracerDAO implements PacketTracerDAO {
         return Port.fromCiscoObject(p);
     }
 
+    protected InnerLink getLink(InnerLink link) throws LinkNotFoundException {
+        for (int i = 0; i < this.network.getDeviceCount(); i++) {
+            final com.cisco.pt.ipc.sim.Device d = this.network.getDeviceAt(i);
+            for (int j = 0; j < d.getPortCount(); j++) {
+                final com.cisco.pt.ipc.sim.port.Port p = d.getPortAt(j);
+                final String lId = (p.getLink() == null)? null : Utils.toSimplifiedId(p.getLink().getObjectUUID());
+                if (link.getId().equals(lId)) {
+                    link.appendEndpoint(Utils.toSimplifiedId(d.getObjectUUID()), p.getName());
+                    if (link.areEndpointsSet())
+                        return link;
+                        // Check in the next device (I am assuming that a device cannot be connected to itself!)
+                    else break;  // Keep finding the other endpoint in the next device
+                }
+            }
+        }
+        throw new LinkNotFoundException(link.getId());
+    }
+
     @Override
     public InnerLink getLink(String linkId) throws LinkNotFoundException {
         if (linkId!=null) {
-            final InnerLink ret = new InnerLink(linkId);
-            for (int i = 0; i < this.network.getDeviceCount(); i++) {
-                final com.cisco.pt.ipc.sim.Device d = this.network.getDeviceAt(i);
-                for (int j = 0; j < d.getPortCount(); j++) {
-                    final com.cisco.pt.ipc.sim.port.Port p = d.getPortAt(j);
-                    final String lId = (p.getLink() == null)? null : Utils.toSimplifiedId(p.getLink().getObjectUUID());
-                    if (linkId.equals(lId)) {
-                        ret.appendEndpoint(Utils.toSimplifiedId(d.getObjectUUID()),
-                                            p.getName());
-                        if (ret.areEndpointsSet())
-                            return ret;
-                            // Check in the next device (I am assuming that a device cannot be connected to itself!)
-                        else break;
-                    }
-                }
-            }
+            final InnerLink link = new InnerLink(linkId);
+            return getLink(link);
         }
         throw new LinkNotFoundException(linkId);
     }
@@ -306,21 +318,9 @@ public class BasicPacketTracerDAO implements PacketTracerDAO {
     public InnerLink getLink(String deviceId, String portName) throws LinkNotFoundException {
         final String linkId = getPort(deviceId, portName).getLink();
         if (linkId!=null) {
-            final InnerLink ret = new InnerLink(linkId);
-            ret.appendEndpoint(deviceId, portName);
-            final UUID devId = Utils.toCiscoUUID(deviceId);  // More efficient than the oher way around?
-            for (int i = 0; i < this.network.getDeviceCount(); i++) {
-                final com.cisco.pt.ipc.sim.Device d = this.network.getDeviceAt(i);
-                if (!devId.equals(d.getObjectUUID()))
-                    for (int j = 0; j < d.getPortCount(); j++) {
-                        final com.cisco.pt.ipc.sim.port.Port p = d.getPortAt(j);
-                        final String lId = (p.getLink() == null) ? null : Utils.toSimplifiedId(p.getLink().getObjectUUID());
-                        if (lId != null && ret.getId().equals(lId)) {
-                            ret.appendEndpoint(Utils.toSimplifiedId(d.getObjectUUID()), p.getName());
-                            return ret;
-                        }
-                    }
-            }
+            final InnerLink link = new InnerLink(linkId);
+            link.appendEndpoint(deviceId, portName);
+            return getLink(link);
         }
         throw new LinkNotFoundException(deviceId, portName);
     }
@@ -328,9 +328,7 @@ public class BasicPacketTracerDAO implements PacketTracerDAO {
     @Override
     public boolean createLink(String fromDeviceId, String fromPortName, HalfLink newLink) {
         final String toDeviceId = URLFactory.parseDeviceId(newLink.getToPort());
-        final UUID fromUUID = Utils.toCiscoUUID(fromDeviceId);
-        final UUID toUUID = Utils.toCiscoUUID(toDeviceId);
-        final Map<String, com.cisco.pt.ipc.sim.Device> devices = getSimDevicesByIds(fromUUID, toUUID);
+        final Map<String, com.cisco.pt.ipc.sim.Device> devices = getSimDevicesByIds(fromDeviceId, toDeviceId);
 
         final com.cisco.pt.ipc.sim.Device fromDevice = devices.get(fromDeviceId);
         final com.cisco.pt.ipc.sim.Device toDevice = devices.get(toDeviceId);
@@ -343,7 +341,7 @@ public class BasicPacketTracerDAO implements PacketTracerDAO {
     @Override
     public boolean removeLink(String fromDeviceId, String fromPortName) {
         final LogicalWorkspace workspace = this.ipc.appWindow().getActiveWorkspace().getLogicalWorkspace();
-        final com.cisco.pt.ipc.sim.Device device = getSimDeviceById(Utils.toCiscoUUID(fromDeviceId));
+        final com.cisco.pt.ipc.sim.Device device = getSimDeviceById(fromDeviceId);
         if (device==null) return false;
         return workspace.deleteLink(device.getName(), fromPortName);
     }

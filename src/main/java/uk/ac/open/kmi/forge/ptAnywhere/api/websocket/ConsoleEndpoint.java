@@ -14,7 +14,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import uk.ac.open.kmi.forge.ptAnywhere.analytics.InteractionRecord;
 import uk.ac.open.kmi.forge.ptAnywhere.analytics.InteractionRecordFactory;
-import uk.ac.open.kmi.forge.ptAnywhere.api.http.Utils;
 import uk.ac.open.kmi.forge.ptAnywhere.gateway.PTConnection;
 import uk.ac.open.kmi.forge.ptAnywhere.session.PTInstanceDetails;
 import uk.ac.open.kmi.forge.ptAnywhere.session.SessionsManagerFactory;
@@ -100,7 +99,7 @@ public class ConsoleEndpoint implements TerminalLineEventListener {
             if (LOGGER.isInfoEnabled()) {
                 LOGGER.info("Opening communication channel for device " + deviceId + "'s command line.");
             }
-            final Device dev = this.common.getDataAccessObject().getSimDeviceById(Utils.toCiscoUUID(deviceId));
+            final Device dev = this.common.getDataAccessObject().getSimDeviceById(deviceId);
             if (dev == null) {
                 session.close(new CloseReason(CloseReason.CloseCodes.CANNOT_ACCEPT, "The device does not exist."));
                 if (LOGGER.isErrorEnabled()) {
