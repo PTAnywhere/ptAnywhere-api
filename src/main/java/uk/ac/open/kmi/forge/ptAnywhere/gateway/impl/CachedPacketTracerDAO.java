@@ -1,7 +1,10 @@
 package uk.ac.open.kmi.forge.ptAnywhere.gateway.impl;
 
 import com.cisco.pt.ipc.sim.Device;
+import com.cisco.pt.ipc.sim.Network;
 import com.cisco.pt.ipc.ui.IPC;
+import com.cisco.pt.ipc.ui.LogicalWorkspace;
+import sun.nio.ch.Net;
 import uk.ac.open.kmi.forge.ptAnywhere.api.http.Utils;
 import uk.ac.open.kmi.forge.ptAnywhere.exceptions.DeviceNotFoundException;
 import uk.ac.open.kmi.forge.ptAnywhere.gateway.Cache;
@@ -19,7 +22,11 @@ public class CachedPacketTracerDAO extends BasicPacketTracerDAO {
     final String networkId;
 
     public CachedPacketTracerDAO(IPC ipc, Cache cache) {
-        super(ipc, new CachingNetwork(ipc.network(), cache));
+        this(ipc.appWindow().getActiveWorkspace().getLogicalWorkspace(), ipc.network(), cache);
+    }
+
+    protected CachedPacketTracerDAO(LogicalWorkspace workspace, Network network, Cache cache) {
+        super(workspace, new CachingNetwork(network, cache));
         this.networkId = Utils.toSimplifiedId(network.getObjectUUID());
         this.cache = cache;
     }

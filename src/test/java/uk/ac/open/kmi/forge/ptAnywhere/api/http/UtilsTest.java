@@ -43,7 +43,6 @@ public class UtilsTest {
     @Test
     public void testToCiscoUUID() {
         for (String[] sample: TEST_SAMPLES) {
-            final String id = "qRAfa.98Q3KRwpOR6U7iMw--";
             final com.cisco.pt.UUID expectedUuid = new UUIDImpl("{" + sample[0] + "}");
             assertEquals(expectedUuid, Utils.toCiscoUUID(sample[1]));
         }

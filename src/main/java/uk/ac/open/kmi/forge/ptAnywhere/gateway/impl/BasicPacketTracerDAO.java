@@ -1,6 +1,6 @@
 package uk.ac.open.kmi.forge.ptAnywhere.gateway.impl;
 
-
+import java.util.*;
 import com.cisco.pt.*;
 import com.cisco.pt.UUID;
 import com.cisco.pt.impl.IPAddressImpl;
@@ -24,8 +24,6 @@ import uk.ac.open.kmi.forge.ptAnywhere.pojo.*;
 import uk.ac.open.kmi.forge.ptAnywhere.pojo.Device;
 import uk.ac.open.kmi.forge.ptAnywhere.pojo.Network;
 
-import java.util.*;
-
 
 /**
  * Basic Data access object for PacketTracer.
@@ -33,16 +31,16 @@ import java.util.*;
 public class BasicPacketTracerDAO implements PacketTracerDAO {
 
     private static final Log LOGGER = LogFactory.getLog(BasicPacketTracerDAO.class);
-    final IPC ipc;
+    final LogicalWorkspace workspace;
     final com.cisco.pt.ipc.sim.Network network;  // It is used often, so better to put it as attribute.
 
 
     public BasicPacketTracerDAO(IPC ipc) {
-        this(ipc, ipc.network());
+        this(ipc.appWindow().getActiveWorkspace().getLogicalWorkspace(), ipc.network());
     }
 
-    protected BasicPacketTracerDAO(IPC ipc, com.cisco.pt.ipc.sim.Network network) {
-        this.ipc = ipc;
+    protected BasicPacketTracerDAO(LogicalWorkspace workspace, com.cisco.pt.ipc.sim.Network network) {
+        this.workspace = workspace;
         this.network = network;
     }
 
@@ -109,8 +107,7 @@ public class BasicPacketTracerDAO implements PacketTracerDAO {
         final DeviceType type = getType(device);
         if (type==null) return null;
 
-        final LogicalWorkspace workspace = this.ipc.appWindow().getActiveWorkspace().getLogicalWorkspace();
-        final String addedDeviceName = workspace.addDevice(type, getDefaultModelName(type));
+        final String addedDeviceName = this.workspace.addDevice(type, getDefaultModelName(type));
         final com.cisco.pt.ipc.sim.Device deviceAdded = getSimDeviceByName(addedDeviceName);
         final Device ret = Device.fromCiscoObject(deviceAdded);
         if (device.getX()!=-1 && device.getY()!=-1) { // Bad luck if you choose -1 position :-P
@@ -207,8 +204,7 @@ public class BasicPacketTracerDAO implements PacketTracerDAO {
     public Device removeDevice(String deviceId) {
         final Device ret = getDeviceById(deviceId);
         if (ret!=null) {
-            final LogicalWorkspace workspace = this.ipc.appWindow().getActiveWorkspace().getLogicalWorkspace();
-            workspace.removeDevice(ret.getLabel());  // It can only be removed by name :-S
+            this.workspace.removeDevice(ret.getLabel());  // It can only be removed by name :-S
         }
         return ret;
     }
@@ -334,15 +330,13 @@ public class BasicPacketTracerDAO implements PacketTracerDAO {
         final com.cisco.pt.ipc.sim.Device toDevice = devices.get(toDeviceId);
 
         final String toPortName = URLFactory.parsePortId(newLink.getToPort());
-        final LogicalWorkspace workspace = this.ipc.appWindow().getActiveWorkspace().getLogicalWorkspace();
-        return workspace.createLink(fromDevice.getName(), fromPortName, toDevice.getName(), toPortName, ConnectType.ETHERNET_STRAIGHT);
+        return this.workspace.createLink(fromDevice.getName(), fromPortName, toDevice.getName(), toPortName, ConnectType.ETHERNET_STRAIGHT);
     }
 
     @Override
     public boolean removeLink(String fromDeviceId, String fromPortName) {
-        final LogicalWorkspace workspace = this.ipc.appWindow().getActiveWorkspace().getLogicalWorkspace();
         final com.cisco.pt.ipc.sim.Device device = getSimDeviceById(fromDeviceId);
         if (device==null) return false;
-        return workspace.deleteLink(device.getName(), fromPortName);
+        return this.workspace.deleteLink(device.getName(), fromPortName);
     }
 }
