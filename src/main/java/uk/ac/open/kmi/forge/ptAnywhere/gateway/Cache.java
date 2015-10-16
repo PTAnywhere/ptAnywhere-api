@@ -1,4 +1,4 @@
-package uk.ac.open.kmi.forge.ptAnywhere.gateway.cache;
+package uk.ac.open.kmi.forge.ptAnywhere.gateway;
 
 
 /**
@@ -10,9 +10,9 @@ package uk.ac.open.kmi.forge.ptAnywhere.gateway.cache;
  */
 public interface Cache {
 
-    void add(String sessionId, String identifier, String name);
-    void remove(String sessionId, String identifier);
-    void removeAll(String sessionId);
+    void add(String networkId, String identifier, String name);
+    void remove(String networkId, String identifier);
+    void removeAll(String networkId);
     /**
      * @param identifier
      * @return
@@ -21,5 +21,5 @@ public interface Cache {
      *      (2) that there is one (or more) additional identifier associated to the same name.
      *      If the latter happens, the ID will be needed to retrieve this given device from Packet Tracer later on.
      */
-    String getName(String sessionId, String identifier);
+    String getName(String networkId, String identifier);
 }
