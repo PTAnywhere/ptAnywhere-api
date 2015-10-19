@@ -19,6 +19,12 @@ public interface PacketTracerDAO {
 
     com.cisco.pt.ipc.sim.Device getSimDeviceById(String simplifiedId) throws DeviceNotFoundException;
 
+    /**
+     * @param deviceId
+     * @return The device name.
+     */
+    String getDeviceName(String deviceId);
+
     Device getDeviceById(String deviceId);
 
     Device getDeviceById(String deviceId, boolean loadPorts);

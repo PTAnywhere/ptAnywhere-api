@@ -142,6 +142,13 @@ public class BasicPacketTracerDAO implements PacketTracerDAO {
         return getSimDeviceByCiscoId(Utils.toCiscoUUID(simplifiedId));
     }
 
+    @Override
+    public String getDeviceName(String simplifiedId) {
+        final com.cisco.pt.ipc.sim.Device d = getSimDeviceById(simplifiedId);
+        if (d == null) return null;
+        return d.getName();
+    }
+
     protected com.cisco.pt.ipc.sim.Device getSimDeviceByCiscoId(UUID deviceId) throws DeviceNotFoundException {
         for (int i=0; i<this.network.getDeviceCount(); i++) {
             final com.cisco.pt.ipc.sim.Device ret = this.network.getDeviceAt(i);

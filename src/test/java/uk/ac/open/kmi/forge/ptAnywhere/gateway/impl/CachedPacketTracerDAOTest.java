@@ -5,6 +5,7 @@ import java.util.Map;
 import com.cisco.pt.ipc.sim.Router;
 import org.junit.Before;
 import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
 import com.cisco.pt.impl.UUIDImpl;
 import com.cisco.pt.ipc.sim.Device;
@@ -46,9 +47,22 @@ public class CachedPacketTracerDAOTest {
 
     @Test(expected = DeviceNotFoundException.class)
     public void testGetSimDeviceByIdCached() {
-        this.cache.add(this.netSimpleId, this.testedDeviceSimpleId, "device name");
+        this.cache.add(this.netSimpleId, this.testedDeviceSimpleId, this.testedDeviceName);
         this.tested.getSimDeviceById(this.testedDeviceSimpleId);
-        verify(this.network).getDevice("device name");  // Found in cache and then looked for it in network
+        verify(this.network).getDevice(this.testedDeviceName);  // Found in cache and then looked for it in network
+    }
+
+    @Test(expected = DeviceNotFoundException.class)
+    public void testGetDeviceNameNotCached() {
+        this.tested.getDeviceName(this.testedDeviceSimpleId);
+        verify(this.network).getDeviceCount();  // Not found in cache and then looked for it in network
+    }
+
+    @Test
+    public void testGetDeviceNameCached() {
+        this.cache.add(this.netSimpleId, this.testedDeviceSimpleId, this.testedDeviceName);
+        // If it has the name cached, the method returns it without checking the network
+        assertEquals(this.testedDeviceName, this.tested.getDeviceName(this.testedDeviceSimpleId));
     }
 
     @Test(expected = DeviceNotFoundException.class)

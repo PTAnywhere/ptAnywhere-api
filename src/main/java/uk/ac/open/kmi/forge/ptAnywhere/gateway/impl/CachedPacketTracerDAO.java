@@ -42,6 +42,13 @@ public class CachedPacketTracerDAO extends BasicPacketTracerDAO {
     }
 
     @Override
+    public String getDeviceName(String simplifiedId) {
+        final String name = this.cache.getName(this.networkId, simplifiedId);
+        if (name!=null) return name;
+        return super.getDeviceName(simplifiedId);
+    }
+
+    @Override
     protected Map<String, com.cisco.pt.ipc.sim.Device> getSimDevicesByIds(String... deviceIds) throws DeviceNotFoundException {
         final Map<String, Device> ret = new HashMap<String, Device>();
         final Set<String> toFindById = new HashSet<String>();
