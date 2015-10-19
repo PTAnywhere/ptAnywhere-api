@@ -1,10 +1,8 @@
 package uk.ac.open.kmi.forge.ptAnywhere.gateway.impl;
 
 import uk.ac.open.kmi.forge.ptAnywhere.gateway.Cache;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+
+import java.util.*;
 
 
 /**
@@ -15,7 +13,7 @@ import java.util.Map;
 public class MemoryCache implements Cache {
 
     final Map<String, Map<String, String>> cache = new HashMap<>();
-    final Map<String, Map<String, List<String>>> repeated = new HashMap<>();
+    final Map<String, Map<String, Set<String>>> repeated = new HashMap<>();
 
     protected Map<String, String> getNetworkCache(String id) {
         if (!this.cache.containsKey(id))
@@ -27,18 +25,18 @@ public class MemoryCache implements Cache {
      */
     protected boolean addRepeated(String networkId, String id, String name) {
         if (!this.repeated.containsKey(networkId))
-            this.repeated.put(networkId, new HashMap<String, List<String>>());
+            this.repeated.put(networkId, new HashMap<String, Set<String>>());
         if (!this.repeated.get(networkId).containsKey(name))
-            this.repeated.get(networkId).put(name, new ArrayList<String>());
-        final List<String> l = this.repeated.get(networkId).get(name);
+            this.repeated.get(networkId).put(name, new HashSet<String>());
+        final Set<String> l = this.repeated.get(networkId).get(name);
         l.add(id);
         return l.size()>1;
     }
     @Override
     public void add(String networkId, String identifier, String name) {
-        final boolean repeated =addRepeated(networkId, identifier, name);
+        final boolean repeated = addRepeated(networkId, identifier, name);
         if (repeated) {
-            getNetworkCache(identifier).put(identifier, null);
+            getNetworkCache(identifier).remove(identifier);
         } else {
             getNetworkCache(networkId).put(identifier, name);
         }
@@ -60,7 +58,8 @@ public class MemoryCache implements Cache {
     }
     @Override
     public String getName(String networkId, String identifier) {
-        if (!this.cache.containsKey(networkId)) return null;
-        return getNetworkCache(networkId).get(identifier);
+        if (this.cache.containsKey(networkId))
+            return this.cache.get(networkId).get(identifier);
+        return null;
     }
 }
