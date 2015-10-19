@@ -55,7 +55,7 @@ public class CachedPacketTracerDAO extends BasicPacketTracerDAO {
             }
         }
         if (ret.size()==deviceIds.length) return ret;
-        return super.getSimDevicesByIds(ret, (String[]) toFindById.toArray());
+        return super.getSimDevicesByIds(ret, toFindById.toArray(new String[toFindById.size()]));
     }
 
     /***************************** Cache Updates  *******************************/
