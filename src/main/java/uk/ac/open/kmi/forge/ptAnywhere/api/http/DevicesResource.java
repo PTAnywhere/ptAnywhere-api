@@ -101,7 +101,7 @@ public class DevicesResource {
 
         final InteractionRecord ir = APIApplication.createInteractionRecord(servletContext, request, sm.getSessionId());
         final String newDeviceUri = this.gen.createDeviceURL(device.getId());
-        ir.deviceCreated(newDeviceUri, device.getLabel(), device.getGroup());
+        ir.deviceCreated(newDeviceUri, device.getLabel(), device.getGroup(), device.getX(), device.getY());
         return addDefaultLinks(Response.created(new URI(newDeviceUri))).
                 entity(device).
                 links(getItemLink(device.getId())).build();  // Not using a new Thread

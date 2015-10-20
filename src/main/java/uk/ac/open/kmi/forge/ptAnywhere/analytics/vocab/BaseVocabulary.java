@@ -30,10 +30,13 @@ public class BaseVocabulary {
     public static final String EXT_DEVICE_NAME = EXTENSION + "/device/name";
     public static final String EXT_DEVICE_TYPE = EXTENSION + "/device/type";
     public static final String EXT_DEVICE_URI = EXTENSION + "/device/uri";  // URI in the context of PTAnywhere API
+    public static final String EXT_DEVICE_POSITION = EXTENSION + "/device/position";
     public static final String EXT_ENDPOINTS = EXTENSION + "/endpoints";
     public static final String EXT_LINK_URI = EXTENSION + "/link/uri";
 
-    // In JSON object
+    // In JSON objects
     public static final String EXT_ENDPOINT_DEVICE = "device";
     public static final String EXT_ENDPOINT_PORT = "port";
+    public static final String EXT_POSITION_X = "x";
+    public static final String EXT_POSITION_Y = "y";
 }

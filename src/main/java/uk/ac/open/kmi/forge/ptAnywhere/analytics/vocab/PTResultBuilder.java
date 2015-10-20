@@ -70,6 +70,14 @@ public class PTResultBuilder {
         return this;
     }
 
+    public PTResultBuilder positionExt(double x, double y) throws URISyntaxException {
+        final JsonNode position = JsonNodeFactory.instance.objectNode().
+                put(BaseVocabulary.EXT_POSITION_X, x).
+                put(BaseVocabulary.EXT_POSITION_Y, y);
+        getExtensions().put(BaseVocabulary.EXT_DEVICE_POSITION, position);
+        return this;
+    }
+
     public Result build() {
         return this.result;
     }

@@ -117,9 +117,16 @@ public class TinCanAPITest {
         return ret + "}";
     }
 
+    protected String toPositionJson(double x, double y) {
+        final JsonObjectBuilder endpoint1 = Json.createObjectBuilder().
+                add(BaseVocabulary.EXT_POSITION_X, x).
+                add(BaseVocabulary.EXT_POSITION_Y, y);
+        return endpoint1.build().toString();
+    }
+
     @Test
     public void testDeviceCreated() throws JSONException {
-        this.testable.deviceCreated(DEVICE1URI, DEVICE1NAME, DEVICETYPE);
+        this.testable.deviceCreated(DEVICE1URI, DEVICE1NAME, DEVICETYPE, 44, 66);
         final String jsonGenerated = this.testable.statementToRecord.toJSON();
         assertContains("actor", getExpectedActor(), jsonGenerated);
         assertContains("verb", getExpectedVerb(BaseVocabulary.CREATED), jsonGenerated);
@@ -128,7 +135,8 @@ public class TinCanAPITest {
         final String[][] exts = new String[][] {
                 {BaseVocabulary.EXT_DEVICE_NAME, DEVICE1NAME},
                 {BaseVocabulary.EXT_DEVICE_URI, DEVICE1URI},
-                {BaseVocabulary.EXT_DEVICE_TYPE, DEVICETYPE}
+                {BaseVocabulary.EXT_DEVICE_TYPE, DEVICETYPE},
+                {BaseVocabulary.EXT_DEVICE_POSITION, toPositionJson(44, 66)}
         };
         assertContains("result", getExpectedResult(DEVICE1NAME, exts), jsonGenerated);
     }

@@ -82,14 +82,15 @@ public class TinCanAPI extends InteractionRecord {
         }
     }
 
-    public void deviceCreated(String deviceUri, String deviceName, String deviceType) {
+    public void deviceCreated(String deviceUri, String deviceName, String deviceType, double x, double y) {
         try {
             final StatementBuilder builder = new StatementBuilder(this.factory).
                     anonymousUser(this.sessionId).verb(BaseVocabulary.CREATED);
             builder.getActivityBuilder().simulatedDevice(deviceType);
             builder.getContextBuilder().addSession(this.sessionId).addParentActivity();
             builder.getResultBuilder().response(deviceName).
-                    deviceNameExt(deviceName).deviceTypeExt(deviceType).deviceURIExt(deviceUri);
+                    deviceNameExt(deviceName).deviceTypeExt(deviceType).
+                    positionExt(x, y).deviceURIExt(deviceUri);
             record(builder.build());
         } catch(URISyntaxException e) {
             LOGGER.error(e.getMessage());
