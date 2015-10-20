@@ -4,7 +4,6 @@ import com.cisco.pt.ipc.sim.Device;
 import com.cisco.pt.ipc.sim.Network;
 import com.cisco.pt.ipc.ui.IPC;
 import com.cisco.pt.ipc.ui.LogicalWorkspace;
-import sun.nio.ch.Net;
 import uk.ac.open.kmi.forge.ptAnywhere.api.http.Utils;
 import uk.ac.open.kmi.forge.ptAnywhere.exceptions.DeviceNotFoundException;
 import uk.ac.open.kmi.forge.ptAnywhere.gateway.Cache;

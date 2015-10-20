@@ -12,7 +12,8 @@ import com.cisco.pt.ptmp.impl.PacketTracerSessionFactoryImpl;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import uk.ac.open.kmi.forge.ptAnywhere.exceptions.PacketTracerConnectionException;
-import uk.ac.open.kmi.forge.ptAnywhere.gateway.impl.BasicPacketTracerDAO;
+import uk.ac.open.kmi.forge.ptAnywhere.gateway.impl.CachedPacketTracerDAO;
+import uk.ac.open.kmi.forge.ptAnywhere.gateway.impl.MemoryCache;
 
 
 /**
@@ -62,6 +63,7 @@ public class PTConnection {
             }
             return createSession(sessionFactory, negotiationProperties);
         } catch(Error e) {
+            getLog().error(e);
             if (e.getMessage().equals("Unable to connect to Packet Tracer"))
                 throw new PacketTracerConnectionException();
             throw e;  // else
@@ -87,7 +89,7 @@ public class PTConnection {
     }
 
     public PacketTracerDAO getDataAccessObject() {
-        return new BasicPacketTracerDAO(getIPC());
+        return new CachedPacketTracerDAO(getIPC(), new MemoryCache());
     }
 
     public void open() {
@@ -95,12 +97,12 @@ public class PTConnection {
         try {
             this.before();
         } catch (IPCError ipcError) {
-            this.getLog().error("\n\n\nAn IPC error occurred:\n\t" + ipcError.getMessage() + "\n\n\n");
+            getLog().error("\n\n\nAn IPC error occurred:\n\t" + ipcError.getMessage() + "\n\n\n");
         } catch (Throwable t) {
             if ((t instanceof ThreadDeath)) {
                 throw ((ThreadDeath) t);
             }
-            this.getLog().error(t);
+            getLog().error(t);
         }
     }
 
@@ -112,7 +114,7 @@ public class PTConnection {
             if ((t instanceof ThreadDeath)) {
                 throw ((ThreadDeath) t);
             }
-            this.getLog().error(t);
+            getLog().error(t);
         }
     }
 

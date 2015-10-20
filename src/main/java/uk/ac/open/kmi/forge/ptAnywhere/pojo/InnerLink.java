@@ -14,10 +14,24 @@ public class InnerLink {
         this.endpoints = new String[2][2];
     }
 
+    /**
+     * Add endpoint to link only if it does not already exist.
+     * @param deviceId
+     * @param portName
+     */
     public void appendEndpoint(String deviceId, String portName) {
-        final int pos = getNextEmptyPosition();  // If the first one is already set, put the second one.
-        this.endpoints[pos][0] = deviceId;
-        this.endpoints[pos][1] = portName;
+        if (!isAlreadyAdded(deviceId, portName)) {
+            final int pos = getNextEmptyPosition();  // If the first one is already set, put the second one.
+            this.endpoints[pos][0] = deviceId;
+            this.endpoints[pos][1] = portName;
+        }
+    }
+
+    private boolean isAlreadyAdded(String deviceId, String portName) {
+        for (String[] endpoint: this.endpoints) {
+            if (deviceId.equals(endpoint[0]) && portName.equals(endpoint[1])) return true;
+        }
+        return false;
     }
 
     private int getNextEmptyPosition() {
@@ -32,8 +46,16 @@ public class InnerLink {
         return id;
     }
 
-    public String[][] getEndpoints() {
-        return endpoints;
+    public String getDeviceId(int endpointNumber) {
+        if (endpointNumber < this.endpoints.length)
+            return this.endpoints[endpointNumber][0];
+        return null;
+    }
+
+    public String getPortName(int endpointNumber) {
+        if (endpointNumber<this.endpoints.length)
+            return this.endpoints[endpointNumber][1];
+        return null;
     }
 
     public boolean areEndpointsSet() {

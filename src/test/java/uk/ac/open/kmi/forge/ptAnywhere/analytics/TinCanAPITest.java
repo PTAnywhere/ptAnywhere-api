@@ -8,6 +8,10 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 import org.skyscreamer.jsonassert.JSONAssert;
 import uk.ac.open.kmi.forge.ptAnywhere.analytics.vocab.BaseVocabulary;
+
+import javax.json.Json;
+import javax.json.JsonArrayBuilder;
+import javax.json.JsonObjectBuilder;
 import java.net.MalformedURLException;
 
 
@@ -18,10 +22,12 @@ public class TinCanAPITest {
     final static String SESSIONUUID = "6fc7797b-1a33-4fd7-8db1-1d6e7468db65";
     final static String DEVICE1URI = "http://device1";
     final static String DEVICE2URI = "http://device2";
-    final static String DEVICENAME = "Device One";
+    final static String DEVICE1NAME = "Device One";
+    final static String DEVICE2NAME = "Device One";
     final static String DEVICETYPE = "router";
     final static String LINKURI = "http://coolLink1234";
-    final static String[] ENDPOINTURLS = new String[] {DEVICE1URI, DEVICE2URI};
+    final static String PORT1NAME = "port1";
+    final static String PORT2NAME = "port2";
     final static String COMMANDLINE_TEXT = "ping 127.0.0.1";
 
     TestableTinCanAPI testable;
@@ -113,70 +119,73 @@ public class TinCanAPITest {
 
     @Test
     public void testDeviceCreated() throws JSONException {
-        this.testable.deviceCreated(DEVICE1URI, DEVICENAME, DEVICETYPE);
+        this.testable.deviceCreated(DEVICE1URI, DEVICE1NAME, DEVICETYPE);
         final String jsonGenerated = this.testable.statementToRecord.toJSON();
         assertContains("actor", getExpectedActor(), jsonGenerated);
         assertContains("verb", getExpectedVerb(BaseVocabulary.CREATED), jsonGenerated);
         assertContains("object", getExpectedActivity(BaseVocabulary.SIMULATED_DEVICE + "/" + DEVICETYPE, BaseVocabulary.SIMULATION, "Simulated router"), jsonGenerated);
         assertContains("context", getExpectedContext(WIDGETURI), jsonGenerated);
         final String[][] exts = new String[][] {
-                {BaseVocabulary.EXT_DEVICE_NAME, DEVICENAME},
+                {BaseVocabulary.EXT_DEVICE_NAME, DEVICE1NAME},
                 {BaseVocabulary.EXT_DEVICE_URI, DEVICE1URI},
                 {BaseVocabulary.EXT_DEVICE_TYPE, DEVICETYPE}
         };
-        assertContains("result", getExpectedResult(DEVICENAME, exts), jsonGenerated);
+        assertContains("result", getExpectedResult(DEVICE1NAME, exts), jsonGenerated);
     }
 
     @Test
     public void testDeviceDeleted() throws JSONException {
-        this.testable.deviceDeleted(DEVICE1URI, DEVICENAME, DEVICETYPE);
+        this.testable.deviceDeleted(DEVICE1URI, DEVICE1NAME, DEVICETYPE);
         final String jsonGenerated = this.testable.statementToRecord.toJSON();
         assertContains("actor", getExpectedActor(), jsonGenerated);
         assertContains("verb", getExpectedVerb(BaseVocabulary.DELETED), jsonGenerated);
         assertContains("object", getExpectedActivity(BaseVocabulary.SIMULATED_DEVICE + "/" + DEVICETYPE, BaseVocabulary.SIMULATION, "Simulated router"), jsonGenerated);
         assertContains("context", getExpectedContext(WIDGETURI), jsonGenerated);
         final String[][] exts = new String[][] {
-                {BaseVocabulary.EXT_DEVICE_NAME, DEVICENAME},
+                {BaseVocabulary.EXT_DEVICE_NAME, DEVICE1NAME},
                 {BaseVocabulary.EXT_DEVICE_URI, DEVICE1URI},
                 {BaseVocabulary.EXT_DEVICE_TYPE, DEVICETYPE}
         };
-        assertContains("result", getExpectedResult(DEVICENAME, exts), jsonGenerated);
+        assertContains("result", getExpectedResult(DEVICE1NAME, exts), jsonGenerated);
     }
 
     @Test
     public void deviceModified() throws JSONException {
-        this.testable.deviceModified(DEVICE1URI, DEVICENAME, DEVICETYPE);
+        this.testable.deviceModified(DEVICE1URI, DEVICE1NAME, DEVICETYPE);
         final String jsonGenerated = this.testable.statementToRecord.toJSON();
         assertContains("actor", getExpectedActor(), jsonGenerated);
         assertContains("verb", getExpectedVerb(BaseVocabulary.UPDATED), jsonGenerated);
         assertContains("object", getExpectedActivity(BaseVocabulary.SIMULATED_DEVICE + "/" + DEVICETYPE, BaseVocabulary.SIMULATION, "Simulated router"), jsonGenerated);
         assertContains("context", getExpectedContext(WIDGETURI), jsonGenerated);
         final String[][] exts = new String[][] {
-                {BaseVocabulary.EXT_DEVICE_NAME, DEVICENAME},
+                {BaseVocabulary.EXT_DEVICE_NAME, DEVICE1NAME},
                 {BaseVocabulary.EXT_DEVICE_URI, DEVICE1URI},
                 {BaseVocabulary.EXT_DEVICE_TYPE, DEVICETYPE}
         };
-        assertContains("result", getExpectedResult(DEVICENAME, exts), jsonGenerated);
+        assertContains("result", getExpectedResult(DEVICE1NAME, exts), jsonGenerated);
     }
 
-    protected String toJsonArray(String... elements) {  // TODO We could perfectly do it with the JSON library
-        String ret = "[";
-        for(String el: elements) {
-            ret += "\"" + el + "\",";
-        }
-        return ret.substring(0, ret.length()-1) + "]";
+    protected String toEndpointJson(String name1, String port1, String name2, String port2) {
+        final JsonObjectBuilder endpoint1 = Json.createObjectBuilder().
+                add(BaseVocabulary.EXT_ENDPOINT_DEVICE, name1).
+                add(BaseVocabulary.EXT_ENDPOINT_PORT, port1);
+        final JsonObjectBuilder endpoint2 = Json.createObjectBuilder().
+                add(BaseVocabulary.EXT_ENDPOINT_DEVICE, name2).
+                add(BaseVocabulary.EXT_ENDPOINT_PORT, port2);
+        final JsonArrayBuilder array = Json.createArrayBuilder().add(endpoint1).add(endpoint2);
+        return array.build().toString();
     }
 
     @Test
     public void deviceConnected() throws JSONException {
-        this.testable.deviceConnected(LINKURI, ENDPOINTURLS);
+        this.testable.deviceConnected(LINKURI, DEVICE1NAME, PORT1NAME, DEVICE2URI, PORT2NAME);
         final String jsonGenerated = this.testable.statementToRecord.toJSON();
         assertContains("actor", getExpectedActor(), jsonGenerated);
         assertContains("verb", getExpectedVerb(BaseVocabulary.CREATED), jsonGenerated);
         assertContains("object", getExpectedActivity(BaseVocabulary.SIMULATED_LINK, BaseVocabulary.SIMULATION, "Link"), jsonGenerated);
         assertContains("context", getExpectedContext(WIDGETURI), jsonGenerated);
         final String[][] exts = new String[][] {
-                {BaseVocabulary.EXT_ENDPOINTS, toJsonArray(ENDPOINTURLS)},
+                {BaseVocabulary.EXT_ENDPOINTS, toEndpointJson(DEVICE1NAME, PORT1NAME, DEVICE2URI, PORT2NAME)},
                 {BaseVocabulary.EXT_LINK_URI, LINKURI}
         };
         assertContains("result", getExpectedResult(LINKURI, exts), jsonGenerated);
@@ -184,14 +193,14 @@ public class TinCanAPITest {
 
     @Test
     public void deviceDisconnected() throws JSONException {
-        this.testable.deviceDisconnected(LINKURI, ENDPOINTURLS);
+        this.testable.deviceDisconnected(LINKURI, DEVICE1NAME, PORT1NAME, DEVICE2URI, PORT2NAME);
         final String jsonGenerated = this.testable.statementToRecord.toJSON();
         assertContains("actor", getExpectedActor(), jsonGenerated);
         assertContains("verb", getExpectedVerb(BaseVocabulary.DELETED), jsonGenerated);
         assertContains("object", getExpectedActivity(BaseVocabulary.SIMULATED_LINK, BaseVocabulary.SIMULATION, "Link"), jsonGenerated);
         assertContains("context", getExpectedContext(WIDGETURI), jsonGenerated);
         final String[][] exts = new String[][] {
-                {BaseVocabulary.EXT_ENDPOINTS, toJsonArray(ENDPOINTURLS)},
+                {BaseVocabulary.EXT_ENDPOINTS, toEndpointJson(DEVICE1NAME, PORT1NAME, DEVICE2URI, PORT2NAME)},
                 {BaseVocabulary.EXT_LINK_URI, LINKURI}
         };
         assertContains("result", getExpectedResult(LINKURI, exts), jsonGenerated);
@@ -199,39 +208,39 @@ public class TinCanAPITest {
 
     @Test
     public void commandLineStarted() throws JSONException {
-        final String consoleActivityId = WIDGETURI + "device/"  + DEVICENAME.hashCode() + "/console";
-        this.testable.commandLineStarted(DEVICENAME);
+        final String consoleActivityId = WIDGETURI + "device/"  + DEVICE1NAME.hashCode() + "/console";
+        this.testable.commandLineStarted(DEVICE1NAME);
         final String jsonGenerated = this.testable.statementToRecord.toJSON();
         assertContains("actor", getExpectedActor(), jsonGenerated);
         assertContains("verb", getExpectedVerb(BaseVocabulary.INITIALIZED), jsonGenerated);
-        assertContains("object", getExpectedActivity(consoleActivityId, BaseVocabulary.COMMAND_LINE, DEVICENAME + "'s command line"), jsonGenerated);
+        assertContains("object", getExpectedActivity(consoleActivityId, BaseVocabulary.COMMAND_LINE, DEVICE1NAME + "'s command line"), jsonGenerated);
         assertContains("context", getExpectedContext(WIDGETURI), jsonGenerated);
         assertNotContains("result", jsonGenerated);
     }
 
     @Test
     public void commandLineUsed() throws JSONException {
-        final String consoleActivityId = WIDGETURI + "device/"  + DEVICENAME.hashCode() + "/console";
-        this.testable.commandLineUsed(DEVICENAME, COMMANDLINE_TEXT);
+        final String consoleActivityId = WIDGETURI + "device/"  + DEVICE1NAME.hashCode() + "/console";
+        this.testable.commandLineUsed(DEVICE1NAME, COMMANDLINE_TEXT);
         final String jsonGenerated = this.testable.statementToRecord.toJSON();
         assertContains("actor", getExpectedActor(), jsonGenerated);
         assertContains("verb", getExpectedVerb(BaseVocabulary.USED), jsonGenerated);
-        assertContains("object", getExpectedActivity(consoleActivityId, BaseVocabulary.COMMAND_LINE, DEVICENAME + "'s command line"), jsonGenerated);
+        assertContains("object", getExpectedActivity(consoleActivityId, BaseVocabulary.COMMAND_LINE, DEVICE1NAME + "'s command line"), jsonGenerated);
         assertContains("context", getExpectedContext(WIDGETURI), jsonGenerated);
         final String[][] exts = new String[][] {
-                {BaseVocabulary.EXT_DEVICE_NAME, DEVICENAME}
+                {BaseVocabulary.EXT_DEVICE_NAME, DEVICE1NAME}
         };
         assertContains("result", getExpectedResult(COMMANDLINE_TEXT, exts), jsonGenerated);
     }
 
     @Test
     public void commandLineEnded() throws JSONException {
-        final String consoleActivityId = WIDGETURI + "device/"  + DEVICENAME.hashCode() + "/console";
-        this.testable.commandLineEnded(DEVICENAME);
+        final String consoleActivityId = WIDGETURI + "device/"  + DEVICE1NAME.hashCode() + "/console";
+        this.testable.commandLineEnded(DEVICE1NAME);
         final String jsonGenerated = this.testable.statementToRecord.toJSON();
         assertContains("actor", getExpectedActor(), jsonGenerated);
         assertContains("verb", getExpectedVerb(BaseVocabulary.TERMINATED), jsonGenerated);
-        assertContains("object", getExpectedActivity(consoleActivityId, BaseVocabulary.COMMAND_LINE, DEVICENAME + "'s command line"), jsonGenerated);
+        assertContains("object", getExpectedActivity(consoleActivityId, BaseVocabulary.COMMAND_LINE, DEVICE1NAME + "'s command line"), jsonGenerated);
         assertContains("context", getExpectedContext(WIDGETURI), jsonGenerated);
         assertNotContains("result", jsonGenerated);
     }

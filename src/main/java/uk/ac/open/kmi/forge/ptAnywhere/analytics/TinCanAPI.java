@@ -62,7 +62,6 @@ public class TinCanAPI extends InteractionRecord {
                     LOGGER.error("Something went wrong recording the sentence.");
                     LOGGER.error("    HTTP error: " + lrsRes.getResponse().getStatusMsg());
                     LOGGER.error("    HTTP response: " + lrsRes.getResponse().getContent());
-                    //LOGGER.error(statement.toJSON());
                 }
             }
         };
@@ -133,28 +132,28 @@ public class TinCanAPI extends InteractionRecord {
      *
      * I will use the first one as it seems more symmetric and I don't invent new verbs (connect).
      */
-    public void deviceConnected(String linkUri, String[] endpointURLs) {
+    public void deviceConnected(String linkUri, String endpoint1Name, String endpoint1Port, String endpoint2Name, String endpoint2Port) {
         try {
             final StatementBuilder builder = new StatementBuilder(this.factory).
                     anonymousUser(this.sessionId).verb(BaseVocabulary.CREATED);
-            builder.getActivityBuilder().connectionActivity();
+            builder.getActivityBuilder().simulatedLink();
             builder.getContextBuilder().addSession(this.sessionId).addParentActivity();
             builder.getResultBuilder().response(linkUri).linkUriExt(linkUri);  // TODO check if it makes sense or not
-            builder.getResultBuilder().endpointsExt(endpointURLs);
+            builder.getResultBuilder().endpointsExt(endpoint1Name, endpoint1Port, endpoint2Name, endpoint2Port);
             record(builder.build());
         } catch(URISyntaxException e) {
             LOGGER.error(e.getMessage());
         }
     }
 
-    public void deviceDisconnected(String linkUri, String[] endpointURLs) {
+    public void deviceDisconnected(String linkUri, String endpoint1Name, String endpoint1Port, String endpoint2Name, String endpoint2Port) {
         try {
             final StatementBuilder builder = new StatementBuilder(this.factory).
                     anonymousUser(this.sessionId).verb(BaseVocabulary.DELETED);
-            builder.getActivityBuilder().connectionActivity();
+            builder.getActivityBuilder().simulatedLink();
             builder.getContextBuilder().addSession(this.sessionId).addParentActivity();
             builder.getResultBuilder().response(linkUri).linkUriExt(linkUri);  // TODO check if it makes sense or not
-            builder.getResultBuilder().endpointsExt(endpointURLs);
+            builder.getResultBuilder().endpointsExt(endpoint1Name, endpoint1Port, endpoint2Name, endpoint2Port);
             record(builder.build());
         } catch(URISyntaxException e) {
             LOGGER.error(e.getMessage());

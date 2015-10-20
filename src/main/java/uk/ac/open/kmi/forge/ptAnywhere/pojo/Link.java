@@ -18,8 +18,7 @@ public class Link extends AbstractWebRepresentable<Link> {
         rl.setURLFactory(uf); // To generate URL
         String[] endpoints = new String[2];
         for(int i=0; i<endpoints.length; i++) {
-            String[] endpoint = il.getEndpoints()[i];
-            endpoints[i] = uf.createPortURL(endpoint[0], endpoint[1]);
+            endpoints[i] = uf.createPortURL(il.getDeviceId(i), il.getPortName(i));
         }
         rl.setEndpoints(endpoints);
         return rl;

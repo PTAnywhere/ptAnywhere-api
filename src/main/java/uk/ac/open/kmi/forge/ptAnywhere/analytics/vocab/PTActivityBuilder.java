@@ -40,7 +40,7 @@ public class PTActivityBuilder {
         return this;
     }
 
-    public PTActivityBuilder connectionActivity() throws URISyntaxException {
+    public PTActivityBuilder simulatedLink() throws URISyntaxException {
         this.activity.setId(BaseVocabulary.SIMULATED_LINK);
         final LanguageMap lm = new LanguageMap();
         lm.put("en-GB", "Link"); // Generic name defined to enhance readability in LearningLocker.

@@ -32,4 +32,8 @@ public class BaseVocabulary {
     public static final String EXT_DEVICE_URI = EXTENSION + "/device/uri";  // URI in the context of PTAnywhere API
     public static final String EXT_ENDPOINTS = EXTENSION + "/endpoints";
     public static final String EXT_LINK_URI = EXTENSION + "/link/uri";
+
+    // In JSON object
+    public static final String EXT_ENDPOINT_DEVICE = "device";
+    public static final String EXT_ENDPOINT_PORT = "port";
 }

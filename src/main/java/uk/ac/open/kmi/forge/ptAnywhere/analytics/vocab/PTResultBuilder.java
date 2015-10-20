@@ -1,7 +1,11 @@
 package uk.ac.open.kmi.forge.ptAnywhere.analytics.vocab;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.rusticisoftware.tincan.Extensions;
 import com.rusticisoftware.tincan.Result;
+
 import java.net.URISyntaxException;
 
 
@@ -46,8 +50,18 @@ public class PTResultBuilder {
         return this;
     }
 
-    public PTResultBuilder endpointsExt(String[] endpointURLs) throws URISyntaxException {
-        getExtensions().put(BaseVocabulary.EXT_ENDPOINTS, endpointURLs);
+    private ObjectNode createEndpointObject(String endpointName, String endpointPort) {
+        return JsonNodeFactory.instance.objectNode().
+                put(BaseVocabulary.EXT_ENDPOINT_DEVICE, endpointName).
+                put(BaseVocabulary.EXT_ENDPOINT_PORT, endpointPort);
+    }
+
+    public PTResultBuilder endpointsExt(String endpoint1Name, String endpoint1Port,
+                                        String endpoint2Name, String endpoint2Port) throws URISyntaxException {
+        final JsonNode array = JsonNodeFactory.instance.arrayNode().
+                                                add(createEndpointObject(endpoint1Name, endpoint1Port)).
+                                                add(createEndpointObject(endpoint2Name, endpoint2Port));
+        getExtensions().put(BaseVocabulary.EXT_ENDPOINTS, array);
         return this;
     }
 
