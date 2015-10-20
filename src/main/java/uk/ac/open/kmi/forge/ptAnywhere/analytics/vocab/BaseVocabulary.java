@@ -1,12 +1,15 @@
 package uk.ac.open.kmi.forge.ptAnywhere.analytics.vocab;
 
-
+/**
+ * For a more comprehensive and human-oriented description of the vocabulary used to describe interactions,
+ * please go to [1].
+ *
+ * [1] https://github.com/PTAnywhere/ptAnywhere-api/wiki/Vocabulary-used-to-capture-user-interaction
+ */
 public class BaseVocabulary {
     // Own vocabulary
     private static final String VOCAB = "http://ict-forge.eu/vocab";
     public static final String PTANYWHERE = "http://pt-anywhere.kmi.open.ac.uk";  // For PTAnywhere related extensions
-
-    // Activity http://adlnet.gov/expapi/activities/simulation
 
     /* Verbs */
     public static final String INITIALIZED = "http://adlnet.gov/expapi/verbs/initialized";
@@ -14,7 +17,7 @@ public class BaseVocabulary {
     public static final String CREATED = "http://activitystrea.ms/schema/1.0/create";
     public static final String DELETED = "http://activitystrea.ms/schema/1.0/delete";
     public static final String UPDATED = "http://activitystrea.ms/schema/1.0/update";
-    // For command line, we could also register: "open" or "close"
+    // For command line, instead of initialized and terminated we could also register: "open" or "close".
     public static final String USED = "http://activitystrea.ms/schema/1.0/use";
 
     /* Objects */
