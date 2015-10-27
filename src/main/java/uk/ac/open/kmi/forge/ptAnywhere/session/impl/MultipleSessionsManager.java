@@ -14,6 +14,7 @@ import uk.ac.open.kmi.forge.ptAnywhere.session.management.Instance;
 import uk.ac.open.kmi.forge.ptAnywhere.session.management.InstanceResourceClient;
 import uk.ac.open.kmi.forge.ptAnywhere.session.management.PTManagementClient;
 
+import javax.ws.rs.NotFoundException;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -58,6 +59,16 @@ public class MultipleSessionsManager implements SessionsManager {
     @Override
     public void clear() {
         try (Jedis jedis = this.pool.getResource()) {
+            // Make sure that no unfinished sessions are left behind!
+            final Set<PTInstanceDetails> unfinished = getAllInstances();
+            for (PTInstanceDetails instance: unfinished) {
+                try {
+                    final InstanceResourceClient cli = new InstanceResourceClient(instance.getUrl());
+                    cli.delete();  // If it throws an exception the element is not deleted.
+                } catch(NotFoundException e) {
+                    LOGGER.error("The instance " + instance.getUrl() +  " could not be removed (maybe another thread already delete it?).");
+                }
+            }
             jedis.flushDB();
         }
     }
