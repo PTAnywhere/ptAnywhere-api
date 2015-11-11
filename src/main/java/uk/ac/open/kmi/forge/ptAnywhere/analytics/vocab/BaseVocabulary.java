@@ -10,6 +10,7 @@ public class BaseVocabulary {
     // Own vocabulary
     private static final String VOCAB = "http://ict-forge.eu/vocab";
     public static final String PTANYWHERE = "http://pt-anywhere.kmi.open.ac.uk";  // For PTAnywhere related extensions
+    public static final String UNKNOWN_WIDGET = VOCAB + "/widgets/unknown";
 
     /* Verbs */
     public static final String INITIALIZED = "http://adlnet.gov/expapi/verbs/initialized";

@@ -1,6 +1,8 @@
 package uk.ac.open.kmi.forge.ptAnywhere.analytics;
 
 
+import uk.ac.open.kmi.forge.ptAnywhere.analytics.vocab.BaseVocabulary;
+
 /**
  * URI factory different from the one in "uk.ac.open.kmi.forge.ptAnywhere.api".
  *
@@ -15,6 +17,7 @@ public class URIFactory {
     final String widgetUri;
 
     public URIFactory(String widgetUri) {
+        if (widgetUri==null) widgetUri = BaseVocabulary.UNKNOWN_WIDGET;
         this.widgetUri = (widgetUri.endsWith("/"))? widgetUri: widgetUri + "/";
     }
 

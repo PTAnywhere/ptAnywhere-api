@@ -105,6 +105,7 @@ public class APIApplication extends ResourceConfig {
 
     private static String getReferrerWidgetURL(HttpServletRequest request) {
         final String referrer = request.getHeader("referer");
+        if (referrer==null) return null;
         final int paramsAt = referrer.indexOf("?");
         if (paramsAt==-1) return referrer;
         return referrer.substring(0, paramsAt);
