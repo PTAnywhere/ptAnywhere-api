@@ -4,7 +4,6 @@ import io.swagger.annotations.*;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
-import javax.websocket.Session;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
 import java.net.URI;
@@ -16,9 +15,6 @@ import uk.ac.open.kmi.forge.ptAnywhere.exceptions.ErrorBean;
 import uk.ac.open.kmi.forge.ptAnywhere.exceptions.NoPTInstanceAvailableException;
 import uk.ac.open.kmi.forge.ptAnywhere.pojo.NewSession;
 import uk.ac.open.kmi.forge.ptAnywhere.session.SessionsManager;
-import uk.ac.open.kmi.forge.ptAnywhere.session.impl.MultipleSessionsManager;
-
-import static uk.ac.open.kmi.forge.ptAnywhere.api.http.URLFactory.INPUT_PARAM;
 import static uk.ac.open.kmi.forge.ptAnywhere.api.http.URLFactory.SESSION_PARAM;
 
 
