@@ -4,15 +4,13 @@ import uk.ac.open.kmi.forge.ptAnywhere.exceptions.NoPTInstanceAvailableException
 
 import java.util.Set;
 
-/**
- * Created by agg96 on 10/15/15.
- */
+
 public interface SessionsManager {
     void clear();
 
     void addManagementAPIs(String... apiUrls);
 
-    String createSession() throws NoPTInstanceAvailableException;
+    String createSession(String inputFileUrl) throws NoPTInstanceAvailableException;
 
     Set<String> getCurrentSessions();
 

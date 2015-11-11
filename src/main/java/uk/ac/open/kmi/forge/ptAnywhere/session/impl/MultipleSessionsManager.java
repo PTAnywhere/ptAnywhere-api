@@ -8,6 +8,7 @@ import uk.ac.open.kmi.forge.ptAnywhere.exceptions.NoPTInstanceAvailableException
 import uk.ac.open.kmi.forge.ptAnywhere.properties.PropertyFileManager;
 import uk.ac.open.kmi.forge.ptAnywhere.properties.RedisConnectionProperties;
 import uk.ac.open.kmi.forge.ptAnywhere.session.ExpirationSubscriber;
+import uk.ac.open.kmi.forge.ptAnywhere.session.FileLoadingTask;
 import uk.ac.open.kmi.forge.ptAnywhere.session.PTInstanceDetails;
 import uk.ac.open.kmi.forge.ptAnywhere.session.SessionsManager;
 import uk.ac.open.kmi.forge.ptAnywhere.session.management.Instance;
@@ -40,6 +41,7 @@ public class MultipleSessionsManager implements SessionsManager {
     private static final String INSTANCE_URL = "url";
     private static final String INSTANCE_HOSTNAME = "hostname";
     private static final String INSTANCE_PORT = "port";
+    private static final String INSTANCE_INPUT_FILE = "input_file_url";
 
 
     /**
@@ -99,6 +101,8 @@ public class MultipleSessionsManager implements SessionsManager {
     }
 
     /**
+     * @param inputFileUrl
+     *      The URL of the file to be used as a base.
      * @param instanceUrl
      *      The URL for managing the PT instance.
      * @param ptHost
@@ -107,7 +111,7 @@ public class MultipleSessionsManager implements SessionsManager {
      *      Port of the PT instance.
      * @return The new session id.
      */
-    private String createSession(String instanceUrl, String ptHost, int ptPort) {
+    private String createSession(String instanceUrl, String ptHost, int ptPort, String inputFileUrl) {
         final String sessionId  = generateSessionId();
         final String rSessionId = toRedisSessionId(sessionId);
         final int expirationAfter = RESERVATION_TIME * 60;
@@ -118,6 +122,8 @@ public class MultipleSessionsManager implements SessionsManager {
             t.hset(rSessionId, INSTANCE_URL, instanceUrl);
             t.hset(rSessionId, INSTANCE_HOSTNAME, ptHost);
             t.hset(rSessionId, INSTANCE_PORT, String.valueOf(ptPort));
+            if (inputFileUrl!=null)
+                t.hset(rSessionId, INSTANCE_INPUT_FILE, inputFileUrl);
             // We could also expire the last thing whenever the keyspace events work
             t.expire(rSessionId, expirationAfter);
             // Also stored in a separate key to ensure that we still have the URL after the key expires
@@ -135,13 +141,13 @@ public class MultipleSessionsManager implements SessionsManager {
      * @return The new session id.
      */
     @Override
-    public String createSession() throws NoPTInstanceAvailableException {
+    public String createSession(String inputFileUrl) throws NoPTInstanceAvailableException {
         try (Jedis jedis = this.pool.getResource()) {
             for (String apiUrl : jedis.smembers(AVAILABLE_APIS)) {
                 try {
                     final PTManagementClient cli = new PTManagementClient(apiUrl);
                     final Instance i = cli.createInstance();
-                    return createSession(i.getUrl(), i.getPacketTracerHostname(), i.getPacketTracerPort());
+                    return createSession(i.getUrl(), i.getPacketTracerHostname(), i.getPacketTracerPort(), inputFileUrl);
                 } catch (NoPTInstanceAvailableException e) {
                     // Let's try with the next API...
                 }
@@ -161,14 +167,37 @@ public class MultipleSessionsManager implements SessionsManager {
         }
     }
 
+    class FileLoadingTaskImpl implements FileLoadingTask {
+
+        final String inputUrl;
+        final String rSessionId;
+
+        FileLoadingTaskImpl(String inputFileUrl, String rSessionId) {
+            this.inputUrl = inputFileUrl;
+            this.rSessionId = rSessionId;
+        }
+
+        public String getInputUrl() {
+            return inputUrl;
+        }
+
+        public void markAsLoaded() {
+            try (Jedis jedis = pool.getResource()) {
+                jedis.hdel(rSessionId, INSTANCE_INPUT_FILE);
+            }
+        }
+    }
+
     protected PTInstanceDetails getInstanceWithRSessionId(String rSessionId) {
         try (Jedis jedis = this.pool.getResource()) {
             final Map<String, String> details = jedis.hgetAll(rSessionId);
             if (details != null && details.containsKey(INSTANCE_URL) &&
                     details.containsKey(INSTANCE_HOSTNAME) && details.containsKey(INSTANCE_PORT)) {
+                final String inputFileUrl = details.get(INSTANCE_INPUT_FILE);
                 return new PTInstanceDetails(details.get(INSTANCE_URL),
                         details.get(INSTANCE_HOSTNAME),
-                        Integer.valueOf(details.get(INSTANCE_PORT)));
+                        Integer.valueOf(details.get(INSTANCE_PORT)),
+                        (inputFileUrl==null)? null: new FileLoadingTaskImpl(inputFileUrl, rSessionId) );
             }
             return null;
         }

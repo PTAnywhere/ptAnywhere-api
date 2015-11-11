@@ -4,6 +4,7 @@ import io.swagger.annotations.*;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
+import javax.websocket.Session;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
 import java.net.URI;
@@ -13,8 +14,11 @@ import java.util.*;
 import uk.ac.open.kmi.forge.ptAnywhere.analytics.InteractionRecord;
 import uk.ac.open.kmi.forge.ptAnywhere.exceptions.ErrorBean;
 import uk.ac.open.kmi.forge.ptAnywhere.exceptions.NoPTInstanceAvailableException;
+import uk.ac.open.kmi.forge.ptAnywhere.pojo.NewSession;
 import uk.ac.open.kmi.forge.ptAnywhere.session.SessionsManager;
 import uk.ac.open.kmi.forge.ptAnywhere.session.impl.MultipleSessionsManager;
+
+import static uk.ac.open.kmi.forge.ptAnywhere.api.http.URLFactory.INPUT_PARAM;
 import static uk.ac.open.kmi.forge.ptAnywhere.api.http.URLFactory.SESSION_PARAM;
 
 
@@ -43,6 +47,7 @@ public class SessionsResource {
     }
 
     @POST
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Retrieve information of the newly created session", tags="session")
     @ApiResponses(value = {
@@ -53,9 +58,11 @@ public class SessionsResource {
     })
     // TODO Even better if we use:
     // https://jersey.java.net/documentation/latest/user-guide.html#declarative-linking
-    public Response createSession(@Context ServletContext servletContext, @Context HttpServletRequest request)
+    public Response createSession(@Context ServletContext servletContext, @Context HttpServletRequest request,
+                                  @ApiParam(value = "Session to be created. <br> 'fileUrl' " +
+                                                    "specifies the file to be opened at the beginning.") NewSession newSession)
             throws URISyntaxException, NoPTInstanceAvailableException {
-        final String id = APIApplication.createSessionsManager(servletContext).createSession();  // May throw NoPTInstanceAvailableException
+        final String id = APIApplication.createSessionsManager(servletContext).createSession(newSession.getFileUrl());  // May throw NoPTInstanceAvailableException
         final InteractionRecord ir = APIApplication.createInteractionRecord(servletContext, request, id);
         ir.interactionStarted();
         return Response.created(new URI(getSessionRelativeURI(id))).entity(Utils.toJsonString(id)).

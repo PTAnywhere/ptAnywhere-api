@@ -16,7 +16,7 @@ public class SharedSessionsManagerFactory implements SessionsManagerFactory {
     final PTInstanceDetails uniqueInstance;
 
     protected SharedSessionsManagerFactory(PacketTracerInstanceProperties instanceDetails) {
-        this.uniqueInstance = new PTInstanceDetails(null, instanceDetails.getHostname(), instanceDetails.getPort());
+        this.uniqueInstance = new PTInstanceDetails(null, instanceDetails.getHostname(), instanceDetails.getPort(), null);
     }
 
     public SessionsManager create() {
@@ -37,13 +37,14 @@ public class SharedSessionsManagerFactory implements SessionsManagerFactory {
 
         public void addManagementAPIs(String... apiUrls) {}
 
-        public String createSession() throws NoPTInstanceAvailableException {
+        public String createSession(String inputFileUrl) throws NoPTInstanceAvailableException {
+            // WARNING: No file opening will be allowed in this mode: inputFileUrl is ignored.
             return SESSION_ID;  // Only one session
         }
 
         public Set<String> getCurrentSessions() {
             final Set<String> ret = new HashSet<String>();
-            ret.add(createSession());
+            ret.add(createSession(null));
             return ret;
         }
 
