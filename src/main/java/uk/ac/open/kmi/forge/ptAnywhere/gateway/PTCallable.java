@@ -33,7 +33,7 @@ public abstract class PTCallable<V> implements Callable<V> {
         final PTInstanceDetails details = this.sm.getInstance();
         this.connection = PTConnection.createPacketTracerGateway(details.getHost(), details.getPort());
         try {
-            this.connection.before();
+            this.connection.before(details.getFileLoadingTask());
             return internalRun();
         } catch (PTAnywhereException e) {
             // Simply throw the app's own exceptions...

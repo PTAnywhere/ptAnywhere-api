@@ -5,6 +5,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import uk.ac.open.kmi.forge.ptAnywhere.exceptions.PTAnywhereException;
 import uk.ac.open.kmi.forge.ptAnywhere.exceptions.PacketTracerConnectionException;
+import uk.ac.open.kmi.forge.ptAnywhere.session.FileLoadingTask;
 import uk.ac.open.kmi.forge.ptAnywhere.session.PTInstanceDetails;
 import uk.ac.open.kmi.forge.ptAnywhere.session.SessionManager;
 
@@ -29,7 +30,7 @@ public abstract class PTRunnable implements Runnable {
         final PTInstanceDetails details = this.sm.getInstance();
         this.connection = PTConnection.createPacketTracerGateway(details.getHost(), details.getPort());
         try {
-            this.connection.before();
+            this.connection.before(details.getFileLoadingTask());
             internalRun();
         } catch (PTAnywhereException e) {
             // Simply throw the app's own exceptions...

@@ -14,6 +14,7 @@ import org.apache.commons.logging.LogFactory;
 import uk.ac.open.kmi.forge.ptAnywhere.exceptions.PacketTracerConnectionException;
 import uk.ac.open.kmi.forge.ptAnywhere.gateway.impl.CachedPacketTracerDAO;
 import uk.ac.open.kmi.forge.ptAnywhere.gateway.impl.MemoryCache;
+import uk.ac.open.kmi.forge.ptAnywhere.session.FileLoadingTask;
 
 
 /**
@@ -43,9 +44,18 @@ public class PTConnection {
     }
 
     protected void before() throws IOException {
+        before(null);
+    }
+
+    protected void before(FileLoadingTask loadingTask) throws IOException {
         final PacketTracerSessionFactory sessionFactory = PacketTracerSessionFactoryImpl.getInstance();
         this.packetTracerSession = createSession(sessionFactory);
         this.ipcFactory = new IPCFactory(this.packetTracerSession);
+        // Open file if needed
+        if (loadingTask!=null) {
+            getIPC().appWindow().fileOpenFromURL(loadingTask.getInputUrl());
+            loadingTask.markAsLoaded();
+        }
     }
 
     protected void after() throws IOException {
