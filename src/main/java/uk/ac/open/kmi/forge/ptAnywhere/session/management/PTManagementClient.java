@@ -2,9 +2,12 @@ package uk.ac.open.kmi.forge.ptAnywhere.session.management;
 
 import uk.ac.open.kmi.forge.ptAnywhere.exceptions.ErrorBean;
 import uk.ac.open.kmi.forge.ptAnywhere.exceptions.NoPTInstanceAvailableException;
+import uk.ac.open.kmi.forge.ptAnywhere.exceptions.UnresolvableFileUrlException;
+
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -14,6 +17,7 @@ public class PTManagementClient {
 
     final static String INSTANCES_PATH = "instances";
     final static String INSTANCE_PARAM = "instanceId";
+    final static String FILES_PATH = "files";
     final static String INSTANCE_PATH = INSTANCES_PATH + "/{" + INSTANCE_PARAM + "}";
 
     final WebTarget target;
@@ -51,5 +55,17 @@ public class PTManagementClient {
         final InstanceResourceClient irc = new InstanceResourceClient(
                 this.target.path(INSTANCE_PATH.replace("{" + INSTANCE_PARAM + "}", String.valueOf(instanceId))) );
         return irc.delete();
+    }
+
+
+    public File getCachedFile(String url) {
+        final Response response = this.target.path(FILES_PATH)
+                .request(MediaType.APPLICATION_JSON)
+                .post(Entity.entity(url, MediaType.TEXT_PLAIN));
+        if (response.getStatus()==Response.Status.BAD_REQUEST.getStatusCode()) {
+            final ErrorBean error = response.readEntity(ErrorBean.class);
+            throw new UnresolvableFileUrlException((error==null)? null: error.getErrorMsg());
+        }
+        return response.readEntity(File.class);
     }
 }

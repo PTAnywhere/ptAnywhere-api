@@ -4,6 +4,7 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.junit.Test;
 import uk.ac.open.kmi.forge.ptAnywhere.exceptions.NoPTInstanceAvailableException;
+import uk.ac.open.kmi.forge.ptAnywhere.exceptions.UnresolvableFileUrlException;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.Application;
@@ -14,6 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.Assert.*;
+import static uk.ac.open.kmi.forge.ptAnywhere.session.management.PTManagementClient.FILES_PATH;
 import static uk.ac.open.kmi.forge.ptAnywhere.session.management.PTManagementClient.INSTANCES_PATH;
 import static uk.ac.open.kmi.forge.ptAnywhere.session.management.PTManagementClient.INSTANCE_PARAM;
 
@@ -51,9 +53,24 @@ public class PTManagementClientTest extends JerseyTest {
         }
     }
 
+    @Path(FILES_PATH)
+    public static class FakeFileResource {
+        static String invalidUrl = "http://invalid";
+        static String localFilename = "/data/local/renamedo.pkg";
+
+        @POST
+        @Produces(MediaType.APPLICATION_JSON)
+        public Response cacheFile(String url) {
+            if (url.equals(invalidUrl)) {
+                return Response.status(Response.Status.BAD_REQUEST).build();
+            }
+            return Response.ok(new File(url, localFilename)).build();
+        }
+    }
+
     @Override
     protected Application configure() {
-        return new ResourceConfig(FakeInstanceResource.class);
+        return new ResourceConfig(FakeInstanceResource.class, FakeFileResource.class);
     }
 
     @Override
@@ -84,5 +101,18 @@ public class PTManagementClientTest extends JerseyTest {
     @Test(expected = NotFoundException.class)
     public void testDeleteInstanceNotFound() {
         this.client.deleteInstance(23);
+    }
+
+    @Test
+    public void testGetCachedFile() {
+        final String url = "http://amazing/resolvable/url/";
+        final File cachedFile = this.client.getCachedFile(url);
+        assertEquals(url, cachedFile.getUrl());
+        assertEquals(FakeFileResource.localFilename, cachedFile.getFilename());
+    }
+
+    @Test(expected = UnresolvableFileUrlException.class)
+    public void testGetCachedFileUnresolvable() {
+        this.client.getCachedFile(FakeFileResource.invalidUrl);
     }
 }
