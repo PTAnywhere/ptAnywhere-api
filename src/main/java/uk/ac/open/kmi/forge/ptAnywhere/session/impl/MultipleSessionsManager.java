@@ -5,8 +5,6 @@ import org.apache.commons.logging.LogFactory;
 import redis.clients.jedis.*;
 import uk.ac.open.kmi.forge.ptAnywhere.api.http.Utils;
 import uk.ac.open.kmi.forge.ptAnywhere.exceptions.NoPTInstanceAvailableException;
-import uk.ac.open.kmi.forge.ptAnywhere.properties.PropertyFileManager;
-import uk.ac.open.kmi.forge.ptAnywhere.properties.RedisConnectionProperties;
 import uk.ac.open.kmi.forge.ptAnywhere.session.ExpirationSubscriber;
 import uk.ac.open.kmi.forge.ptAnywhere.session.FileLoadingTask;
 import uk.ac.open.kmi.forge.ptAnywhere.session.PTInstanceDetails;
@@ -41,7 +39,7 @@ public class MultipleSessionsManager implements SessionsManager {
     private static final String INSTANCE_URL = "url";
     private static final String INSTANCE_HOSTNAME = "hostname";
     private static final String INSTANCE_PORT = "port";
-    private static final String INSTANCE_INPUT_FILE = "input_file_url";
+    private static final String INSTANCE_INPUT_FILE = "input_file";
 
 
     /**
@@ -101,8 +99,8 @@ public class MultipleSessionsManager implements SessionsManager {
     }
 
     /**
-     * @param inputFileUrl
-     *      The URL of the file to be used as a base.
+     * @param inputFilename
+     *      The local path (relative to the containers) of the file to be used as a base.
      * @param instanceUrl
      *      The URL for managing the PT instance.
      * @param ptHost
@@ -111,7 +109,7 @@ public class MultipleSessionsManager implements SessionsManager {
      *      Port of the PT instance.
      * @return The new session id.
      */
-    private String createSession(String instanceUrl, String ptHost, int ptPort, String inputFileUrl) {
+    private String createSession(String instanceUrl, String ptHost, int ptPort, String inputFilename) {
         final String sessionId  = generateSessionId();
         final String rSessionId = toRedisSessionId(sessionId);
         final int expirationAfter = RESERVATION_TIME * 60;
@@ -122,8 +120,8 @@ public class MultipleSessionsManager implements SessionsManager {
             t.hset(rSessionId, INSTANCE_URL, instanceUrl);
             t.hset(rSessionId, INSTANCE_HOSTNAME, ptHost);
             t.hset(rSessionId, INSTANCE_PORT, String.valueOf(ptPort));
-            if (inputFileUrl!=null)
-                t.hset(rSessionId, INSTANCE_INPUT_FILE, inputFileUrl);
+            if (inputFilename!=null)
+                t.hset(rSessionId, INSTANCE_INPUT_FILE, inputFilename);
             // We could also expire the last thing whenever the keyspace events work
             t.expire(rSessionId, expirationAfter);
             // Also stored in a separate key to ensure that we still have the URL after the key expires
@@ -147,7 +145,13 @@ public class MultipleSessionsManager implements SessionsManager {
                 try {
                     final PTManagementClient cli = new PTManagementClient(apiUrl);
                     final Instance i = cli.createInstance();
-                    return createSession(i.getUrl(), i.getPacketTracerHostname(), i.getPacketTracerPort(), inputFileUrl);
+                    // We cache the file in that API and store the cached file local path instead of its URL.
+                    // Pros: 1) we avoid storing the API associated to the instance to cache it later
+                    //       2) we can directly store the local file path instead to the URL
+                    // cons: 1) The files are not cached close to when they are opened.
+                    //          In the meantime (worse case scenario: matter of seconds) they could be destroyed.
+                    final String filename = cli.getCachedFile(inputFileUrl).getFilename();
+                    return createSession(i.getUrl(), i.getPacketTracerHostname(), i.getPacketTracerPort(), filename);
                 } catch (NoPTInstanceAvailableException e) {
                     // Let's try with the next API...
                 }
@@ -169,16 +173,16 @@ public class MultipleSessionsManager implements SessionsManager {
 
     class FileLoadingTaskImpl implements FileLoadingTask {
 
-        final String inputUrl;
+        final String inputFilePath;
         final String rSessionId;
 
-        FileLoadingTaskImpl(String inputFileUrl, String rSessionId) {
-            this.inputUrl = inputFileUrl;
+        FileLoadingTaskImpl(String inputFilePath, String rSessionId) {
+            this.inputFilePath = inputFilePath;
             this.rSessionId = rSessionId;
         }
 
-        public String getInputUrl() {
-            return inputUrl;
+        public String getInputFilePath() {
+            return inputFilePath;
         }
 
         public void markAsLoaded() {
@@ -216,16 +220,6 @@ public class MultipleSessionsManager implements SessionsManager {
         }
     }
 
-    /**
-     * Delete session from DB and marks the used instance as available.
-     * @param sessionId
-     */
-    @Override
-    public void deleteSession(String sessionId) {
-        final String rSessionId = toRedisSessionId(sessionId);
-        deleteRSession(rSessionId);
-    }
-
     protected void deleteRSession(String rSessionId) {
         try (Jedis jedis = this.pool.getResource()) {
             final String instanceUrl = jedis.get(URL_PREFIX + rSessionId);
@@ -243,6 +237,16 @@ public class MultipleSessionsManager implements SessionsManager {
                 LOGGER.debug("Expired instance removed for " + rSessionId + ".");
             }
         }
+    }
+
+    /**
+     * Delete session from DB and marks the used instance as available.
+     * @param sessionId
+     */
+    @Override
+    public void deleteSession(String sessionId) {
+        final String rSessionId = toRedisSessionId(sessionId);
+        deleteRSession(rSessionId);
     }
 
     /* Methods to ease webapp management */

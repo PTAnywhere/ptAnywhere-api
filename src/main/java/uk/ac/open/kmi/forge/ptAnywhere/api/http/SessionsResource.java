@@ -13,6 +13,7 @@ import java.util.*;
 import uk.ac.open.kmi.forge.ptAnywhere.analytics.InteractionRecord;
 import uk.ac.open.kmi.forge.ptAnywhere.exceptions.ErrorBean;
 import uk.ac.open.kmi.forge.ptAnywhere.exceptions.NoPTInstanceAvailableException;
+import uk.ac.open.kmi.forge.ptAnywhere.exceptions.UnresolvableFileUrlException;
 import uk.ac.open.kmi.forge.ptAnywhere.pojo.NewSession;
 import uk.ac.open.kmi.forge.ptAnywhere.session.SessionsManager;
 import static uk.ac.open.kmi.forge.ptAnywhere.api.http.URLFactory.SESSION_PARAM;
@@ -50,7 +51,9 @@ public class SessionsResource {
         @ApiResponse(code = 201, message = "Session created successfully. Identifier of the new session.", response = String.class,
                 responseHeaders = { @ResponseHeader(name = "location", description = "URL for the newly created session", response=String.class) } ),
         @ApiResponse(code = NoPTInstanceAvailableException.status, response = ErrorBean.class,
-                message = NoPTInstanceAvailableException.description)
+                message = NoPTInstanceAvailableException.description),
+        @ApiResponse(code = UnresolvableFileUrlException.status, response = ErrorBean.class,
+                message = UnresolvableFileUrlException.description)
     })
     // TODO Even better if we use:
     // https://jersey.java.net/documentation/latest/user-guide.html#declarative-linking
