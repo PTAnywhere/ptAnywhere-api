@@ -10,6 +10,7 @@ import org.apache.commons.logging.LogFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 import uk.ac.open.kmi.forge.ptAnywhere.analytics.InteractionRecord;
 import uk.ac.open.kmi.forge.ptAnywhere.analytics.InteractionRecordFactory;
+import uk.ac.open.kmi.forge.ptAnywhere.api.http.filters.CORSFilter;
 import uk.ac.open.kmi.forge.ptAnywhere.api.websocket.ConsoleEndpoint;
 import uk.ac.open.kmi.forge.ptAnywhere.properties.PropertyFileManager;
 import uk.ac.open.kmi.forge.ptAnywhere.session.ExpirationSubscriber;
@@ -50,7 +51,10 @@ public class APIApplication extends ResourceConfig {
         // However, I'm not sure whether creating one PropertyFileManager per request could be harmful or desirable.
         final PropertyFileManager pfm = new PropertyFileManager();
 
-        packages(getClass().getPackage().getName());
+        packages(false, getClass().getPackage().getName());  // Not recursive
+        if (pfm.doesAPIAllowCORS()) {
+            register(CORSFilter.class);
+        }
         configSwagger(servletContext, pfm.getApplicationPath());
 
         final SessionsManagerFactory sessionsManagerFactory = SessionsManagerFactoryImpl.create(pfm);

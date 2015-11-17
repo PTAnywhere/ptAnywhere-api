@@ -37,6 +37,14 @@ public class PropertyFileManager {
     }
 
     /**
+     * @return Should the API allow cross-origin HTTP requests?
+     *  Default value: false.
+     */
+    public boolean doesAPIAllowCORS() {
+        return Boolean.valueOf(this.props.getProperty("api.cors", "false"));
+    }
+
+    /**
      * By default, the Redis server runs in the same machine as the web server.
      */
     public  RedisConnectionProperties getRedisConnectionDetails() {
