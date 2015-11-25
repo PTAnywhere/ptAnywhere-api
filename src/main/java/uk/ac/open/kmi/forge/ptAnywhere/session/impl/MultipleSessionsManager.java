@@ -9,8 +9,8 @@ import uk.ac.open.kmi.forge.ptAnywhere.session.ExpirationSubscriber;
 import uk.ac.open.kmi.forge.ptAnywhere.session.FileLoadingTask;
 import uk.ac.open.kmi.forge.ptAnywhere.session.PTInstanceDetails;
 import uk.ac.open.kmi.forge.ptAnywhere.session.SessionsManager;
-import uk.ac.open.kmi.forge.ptAnywhere.session.management.Instance;
-import uk.ac.open.kmi.forge.ptAnywhere.session.management.InstanceResourceClient;
+import uk.ac.open.kmi.forge.ptAnywhere.session.management.Allocation;
+import uk.ac.open.kmi.forge.ptAnywhere.session.management.AllocationResourceClient;
 import uk.ac.open.kmi.forge.ptAnywhere.session.management.PTManagementClient;
 
 import javax.ws.rs.NotFoundException;
@@ -63,7 +63,7 @@ public class MultipleSessionsManager implements SessionsManager {
             final Set<PTInstanceDetails> unfinished = getAllInstances();
             for (PTInstanceDetails instance: unfinished) {
                 try {
-                    final InstanceResourceClient cli = new InstanceResourceClient(instance.getUrl());
+                    final AllocationResourceClient cli = new AllocationResourceClient(instance.getUrl());
                     cli.delete();  // If it throws an exception the element is not deleted.
                 } catch(NotFoundException e) {
                     LOGGER.error("The instance " + instance.getUrl() +  " could not be removed (maybe another thread already delete it?).");
@@ -144,7 +144,7 @@ public class MultipleSessionsManager implements SessionsManager {
             for (String apiUrl : jedis.smembers(AVAILABLE_APIS)) {
                 try {
                     final PTManagementClient cli = new PTManagementClient(apiUrl);
-                    final Instance i = cli.createInstance();
+                    final Allocation i = cli.createInstance();
                     // We cache the file in that API and store the cached file local path instead of its URL.
                     // Pros: 1) we avoid storing the API associated to the instance to cache it later
                     //       2) we can directly store the local file path instead to the URL
@@ -224,7 +224,7 @@ public class MultipleSessionsManager implements SessionsManager {
         try (Jedis jedis = this.pool.getResource()) {
             final String instanceUrl = jedis.get(URL_PREFIX + rSessionId);
             if (instanceUrl!=null) {
-                final InstanceResourceClient cli = new InstanceResourceClient(instanceUrl);
+                final AllocationResourceClient cli = new AllocationResourceClient(instanceUrl);
                 cli.delete();  // If it throws an exception the element is not deleted.
 
                 // If everything went well...

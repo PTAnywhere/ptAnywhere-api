@@ -4,28 +4,24 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 
 @XmlRootElement
-public class Instance {
+public class Allocation {
     int id;
     String url;
-    String dockerId;
     String packetTracer;
-    String vnc;
     String createdAt;
     String deletedAt;
 
-    public Instance() {
+    public Allocation() {
     }
 
-    protected static Instance clone(Instance toClone) {
-        return new Instance(toClone.id, toClone.url, toClone.dockerId, toClone.packetTracer, toClone.vnc, toClone.createdAt, toClone.deletedAt);
+    protected static Allocation clone(Allocation toClone) {
+        return new Allocation(toClone.id, toClone.url, toClone.packetTracer, toClone.createdAt, toClone.deletedAt);
     }
 
 
-    public Instance(int id, String url, String dockerId, String packetTracer, String vnc, String createdAt, String deletedAt) {
+    public Allocation(int id, String url, String packetTracer, String createdAt, String deletedAt) {
         this.id = id;
-        this.dockerId = dockerId;
         this.packetTracer = packetTracer;
-        this.vnc = vnc;
         this.createdAt = createdAt;
         this.deletedAt = deletedAt;
     }
@@ -46,14 +42,6 @@ public class Instance {
         this.url = url;
     }
 
-    public String getDockerId() {
-        return dockerId;
-    }
-
-    public void setDockerId(String dockerId) {
-        this.dockerId = dockerId;
-    }
-
     public String getPacketTracer() {
         return packetTracer;
     }
@@ -68,14 +56,6 @@ public class Instance {
 
     public void setPacketTracer(String packetTracer) {
         this.packetTracer = packetTracer;
-    }
-
-    public String getVnc() {
-        return vnc;
-    }
-
-    public void setVnc(String vnc) {
-        this.vnc = vnc;
     }
 
     public String getCreatedAt() {
@@ -97,18 +77,16 @@ public class Instance {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Instance)) return false;
+        if (!(o instanceof Allocation)) return false;
 
-        Instance instance = (Instance) o;
+        Allocation allocation = (Allocation) o;
 
-        if (id != instance.id) return false;
-        if (url != null ? !url.equals(instance.url) : instance.url != null) return false;
-        if (dockerId != null ? !dockerId.equals(instance.dockerId) : instance.dockerId != null) return false;
-        if (packetTracer != null ? !packetTracer.equals(instance.packetTracer) : instance.packetTracer != null)
+        if (id != allocation.id) return false;
+        if (url != null ? !url.equals(allocation.url) : allocation.url != null) return false;
+        if (packetTracer != null ? !packetTracer.equals(allocation.packetTracer) : allocation.packetTracer != null)
             return false;
-        if (vnc != null ? !vnc.equals(instance.vnc) : instance.vnc != null) return false;
-        if (createdAt != null ? !createdAt.equals(instance.createdAt) : instance.createdAt != null) return false;
-        return !(deletedAt != null ? !deletedAt.equals(instance.deletedAt) : instance.deletedAt != null);
+        if (createdAt != null ? !createdAt.equals(allocation.createdAt) : allocation.createdAt != null) return false;
+        return !(deletedAt != null ? !deletedAt.equals(allocation.deletedAt) : allocation.deletedAt != null);
 
     }
 
@@ -116,9 +94,7 @@ public class Instance {
     public int hashCode() {
         int result = id;
         result = 31 * result + (url != null ? url.hashCode() : 0);
-        result = 31 * result + (dockerId != null ? dockerId.hashCode() : 0);
         result = 31 * result + (packetTracer != null ? packetTracer.hashCode() : 0);
-        result = 31 * result + (vnc != null ? vnc.hashCode() : 0);
         result = 31 * result + (createdAt != null ? createdAt.hashCode() : 0);
         result = 31 * result + (deletedAt != null ? deletedAt.hashCode() : 0);
         return result;

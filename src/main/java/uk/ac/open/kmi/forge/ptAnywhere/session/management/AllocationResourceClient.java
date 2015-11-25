@@ -6,20 +6,20 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 
 
-public class InstanceResourceClient {
+public class AllocationResourceClient {
     final WebTarget target;
 
-    public InstanceResourceClient(WebTarget target) {
+    public AllocationResourceClient(WebTarget target) {
         this.target = target;
     }
 
-    public InstanceResourceClient(String instanceUrl) {
+    public AllocationResourceClient(String instanceUrl) {
         this.target = ClientBuilder.newClient().target(instanceUrl);
     }
 
-    public Instance delete() throws NotFoundException {
+    public Allocation delete() throws NotFoundException {
         return this.target
                 .request(MediaType.APPLICATION_JSON)
-                .delete(Instance.class);
+                .delete(Allocation.class);
     }
 }

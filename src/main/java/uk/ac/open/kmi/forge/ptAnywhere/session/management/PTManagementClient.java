@@ -15,10 +15,10 @@ import javax.ws.rs.core.Response;
 
 public class PTManagementClient {
 
-    final static String INSTANCES_PATH = "instances";
-    final static String INSTANCE_PARAM = "instanceId";
+    final static String ALLOCATIONS_PATH = "allocations";
+    final static String ALLOCATION_PARAM = "allocationId";
     final static String FILES_PATH = "files";
-    final static String INSTANCE_PATH = INSTANCES_PATH + "/{" + INSTANCE_PARAM + "}";
+    final static String ALLOCATION_PATH = ALLOCATIONS_PATH + "/{" + ALLOCATION_PARAM + "}";
 
     final WebTarget target;
 
@@ -32,14 +32,14 @@ public class PTManagementClient {
         this.target = client.target(managementApiUrl);
     }
 
-    public Instance createInstance() throws NoPTInstanceAvailableException {
+    public Allocation createInstance() throws NoPTInstanceAvailableException {
         /*  .path("resource/helloworld")
             .queryParam("greeting", "Hi World!")
             .request(MediaType.TEXT_PLAIN_TYPE)
             .header("some-header", "true")
             .get(String.class);
         */
-        final Response response = this.target.path(INSTANCES_PATH)
+        final Response response = this.target.path(ALLOCATIONS_PATH)
                 //.queryParam()
                 .request(MediaType.APPLICATION_JSON)
                         //.header("some-header", "true")
@@ -48,12 +48,12 @@ public class PTManagementClient {
         if (response.getStatus()==Response.Status.SERVICE_UNAVAILABLE.getStatusCode()) {
             throw new NoPTInstanceAvailableException(response.readEntity(ErrorBean.class).getErrorMsg());
         }
-        return response.readEntity(Instance.class);
+        return response.readEntity(Allocation.class);
     }
 
-    public Instance deleteInstance(int instanceId) throws NotFoundException {
-        final InstanceResourceClient irc = new InstanceResourceClient(
-                this.target.path(INSTANCE_PATH.replace("{" + INSTANCE_PARAM + "}", String.valueOf(instanceId))) );
+    public Allocation deleteInstance(int instanceId) throws NotFoundException {
+        final AllocationResourceClient irc = new AllocationResourceClient(
+                this.target.path(ALLOCATION_PATH.replace("{" + ALLOCATION_PARAM + "}", String.valueOf(instanceId))) );
         return irc.delete();
     }
 

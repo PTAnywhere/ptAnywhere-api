@@ -16,40 +16,40 @@ import java.util.Map;
 
 import static org.junit.Assert.*;
 import static uk.ac.open.kmi.forge.ptAnywhere.session.management.PTManagementClient.FILES_PATH;
-import static uk.ac.open.kmi.forge.ptAnywhere.session.management.PTManagementClient.INSTANCES_PATH;
-import static uk.ac.open.kmi.forge.ptAnywhere.session.management.PTManagementClient.INSTANCE_PARAM;
+import static uk.ac.open.kmi.forge.ptAnywhere.session.management.PTManagementClient.ALLOCATIONS_PATH;
+import static uk.ac.open.kmi.forge.ptAnywhere.session.management.PTManagementClient.ALLOCATION_PARAM;
 
 
 public class PTManagementClientTest extends JerseyTest {
 
     PTManagementClient client;
 
-    @Path(INSTANCES_PATH)
+    @Path(ALLOCATIONS_PATH)
     public static class FakeInstanceResource {
-        static Instance createdInstance;  // If null, unavailable
-        static final Map<Integer, Instance> instances = new HashMap<Integer, Instance>();
+        static Allocation createdAllocation;  // If null, unavailable
+        static final Map<Integer, Allocation> instances = new HashMap<Integer, Allocation>();
 
         @POST
         @Produces(MediaType.APPLICATION_JSON)
         public Response createInstance() {
-            if (createdInstance==null) {
+            if (createdAllocation ==null) {
                 throw new NoPTInstanceAvailableException();
             }
-            return Response.ok(createdInstance).build();
+            return Response.ok(createdAllocation).build();
         }
 
         @DELETE
-        @Path("/{" + INSTANCE_PARAM + "}")
+        @Path("/{" + ALLOCATION_PARAM + "}")
         @Produces(MediaType.APPLICATION_JSON)
-        public Response deleteInstance(@PathParam(INSTANCE_PARAM) String instanceId) {
-            final Instance deleted = instances.remove(Integer.parseInt(instanceId));
+        public Response deleteInstance(@PathParam(ALLOCATION_PARAM) String instanceId) {
+            final Allocation deleted = instances.remove(Integer.parseInt(instanceId));
             if (deleted==null)
                 return Response.status(Response.Status.NOT_FOUND).build();
             return Response.ok(deleted).build();
         }
 
-        public static void addInstance(Instance instance) {
-            instances.put(instance.getId(), instance);
+        public static void addInstance(Allocation allocation) {
+            instances.put(allocation.getId(), allocation);
         }
     }
 
@@ -77,23 +77,23 @@ public class PTManagementClientTest extends JerseyTest {
     public void setUp() throws Exception {
         super.setUp();
         this.client = new PTManagementClient(target());
-        FakeInstanceResource.createdInstance = new Instance(1, "http://localhost/inst/1", "dockerid1", "localhost:39000", "vnc://localhost:5901", "today", "tomorrow");
+        FakeInstanceResource.createdAllocation = new Allocation(1, "http://localhost/inst/1", "localhost:39000", "today", "tomorrow");
     }
 
     @Test
     public void testCreateInstance() {
-        assertEquals(FakeInstanceResource.createdInstance, this.client.createInstance());
+        assertEquals(FakeInstanceResource.createdAllocation, this.client.createInstance());
     }
 
     @Test(expected = NoPTInstanceAvailableException.class)
     public void testCreateInstanceUnavailable() {
-        FakeInstanceResource.createdInstance = null;
+        FakeInstanceResource.createdAllocation = null;
         this.client.createInstance();
     }
 
     @Test
     public void testDeleteInstance() {
-        final Instance expected = new Instance(20, "http://localhost/inst/2", "dockerid2", "localhost:39001", "vnc://localhost:5902", "today", "tomorrow");
+        final Allocation expected = new Allocation(20, "http://localhost/inst/2", "localhost:39001", "today", "tomorrow");
         FakeInstanceResource.addInstance(expected);
         assertEquals(expected, this.client.deleteInstance(20));
     }
