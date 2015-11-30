@@ -7,10 +7,12 @@ import uk.ac.open.kmi.forge.ptAnywhere.api.http.Utils;
 import uk.ac.open.kmi.forge.ptAnywhere.api.http.WebRepresentableDevice;
 
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
 import java.util.List;
 
 
 @XmlRootElement
+@XmlType(name="")
 public class Device extends WebRepresentableDevice {
     // Shorter version of the identifier (URL) for vis.js
     // TODO check if this is useful at all regarding the widget performance.
