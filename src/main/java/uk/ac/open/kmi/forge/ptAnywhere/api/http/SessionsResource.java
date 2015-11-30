@@ -64,7 +64,8 @@ public class SessionsResource {
         final String id = APIApplication.createSessionsManager(servletContext).createSession(newSession.getFileUrl());  // May throw NoPTInstanceAvailableException
         final InteractionRecord ir = APIApplication.createInteractionRecord(servletContext, request, id);
         ir.interactionStarted();
-        return Response.created(new URI(getSessionRelativeURI(id))).entity(Utils.toJsonString(id)).
+        final String newSessionURL = getSessionRelativeURI(id);
+        return Response.created(new URI(newSessionURL)).entity(Utils.toJsonString(newSessionURL)).
                 links(getItemLink(id)).build();
     }
 
