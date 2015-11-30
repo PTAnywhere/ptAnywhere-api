@@ -3,7 +3,10 @@ package uk.ac.open.kmi.forge.ptAnywhere.pojo;
 import uk.ac.open.kmi.forge.ptAnywhere.api.http.AbstractWebRepresentable;
 import uk.ac.open.kmi.forge.ptAnywhere.api.http.URLFactory;
 
+import javax.xml.bind.annotation.XmlType;
 
+
+@XmlType(name="")
 public class Link extends AbstractWebRepresentable<Link> {
     String id;  // E.g., "{cc57bc49-d73a-42a5-aa6a-1c78066d565c}"
     String[] endpoints;

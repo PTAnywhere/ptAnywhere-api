@@ -5,7 +5,10 @@ import com.cisco.pt.ipc.sim.port.Link;
 import uk.ac.open.kmi.forge.ptAnywhere.api.http.AbstractWebRepresentable;
 import uk.ac.open.kmi.forge.ptAnywhere.api.http.Utils;
 
+import javax.xml.bind.annotation.XmlType;
+
 // { "portName": "Vlan1", "portIpAddress": "0.0.0.0","portSubnetMask": "0.0.0.0"}
+@XmlType(name="")
 public class Port extends AbstractWebRepresentable<Port> {
 
     String portName;  // E.g., "Vlan1"

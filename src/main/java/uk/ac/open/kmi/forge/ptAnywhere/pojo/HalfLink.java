@@ -1,7 +1,7 @@
 package uk.ac.open.kmi.forge.ptAnywhere.pojo;
 
-
 import uk.ac.open.kmi.forge.ptAnywhere.api.http.AbstractWebRepresentable;
+
 
 public class HalfLink extends AbstractWebRepresentable<HalfLink> {
     String id;  // E.g., "cc57bc49d73a42a5aa6a1c78066d565c"
