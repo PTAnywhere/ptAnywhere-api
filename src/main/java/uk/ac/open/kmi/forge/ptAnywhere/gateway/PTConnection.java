@@ -53,7 +53,10 @@ public class PTConnection {
         this.ipcFactory = new IPCFactory(this.packetTracerSession);
         // Open file if needed
         if (loadingTask!=null) {
+            getIPC().appWindow().setVisible(true);
             getIPC().appWindow().fileOpen(loadingTask.getInputFilePath());
+            getIPC().appWindow().setVisible(false);
+            getIPC().appWindow().showMinimized();
             loadingTask.markAsLoaded();
         }
     }
