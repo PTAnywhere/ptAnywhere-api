@@ -42,6 +42,7 @@ public class APIApplication extends ResourceConfig {
     private final ExecutorService executor;
 
     private final InteractionRecordFactory irf;
+    private final SessionsManagerFactory sessionsManagerFactory;
     private final ExpirationSubscriber es;
 
 
@@ -58,10 +59,10 @@ public class APIApplication extends ResourceConfig {
         }
         configSwagger(servletContext, pfm.getApplicationPath());
 
-        final SessionsManagerFactory sessionsManagerFactory = SessionsManagerFactoryImpl.create(pfm);
-        servletContext.setAttribute(SESSIONS_MANAGER_FACTORY, sessionsManagerFactory);
-        ConsoleEndpoint.setSessionsManagerFactory(sessionsManagerFactory);
-        this.es =  sessionsManagerFactory.createExpirationSubscription();  // WARNING: it can return null.
+        this.sessionsManagerFactory = SessionsManagerFactoryImpl.create(pfm);
+        servletContext.setAttribute(SESSIONS_MANAGER_FACTORY, this.sessionsManagerFactory);
+        ConsoleEndpoint.setSessionsManagerFactory(this.sessionsManagerFactory);
+        this.es =  this.sessionsManagerFactory.createExpirationSubscription();  // WARNING: it can return null.
 
         this.executor = Executors.newFixedThreadPool(20, new SimpleDaemonFactory());
         this.irf = new InteractionRecordFactory(this.executor, pfm.getInteractionRecordingDetails());
@@ -135,6 +136,7 @@ public class APIApplication extends ResourceConfig {
         if (this.es!=null) {
             this.es.stop();  // Destroying the Executor would do the work too, but just in case.
         }
+        this.sessionsManagerFactory.destroy();
         try {
             RemoteLRS.destroy();
         } catch(Exception e) {
@@ -149,7 +151,7 @@ public class APIApplication extends ResourceConfig {
 //   http://stackoverflow.com/questions/3745905/what-is-recommended-way-for-spawning-threads-from-a-servlet-in-tomcat
 class SimpleDaemonFactory implements ThreadFactory {
     public Thread newThread(Runnable r) {
-        final Thread t =new Thread(r);
+        final Thread t = new Thread(r);
         t.setDaemon(true);
         t.setUncaughtExceptionHandler(new UEHLogger());
         return t;

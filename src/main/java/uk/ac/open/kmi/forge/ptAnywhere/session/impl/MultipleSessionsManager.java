@@ -14,6 +14,7 @@ import uk.ac.open.kmi.forge.ptAnywhere.session.management.AllocationResourceClie
 import uk.ac.open.kmi.forge.ptAnywhere.session.management.PTManagementClient;
 
 import javax.ws.rs.NotFoundException;
+import java.lang.ref.WeakReference;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -26,7 +27,7 @@ import java.util.UUID;
  */
 public class MultipleSessionsManager implements SessionsManager {
 
-    private static final Log LOGGER = LogFactory.getLog(MultipleSessionsManager.class);
+    protected static final Log LOGGER = LogFactory.getLog(MultipleSessionsManager.class);
 
     /**
      * Minutes that a reservation will last.
@@ -48,17 +49,21 @@ public class MultipleSessionsManager implements SessionsManager {
     private static final String SESSION_PREFIX = "session:";
     private static final String URL_PREFIX = INSTANCE_URL + ":";
 
-    protected JedisPool pool;
+    protected WeakReference<JedisPool> pool;
     protected int dbNumber;
 
     protected MultipleSessionsManager(JedisPool pool, int dbNumber) {
-        this.pool = pool;
+        this.pool = new WeakReference<JedisPool>(pool);
         this.dbNumber = dbNumber;
+    }
+
+    private JedisPool getPool() {
+        return this.pool.get();
     }
 
     @Override
     public void clear() {
-        try (Jedis jedis = this.pool.getResource()) {
+        try (Jedis jedis = getPool().getResource()) {
             // Make sure that no unfinished sessions are left behind!
             final Set<PTInstanceDetails> unfinished = getAllInstances();
             for (PTInstanceDetails instance: unfinished) {
@@ -79,7 +84,7 @@ public class MultipleSessionsManager implements SessionsManager {
      */
     @Override
     public void addManagementAPIs(String... apiUrls) {
-        try (Jedis jedis = this.pool.getResource()) {
+        try (Jedis jedis = getPool().getResource()) {
             // Is it better to set it in the config file? http://redis.io/commands/config-set
             jedis.configSet("notify-keyspace-events", "Ex");  // Activate notifications on expiration
             jedis.sadd(AVAILABLE_APIS, apiUrls);
@@ -114,7 +119,7 @@ public class MultipleSessionsManager implements SessionsManager {
         final String rSessionId = toRedisSessionId(sessionId);
         final int expirationAfter = RESERVATION_TIME * 60;
 
-        try (Jedis jedis = this.pool.getResource()) {
+        try (Jedis jedis = getPool().getResource()) {
             final Transaction t = jedis.multi();
             // Use hset if more details are needed
             t.hset(rSessionId, INSTANCE_URL, instanceUrl);
@@ -140,7 +145,7 @@ public class MultipleSessionsManager implements SessionsManager {
      */
     @Override
     public String createSession(String inputFileUrl) throws NoPTInstanceAvailableException {
-        try (Jedis jedis = this.pool.getResource()) {
+        try (Jedis jedis = getPool().getResource()) {
             for (String apiUrl : jedis.smembers(AVAILABLE_APIS)) {
                 try {
                     final PTManagementClient cli = new PTManagementClient(apiUrl);
@@ -163,7 +168,7 @@ public class MultipleSessionsManager implements SessionsManager {
     @Override
     public Set<String> getCurrentSessions() {
         final Set<String> ret = new HashSet<String>();
-        try (Jedis jedis = this.pool.getResource()) {
+        try (Jedis jedis = getPool().getResource()) {
             for (String rSessionId : jedis.keys(SESSION_PREFIX + "*")) {
                 ret.add(fromRedisSessionId(rSessionId));
             }
@@ -186,14 +191,14 @@ public class MultipleSessionsManager implements SessionsManager {
         }
 
         public void markAsLoaded() {
-            try (Jedis jedis = pool.getResource()) {
+            try (Jedis jedis = getPool().getResource()) {
                 jedis.hdel(rSessionId, INSTANCE_INPUT_FILE);
             }
         }
     }
 
     protected PTInstanceDetails getInstanceWithRSessionId(String rSessionId) {
-        try (Jedis jedis = this.pool.getResource()) {
+        try (Jedis jedis = getPool().getResource()) {
             final Map<String, String> details = jedis.hgetAll(rSessionId);
             if (details != null && details.containsKey(INSTANCE_URL) &&
                     details.containsKey(INSTANCE_HOSTNAME) && details.containsKey(INSTANCE_PORT)) {
@@ -215,13 +220,13 @@ public class MultipleSessionsManager implements SessionsManager {
     @Override
     public boolean doesExist(String sessionId) {
         final String rSessionId = toRedisSessionId(sessionId);
-        try (Jedis jedis = this.pool.getResource()) {
+        try (Jedis jedis = getPool().getResource()) {
             return jedis.exists(rSessionId);
         }
     }
 
     protected void deleteRSession(String rSessionId) {
-        try (Jedis jedis = this.pool.getResource()) {
+        try (Jedis jedis = getPool().getResource()) {
             final String instanceUrl = jedis.get(URL_PREFIX + rSessionId);
             if (instanceUrl!=null) {
                 final AllocationResourceClient cli = new AllocationResourceClient(instanceUrl);
@@ -253,7 +258,7 @@ public class MultipleSessionsManager implements SessionsManager {
     @Override
     public Set<PTInstanceDetails> getAllInstances() {
         final Set<PTInstanceDetails> ret = new HashSet<PTInstanceDetails>();
-        try (Jedis jedis = this.pool.getResource()) {
+        try (Jedis jedis = getPool().getResource()) {
             for (String rSessionId : jedis.keys(SESSION_PREFIX + "*")) {
                 final PTInstanceDetails details = getInstanceWithRSessionId(rSessionId);
                 if (details != null) ret.add(details);
@@ -282,7 +287,7 @@ class ExpirationListener extends JedisPubSub {
 class ExpirationSubscriberImpl implements ExpirationSubscriber {
     final ExpirationListener listener;
     final int dbNumber;
-    final JedisPool pool;
+    final WeakReference<JedisPool> pool;
     /**
      * @param newManager This should be a new session manager to avoid Thread issues.
      * @param dbNumber
@@ -291,13 +296,16 @@ class ExpirationSubscriberImpl implements ExpirationSubscriber {
     public ExpirationSubscriberImpl(MultipleSessionsManager newManager, int dbNumber, JedisPool pool) {
         this.listener = new ExpirationListener(newManager);
         this.dbNumber = dbNumber;
-        this.pool = pool;
+        this.pool = new WeakReference<JedisPool>(pool);
+    }
+
+    private JedisPool getPool() {
+        return this.pool.get();
     }
 
     @Override
     public void run() {
-        try (Jedis jedis = this.pool.getResource()) {
-            // Recommended readings:
+        try (Jedis jedis = getPool().getResource()) {            // Recommended readings:
             //   + http://redis.io/topics/notifications
             //   + https://github.com/xetorthio/jedis/wiki/AdvancedUsage
             jedis.psubscribe(this.listener, "__keyevent@" + this.dbNumber + "__:expired");
@@ -306,6 +314,6 @@ class ExpirationSubscriberImpl implements ExpirationSubscriber {
 
     @Override
     public void stop() {
-        this.listener.unsubscribe();
+        this.listener.punsubscribe();
     }
 }

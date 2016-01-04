@@ -19,12 +19,19 @@ public class SharedSessionsManagerFactory implements SessionsManagerFactory {
         this.uniqueInstance = new PTInstanceDetails(null, instanceDetails.getHostname(), instanceDetails.getPort(), null);
     }
 
+    @Override
     public SessionsManager create() {
         return new SharedSessionsManager();
     }
 
+    @Override
     public ExpirationSubscriber createExpirationSubscription() {
         return null;
+    }
+
+    @Override
+    public void destroy() {
+        // Nothing to be destroyed.
     }
 
     /**

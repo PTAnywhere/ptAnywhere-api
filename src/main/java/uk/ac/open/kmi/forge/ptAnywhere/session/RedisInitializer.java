@@ -19,19 +19,17 @@ public class RedisInitializer implements ServletContextListener {
 
     private static final Log LOGGER = LogFactory.getLog(RedisInitializer.class);
 
-    public void contextInitialized(ServletContextEvent arg0) {
-        try {
-            final PropertyFileManager pfm = new PropertyFileManager();
-            final Set<String> apis = pfm.getPacketTracerManagementAPIs();
-            final SessionsManager session = SessionsManagerFactoryImpl.create(pfm).create();
-            session.clear();
-            session.addManagementAPIs(apis.toArray(new String[apis.size()]));
-        } catch(Exception e) {
-            LOGGER.error(e.getMessage());
-        }
+    public void contextInitialized(ServletContextEvent event) {
+        final PropertyFileManager pfm = new PropertyFileManager();
+        final Set<String> apis = pfm.getPacketTracerManagementAPIs();
+        final SessionsManagerFactory smf = SessionsManagerFactoryImpl.create(pfm);
+        final SessionsManager session = smf.create();
+        session.clear();
+        session.addManagementAPIs(apis.toArray(new String[apis.size()]));
+        smf.destroy();
     }
 
-    public void contextDestroyed(ServletContextEvent arg0)  {
+    public void contextDestroyed(ServletContextEvent event)  {
         //LOGGER.debug("destroying context");
     }
 }
