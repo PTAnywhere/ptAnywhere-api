@@ -6,7 +6,6 @@
     <link rel="icon" type="image/png" href="${base}icon.png">
     <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
 
-    <link href="${base}widget.css" rel="stylesheet" type="text/css"/>
     <script>
         $(function() {
             $("button.goto").click(function () {

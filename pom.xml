@@ -151,7 +151,7 @@
             <dependency>
                 <groupId>org.glassfish.jersey</groupId>
                 <artifactId>jersey-bom</artifactId>
-                <version>2.18</version>
+                <version>2.22.1</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -207,7 +207,7 @@
             <groupId>org.glassfish.main.extras</groupId>
             <artifactId>glassfish-embedded-web</artifactId>
             <scope>provided</scope>
-            <version>4.1</version>
+            <version>4.1.1</version>
         </dependency>
         <dependency>
             <groupId>org.codehaus.jettison</groupId>
@@ -222,7 +222,7 @@
         <dependency>
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging</artifactId>
-            <version>1.1.1</version>
+            <version>1.2</version>
         </dependency>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
@@ -238,7 +238,7 @@
         <dependency>
             <groupId>redis.clients</groupId>
             <artifactId>jedis</artifactId>
-            <version>2.7.2</version>
+            <version>2.8.0</version>
         </dependency>
         <dependency>
             <groupId>com.cisco.pt</groupId>
@@ -255,13 +255,13 @@
         <dependency>
             <groupId>com.rusticisoftware</groupId>
             <artifactId>tincan</artifactId>
-            <version>0.7.0</version>
+            <version>0.7.1-SNAPSHOT</version>
         </dependency>
         <!-- TinCanJava's dependencies, hopefully this won't be needed soon. -->
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-client</artifactId>
-            <version>8.1.9.v20130131</version>
+            <version>9.3.6.v20151106</version>
         </dependency>
         <!-- We now rely on the Jackson version added by io.swagger -->
         <!--<dependency>

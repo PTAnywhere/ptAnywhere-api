@@ -1,5 +1,6 @@
 package uk.ac.open.kmi.forge.ptAnywhere.api.http;
 
+import com.rusticisoftware.tincan.RemoteLRS;
 import io.swagger.config.ScannerFactory;
 import io.swagger.jaxrs.config.ReflectiveJaxrsScanner;
 import io.swagger.jaxrs.listing.ApiListingResource;
@@ -133,6 +134,12 @@ public class APIApplication extends ResourceConfig {
         LOGGER.info("Destroying API webapp.");
         if (this.es!=null) {
             this.es.stop();  // Destroying the Executor would do the work too, but just in case.
+        }
+        try {
+            RemoteLRS.destroy();
+        } catch(Exception e) {
+            LOGGER.error("The RemoteLRS was not properly destroyed.");
+            LOGGER.error(e.getMessage());
         }
         this.executor.shutdownNow();
     }
