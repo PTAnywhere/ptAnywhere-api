@@ -23,8 +23,13 @@ public class TinCanAPITest {
     final static String DEVICE1URI = "http://device1";
     final static String DEVICE2URI = "http://device2";
     final static String DEVICE1NAME = "Device One";
-    final static String DEVICE2NAME = "Device One";
+    final static String DEVICE2NAME = "Device Two";
     final static String DEVICETYPE = "router";
+    final static String DEVICEGW = "192.168.1.1";
+    final static String PORTURI = "http://port1";
+    final static String PORTNAME = "Port One";
+    final static String PORTIPADDR = "192.168.1.3";
+    final static String PORTSUBNETMASK = "255.255.255.0";
     final static String LINKURI = "http://coolLink1234";
     final static String PORT1NAME = "port1";
     final static String PORT2NAME = "port2";
@@ -158,7 +163,7 @@ public class TinCanAPITest {
     }
 
     @Test
-    public void deviceModified() throws JSONException {
+    public void testDeviceModified() throws JSONException {
         this.testable.deviceModified(DEVICE1URI, DEVICE1NAME, DEVICETYPE);
         final String jsonGenerated = this.testable.statementToRecord.toJSON();
         assertContains("actor", getExpectedActor(), jsonGenerated);
@@ -174,9 +179,8 @@ public class TinCanAPITest {
     }
 
     @Test
-    public void deviceModifiedWithDefaultGateway() throws JSONException {
-        final String gw = "192.168.1.3";
-        this.testable.deviceModified(DEVICE1URI, DEVICE1NAME, DEVICETYPE, gw);
+    public void testDeviceModifiedWithDefaultGateway() throws JSONException {
+        this.testable.deviceModified(DEVICE1URI, DEVICE1NAME, DEVICETYPE, DEVICEGW);
         final String jsonGenerated = this.testable.statementToRecord.toJSON();
         assertContains("actor", getExpectedActor(), jsonGenerated);
         assertContains("verb", getExpectedVerb(BaseVocabulary.UPDATED), jsonGenerated);
@@ -186,9 +190,28 @@ public class TinCanAPITest {
                 {BaseVocabulary.EXT_DEVICE_NAME, DEVICE1NAME},
                 {BaseVocabulary.EXT_DEVICE_URI, DEVICE1URI},
                 {BaseVocabulary.EXT_DEVICE_TYPE, DEVICETYPE},
-                {BaseVocabulary.EXT_DEVICE_GW, gw}
+                {BaseVocabulary.EXT_DEVICE_GW, DEVICEGW}
         };
         assertContains("result", getExpectedResult(DEVICE1NAME, exts), jsonGenerated);
+    }
+
+    @Test
+    public void testPortModified() throws JSONException {
+        final String portActivityId = WIDGETURI + "device/"  + DEVICE1NAME.hashCode() + "/port/Port%20One";
+        this.testable.portModified(PORTURI, DEVICE1NAME, PORTNAME, PORTIPADDR, PORTSUBNETMASK);
+        final String jsonGenerated = this.testable.statementToRecord.toJSON();
+        assertContains("actor", getExpectedActor(), jsonGenerated);
+        assertContains("verb", getExpectedVerb(BaseVocabulary.UPDATED), jsonGenerated);
+        assertContains("object", getExpectedActivity(portActivityId, BaseVocabulary.SIMULATED_PORT, "Device One's port Port One"), jsonGenerated);
+        assertContains("context", getExpectedContext(WIDGETURI), jsonGenerated);
+        final String[][] exts = new String[][] {
+                {BaseVocabulary.EXT_PORT_URI, PORTURI},
+                {BaseVocabulary.EXT_DEVICE_NAME, DEVICE1NAME},
+                {BaseVocabulary.EXT_PORT_NAME, PORTNAME},
+                {BaseVocabulary.EXT_PORT_IP_ADDR, PORTIPADDR},
+                {BaseVocabulary.EXT_PORT_SUBNET_MASK, PORTSUBNETMASK}
+        };
+        assertContains("result", getExpectedResult(PORTNAME, exts), jsonGenerated);
     }
 
     protected String toEndpointJson(String name1, String port1, String name2, String port2) {
