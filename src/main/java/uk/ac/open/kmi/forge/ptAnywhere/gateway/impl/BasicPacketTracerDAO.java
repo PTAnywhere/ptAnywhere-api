@@ -221,13 +221,13 @@ public class BasicPacketTracerDAO implements PacketTracerDAO {
         final com.cisco.pt.ipc.sim.Device ret = getSimDeviceById(modification.getId());
         if (ret!=null) {
             ret.setName(modification.getLabel());
-            // FIXME distinguish between devices in a more elegant way
+            // TODO distinguish between devices in a more elegant way
             if (ret instanceof Pc && modification.getDefaultGateway()!=null) {
                 final IPAddress gateway = new IPAddressImpl(modification.getDefaultGateway());
                 ((Pc) ret).setDefaultGateway(gateway);
             }
         }
-        return Device.fromCiscoObject(ret);
+        return Device.fromCiscoObject(ret, modification.getDefaultGateway());
     }
 
     private List<Port> getPorts(com.cisco.pt.ipc.sim.Device device) {

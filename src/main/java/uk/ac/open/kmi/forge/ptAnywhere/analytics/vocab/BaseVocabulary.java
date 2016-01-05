@@ -33,6 +33,7 @@ public class BaseVocabulary {
     private static final String EXTENSION = PTANYWHERE + "/extensions";
     public static final String EXT_DEVICE_NAME = EXTENSION + "/device/name";
     public static final String EXT_DEVICE_TYPE = EXTENSION + "/device/type";
+    public static final String EXT_DEVICE_GW = EXTENSION + "/device/defaultGateway";
     public static final String EXT_DEVICE_URI = EXTENSION + "/device/uri";  // URI in the context of PTAnywhere API
     public static final String EXT_DEVICE_POSITION = EXTENSION + "/device/position";
     public static final String EXT_ENDPOINTS = EXTENSION + "/endpoints";

@@ -112,6 +112,10 @@ public class TinCanAPI extends InteractionRecord {
     }
 
     public void deviceModified(String deviceUri, String deviceName, String deviceType) {
+        deviceModified(deviceUri, deviceName, deviceType, null);
+    }
+
+    public void deviceModified(String deviceUri, String deviceName, String deviceType, String defaultGateway) {
         try {
             final StatementBuilder builder = new StatementBuilder(this.factory).
                     anonymousUser(this.sessionId).verb(BaseVocabulary.UPDATED);
@@ -119,6 +123,9 @@ public class TinCanAPI extends InteractionRecord {
             builder.getContextBuilder().addSession(this.sessionId).addParentActivity();
             builder.getResultBuilder().response(deviceName).
                     deviceNameExt(deviceName).deviceTypeExt(deviceType).deviceURIExt(deviceUri);
+            if (defaultGateway!=null) {
+                builder.getResultBuilder().deviceDefaultGwExt(defaultGateway);
+            }
             record(builder.build());
         } catch(URISyntaxException e) {
             LOGGER.error(e.getMessage());

@@ -41,7 +41,8 @@ public class Device extends WebRepresentableDevice {
         this.defaultGateway = null;
     }
 
-    public static Device fromCiscoObject(com.cisco.pt.ipc.sim.Device device) {
+    // FIXME Ugly fix. Passing GW value because getDefaultGateway() is not implemented in PT's protocol.
+    public static Device fromCiscoObject(com.cisco.pt.ipc.sim.Device device, String defaultGw) {
         if (device==null) return null;
         final String id = Utils.toSimplifiedId(device.getObjectUUID());
         final String label = /*device.getClass() + ":" + device.getModel()
@@ -57,13 +58,17 @@ public class Device extends WebRepresentableDevice {
         } else if (device instanceof Pc) {
             group = "pcDevice";
             //defaultGateway = ((Pc) device).getDefaultGateway().getDottedQuadString();
-            defaultGateway = "0.0.0.0";
+            defaultGateway = (defaultGw==null)? "0.0.0.0": defaultGw;
         } else {
             group = "switchDevice";
         }
         final Device ret = new Device(id, label, deviceX, deviceY, group);
         ret.setDefaultGateway(defaultGateway);
         return ret;
+    }
+
+    public static Device fromCiscoObject(com.cisco.pt.ipc.sim.Device device) {
+        return fromCiscoObject(device, null);
     }
 
     public String getId() {

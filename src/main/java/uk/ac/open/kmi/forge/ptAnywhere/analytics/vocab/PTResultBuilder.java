@@ -50,6 +50,11 @@ public class PTResultBuilder {
         return this;
     }
 
+    public PTResultBuilder deviceDefaultGwExt(String defaultGateway) throws URISyntaxException {
+        getExtensions().put(BaseVocabulary.EXT_DEVICE_GW, defaultGateway);
+        return this;
+    }
+
     private ObjectNode createEndpointObject(String endpointName, String endpointPort) {
         return JsonNodeFactory.instance.objectNode().
                 put(BaseVocabulary.EXT_ENDPOINT_DEVICE, endpointName).

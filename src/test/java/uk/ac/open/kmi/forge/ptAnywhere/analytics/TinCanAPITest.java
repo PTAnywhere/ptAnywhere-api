@@ -173,6 +173,24 @@ public class TinCanAPITest {
         assertContains("result", getExpectedResult(DEVICE1NAME, exts), jsonGenerated);
     }
 
+    @Test
+    public void deviceModifiedWithDefaultGateway() throws JSONException {
+        final String gw = "192.168.1.3";
+        this.testable.deviceModified(DEVICE1URI, DEVICE1NAME, DEVICETYPE, gw);
+        final String jsonGenerated = this.testable.statementToRecord.toJSON();
+        assertContains("actor", getExpectedActor(), jsonGenerated);
+        assertContains("verb", getExpectedVerb(BaseVocabulary.UPDATED), jsonGenerated);
+        assertContains("object", getExpectedActivity(BaseVocabulary.SIMULATED_DEVICE + "/" + DEVICETYPE, BaseVocabulary.SIMULATION, "Simulated router"), jsonGenerated);
+        assertContains("context", getExpectedContext(WIDGETURI), jsonGenerated);
+        final String[][] exts = new String[][] {
+                {BaseVocabulary.EXT_DEVICE_NAME, DEVICE1NAME},
+                {BaseVocabulary.EXT_DEVICE_URI, DEVICE1URI},
+                {BaseVocabulary.EXT_DEVICE_TYPE, DEVICETYPE},
+                {BaseVocabulary.EXT_DEVICE_GW, gw}
+        };
+        assertContains("result", getExpectedResult(DEVICE1NAME, exts), jsonGenerated);
+    }
+
     protected String toEndpointJson(String name1, String port1, String name2, String port2) {
         final JsonObjectBuilder endpoint1 = Json.createObjectBuilder().
                 add(BaseVocabulary.EXT_ENDPOINT_DEVICE, name1).

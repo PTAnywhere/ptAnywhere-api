@@ -145,7 +145,7 @@ public class DeviceResource {
         final Device d = new DeviceModifier(this.sm, deviceId, modification, this.uri.getBaseUri()).call();  // Not using a new Thread
         // TODO add getDevicesLink() to not found exception
         final InteractionRecord ir = APIApplication.createInteractionRecord(servletContext, request, this.sm.getSessionId());
-        ir.deviceModified(this.uri.getRequestUri().toString(), d.getLabel(), d.getGroup());
+        ir.deviceModified(this.uri.getRequestUri().toString(), d.getLabel(), d.getGroup(), d.getDefaultGateway());
         return Response.ok(d).
                 links(getDevicesLink()).
                 links(getPortsLink(d)).build();
