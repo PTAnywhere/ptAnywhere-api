@@ -132,6 +132,21 @@ public class TinCanAPI extends InteractionRecord {
         }
     }
 
+    public void portModified(String portUri, String deviceName, String portName, String ipAddress, String subnetMask) {
+        try {
+            final StatementBuilder builder = new StatementBuilder(this.factory).
+                    anonymousUser(this.sessionId).verb(BaseVocabulary.UPDATED);
+            builder.getActivityBuilder().simulatedPort(deviceName, portName);
+            builder.getContextBuilder().addSession(this.sessionId).addParentActivity();
+            builder.getResultBuilder().response(portName).
+                    deviceNameExt(deviceName).portURIExt(portUri).portNameExt(portName).
+                    portIpAddressExt(ipAddress).portSubnetMaskExt(subnetMask);
+            record(builder.build());
+        } catch(URISyntaxException e) {
+            LOGGER.error(e.getMessage());
+        }
+    }
+
     /*
      * Alternatives to model a connection:
      *      - user creates link1 (extensions: endpoints: [portUrl1, portUrl2]

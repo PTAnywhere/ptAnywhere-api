@@ -55,6 +55,26 @@ public class PTResultBuilder {
         return this;
     }
 
+    public PTResultBuilder portURIExt(String portUri) throws URISyntaxException {
+        getExtensions().put(BaseVocabulary.EXT_PORT_URI, portUri);
+        return this;
+    }
+
+    public PTResultBuilder portNameExt(String portName) throws URISyntaxException {
+        getExtensions().put(BaseVocabulary.EXT_PORT_NAME, portName);
+        return this;
+    }
+
+    public PTResultBuilder portIpAddressExt(String ipAddress) throws URISyntaxException {
+        getExtensions().put(BaseVocabulary.EXT_PORT_IP_ADDR, ipAddress);
+        return this;
+    }
+
+    public PTResultBuilder portSubnetMaskExt(String subnetMask) throws URISyntaxException {
+        getExtensions().put(BaseVocabulary.EXT_PORT_SUBNET_MASK, subnetMask);
+        return this;
+    }
+
     private ObjectNode createEndpointObject(String endpointName, String endpointPort) {
         return JsonNodeFactory.instance.objectNode().
                 put(BaseVocabulary.EXT_ENDPOINT_DEVICE, endpointName).

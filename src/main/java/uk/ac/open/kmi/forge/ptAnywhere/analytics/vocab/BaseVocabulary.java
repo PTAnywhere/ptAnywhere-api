@@ -26,6 +26,7 @@ public class BaseVocabulary {
     public static final String SIMULATION = "http://adlnet.gov/expapi/activities/simulation";
     public static final String ACTIVITIES = VOCAB + "/activities";
     public static final String SIMULATED_DEVICE = ACTIVITIES + "/device";
+    public static final String SIMULATED_PORT = ACTIVITIES + "/port";
     public static final String SIMULATED_LINK = ACTIVITIES + "/link";
     public static final String COMMAND_LINE = ACTIVITIES + "/command-line";
 
@@ -36,6 +37,10 @@ public class BaseVocabulary {
     public static final String EXT_DEVICE_GW = EXTENSION + "/device/defaultGateway";
     public static final String EXT_DEVICE_URI = EXTENSION + "/device/uri";  // URI in the context of PTAnywhere API
     public static final String EXT_DEVICE_POSITION = EXTENSION + "/device/position";
+    public static final String EXT_PORT_URI = EXTENSION + "/port/uri";
+    public static final String EXT_PORT_NAME = EXTENSION + "/port/name";
+    public static final String EXT_PORT_IP_ADDR = EXTENSION + "/port/ipAddress";
+    public static final String EXT_PORT_SUBNET_MASK = EXTENSION + "/port/subnetMask";
     public static final String EXT_ENDPOINTS = EXTENSION + "/endpoints";
     public static final String EXT_LINK_URI = EXTENSION + "/link/uri";
 

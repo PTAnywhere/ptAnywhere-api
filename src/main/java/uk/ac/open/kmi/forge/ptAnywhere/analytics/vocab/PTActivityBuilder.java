@@ -40,6 +40,20 @@ public class PTActivityBuilder {
         return this;
     }
 
+    public PTActivityBuilder simulatedPort(String deviceName, String portName) throws URISyntaxException {
+        final LanguageMap lm = new LanguageMap();
+        lm.put("en-GB", deviceName + "'s port " + portName);
+        final ActivityDefinition definition = new ActivityDefinition();
+        definition.setName(lm);
+        definition.setType(BaseVocabulary.SIMULATED_PORT);
+        // It would be particularly useful to refer to activity types across sessions
+        //   (e.g., modifying X port were X is always the same port of the same device)
+        final URI clUri = UriBuilder.fromPath(this.factory.getDeviceURI(deviceName)).path("port").path(portName).build();
+        this.activity.setId(clUri);
+        this.activity.setDefinition(definition);
+        return this;
+    }
+
     public PTActivityBuilder simulatedLink() throws URISyntaxException {
         this.activity.setId(BaseVocabulary.SIMULATED_LINK);
         final LanguageMap lm = new LanguageMap();

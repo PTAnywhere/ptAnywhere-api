@@ -1,6 +1,7 @@
 package uk.ac.open.kmi.forge.ptAnywhere.api.http;
 
 import io.swagger.annotations.*;
+import uk.ac.open.kmi.forge.ptAnywhere.analytics.InteractionRecord;
 import uk.ac.open.kmi.forge.ptAnywhere.exceptions.*;
 import uk.ac.open.kmi.forge.ptAnywhere.gateway.PTCallable;
 import uk.ac.open.kmi.forge.ptAnywhere.pojo.Port;
@@ -9,6 +10,8 @@ import static uk.ac.open.kmi.forge.ptAnywhere.api.http.URLFactory.DEVICE_PARAM;
 import static uk.ac.open.kmi.forge.ptAnywhere.api.http.URLFactory.PORT_PARAM;
 import static uk.ac.open.kmi.forge.ptAnywhere.api.http.URLFactory.PORT_LINK_PATH;
 
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
 import java.net.URI;
@@ -44,6 +47,7 @@ class PortGetter extends AbstractPortHandler {
 
 class PortModifier extends AbstractPortHandler {
     final Port modification;
+    String deviceName;  // FIXME: Ugly as hell, but it is needed to record it in LRS
     public PortModifier(SessionManager sm, String deviceId, Port modification, URI baseURI) {
         super(sm, deviceId, baseURI);
         this.modification = modification;
@@ -51,6 +55,7 @@ class PortModifier extends AbstractPortHandler {
 
     @Override
     public Port handlePort() {
+        this.deviceName = this.connection.getDataAccessObject().getDeviceName(this.deviceId);
         return this.connection.getDataAccessObject().modifyPort(this.deviceId, this.modification);
     }
 }
@@ -101,8 +106,8 @@ public class PortResource {
         @ApiResponse(code = PacketTracerConnectionException.status, response = ErrorBean.class, message = PacketTracerConnectionException.description),
         @ApiResponse(code = SessionNotFoundException.status, response = ErrorBean.class, message = SessionNotFoundException.description)
     })
-    public Response modifyPort(
-            @ApiParam(value = "Port to be modified. Only the IP address and the subnet mask can be updated " +
+    public Response modifyPort(@Context ServletContext servletContext, @Context HttpServletRequest request,
+                               @ApiParam(value = "Port to be modified. Only the IP address and the subnet mask can be updated " +
                     "(providing this makes sense for this type of device). " +
                     "The rest of the fields will be ignored.") Port modification,
             @ApiParam(value = "Identifier of the device.") @PathParam(DEVICE_PARAM) String deviceId,
@@ -110,7 +115,10 @@ public class PortResource {
         // The portName should be provided in the URL, not in the body (i.e., JSON sent).
         if (modification.getPortName()==null) {
             modification.setPortName(Utils.unescapePort(portName));
-            final Port ret = new PortModifier(this.sm, deviceId, modification, this.uri.getBaseUri()).call();  // Not using a new Thread
+            final PortModifier pm = new PortModifier(this.sm, deviceId, modification, this.uri.getBaseUri());
+            final Port ret = pm.call();  // Not using a new Thread
+            final InteractionRecord ir = APIApplication.createInteractionRecord(servletContext, request, this.sm.getSessionId());
+            ir.portModified(this.uri.getRequestUri().toString(), pm.deviceName, portName, ret.getPortIpAddress(), ret.getPortSubnetMask());
             // TODO add links to not found exception
             return Response.ok(ret).
                     links(getPortsLink()).
