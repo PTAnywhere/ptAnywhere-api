@@ -64,6 +64,7 @@ class DeviceDeleter extends AbstractDeviceHandler {
 
 class DeviceModifier extends AbstractDeviceHandler {
     final Device modification;
+    String oldName;  // Needed for LRS. FIXME: Ugly.
     public DeviceModifier(SessionManager sm, String dId, Device modification, URI baseURI) {
         super(sm, dId, baseURI);
         modification.setId(dId);
@@ -71,6 +72,7 @@ class DeviceModifier extends AbstractDeviceHandler {
     }
     @Override
     public Device manageDevice() {
+        this.oldName = this.connection.getDataAccessObject().getDeviceName(this.modification.getId());
         return this.connection.getDataAccessObject().modifyDevice(this.modification);
     }
 }
@@ -142,10 +144,11 @@ public class DeviceResource {
             @ApiParam(value = "Identifier of the device to be updated.") @PathParam(DEVICE_PARAM) String deviceId,
             @ApiParam(value = "Device to be updated. Only the 'label' and the 'defaultGateway' (if it is a PC) fields " +
                     "can be updated. The rest will be simply ignored.") Device modification) {
-        final Device d = new DeviceModifier(this.sm, deviceId, modification, this.uri.getBaseUri()).call();  // Not using a new Thread
+        final DeviceModifier modifier = new DeviceModifier(this.sm, deviceId, modification, this.uri.getBaseUri());
+        final Device d = modifier.call();  // Not using a new Thread
         // TODO add getDevicesLink() to not found exception
         final InteractionRecord ir = APIApplication.createInteractionRecord(servletContext, request, this.sm.getSessionId());
-        ir.deviceModified(this.uri.getRequestUri().toString(), d.getLabel(), d.getGroup(), d.getDefaultGateway());
+        ir.deviceModified(this.uri.getRequestUri().toString(), modifier.oldName, d.getGroup(), d.getLabel(), d.getDefaultGateway());
         return Response.ok(d).
                 links(getDevicesLink()).
                 links(getPortsLink(d)).build();

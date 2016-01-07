@@ -33,6 +33,7 @@ public class TinCanAPI extends InteractionRecord {
         this.executor = null;
     }
 
+    // Constructor used by the factory
     protected TinCanAPI(String endpoint, String username, String password, ExecutorService executor) throws MalformedURLException {
         this.executor = executor;
         this.lrs.setEndpoint(endpoint);
@@ -70,6 +71,7 @@ public class TinCanAPI extends InteractionRecord {
         this.executor.submit(saveTask);
     }
 
+    @Override
     public void interactionStarted() {
         try {
             final StatementBuilder builder = new StatementBuilder(this.factory).
@@ -82,6 +84,7 @@ public class TinCanAPI extends InteractionRecord {
         }
     }
 
+    @Override
     public void deviceCreated(String deviceUri, String deviceName, String deviceType, double x, double y) {
         try {
             final StatementBuilder builder = new StatementBuilder(this.factory).
@@ -97,6 +100,7 @@ public class TinCanAPI extends InteractionRecord {
         }
     }
 
+    @Override
     public void deviceDeleted(String deviceUri, String deviceName, String deviceType) {
         try {
             final StatementBuilder builder = new StatementBuilder(this.factory).
@@ -111,17 +115,19 @@ public class TinCanAPI extends InteractionRecord {
         }
     }
 
-    public void deviceModified(String deviceUri, String deviceName, String deviceType) {
-        deviceModified(deviceUri, deviceName, deviceType, null);
+    @Override
+    public void deviceModified(String deviceUri, String deviceName, String deviceType, String newDeviceName) {
+        deviceModified(deviceUri, deviceName, deviceType, newDeviceName, null);
     }
 
-    public void deviceModified(String deviceUri, String deviceName, String deviceType, String defaultGateway) {
+    @Override
+    public void deviceModified(String deviceUri, String deviceName, String deviceType, String newDeviceName, String defaultGateway) {
         try {
             final StatementBuilder builder = new StatementBuilder(this.factory).
                     anonymousUser(this.sessionId).verb(BaseVocabulary.UPDATED);
             builder.getActivityBuilder().simulatedDevice(deviceType);
             builder.getContextBuilder().addSession(this.sessionId).addParentActivity();
-            builder.getResultBuilder().response(deviceName).
+            builder.getResultBuilder().response(newDeviceName).
                     deviceNameExt(deviceName).deviceTypeExt(deviceType).deviceURIExt(deviceUri);
             if (defaultGateway!=null) {
                 builder.getResultBuilder().deviceDefaultGwExt(defaultGateway);
@@ -132,6 +138,7 @@ public class TinCanAPI extends InteractionRecord {
         }
     }
 
+    @Override
     public void portModified(String portUri, String deviceName, String portName, String ipAddress, String subnetMask) {
         try {
             final StatementBuilder builder = new StatementBuilder(this.factory).
@@ -155,6 +162,7 @@ public class TinCanAPI extends InteractionRecord {
      *
      * I will use the first one as it seems more symmetric and I don't invent new verbs (connect).
      */
+    @Override
     public void deviceConnected(String linkUri, String endpoint1Name, String endpoint1Port, String endpoint2Name, String endpoint2Port) {
         try {
             final StatementBuilder builder = new StatementBuilder(this.factory).
@@ -169,6 +177,7 @@ public class TinCanAPI extends InteractionRecord {
         }
     }
 
+    @Override
     public void deviceDisconnected(String linkUri, String endpoint1Name, String endpoint1Port, String endpoint2Name, String endpoint2Port) {
         try {
             final StatementBuilder builder = new StatementBuilder(this.factory).
@@ -191,6 +200,7 @@ public class TinCanAPI extends InteractionRecord {
         return builder;
     }
 
+    @Override
     public void commandLineStarted(String deviceName) {
         try {
             record( createCommandLine(deviceName, BaseVocabulary.INITIALIZED).build() );
@@ -199,6 +209,7 @@ public class TinCanAPI extends InteractionRecord {
         }
     }
 
+    @Override
     public void commandLineUsed(String deviceName, String input) {
         try {
             final StatementBuilder builder = createCommandLine(deviceName, BaseVocabulary.USED);
@@ -209,6 +220,7 @@ public class TinCanAPI extends InteractionRecord {
         }
     }
 
+    @Override
     public void commandLineEnded(String deviceName) {
         try {
             record( createCommandLine(deviceName, BaseVocabulary.TERMINATED).build() );
