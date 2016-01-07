@@ -14,15 +14,21 @@ public class InteractionRecordFactory {
     private final ExecutorService executor;  // This executor is not handled by this class.
     private final InteractionRecordingProperties irp;
 
+    private LRSTimestamp lastResponseTime;
+
     public InteractionRecordFactory(ExecutorService executor, InteractionRecordingProperties props) {
         this.executor = executor;
         this.irp = props;
+        this.lastResponseTime = null;
     }
 
     protected InteractionRecord create() {
         if (this.irp==null) return new NoTracker();
         try {
-            return new TinCanAPI(this.irp.getEndpoint(), this.irp.getUsername(), this.irp.getPassword(), this.executor);
+            if (this.lastResponseTime==null) {
+                this.lastResponseTime = new LRSTimestamp();  // Shared among TinCanAPI objects
+            }
+            return new TinCanAPI(this.irp.getEndpoint(), this.irp.getUsername(), this.irp.getPassword(), this.executor, this.lastResponseTime);
         } catch(MalformedURLException e) {
             LOGGER.error(e.getMessage());
             return new NoTracker();

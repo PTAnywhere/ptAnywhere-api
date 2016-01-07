@@ -1,9 +1,13 @@
 package uk.ac.open.kmi.forge.ptAnywhere.analytics;
 
 import com.rusticisoftware.tincan.*;
+import com.rusticisoftware.tincan.http.HTTPResponse;
 import com.rusticisoftware.tincan.lrsresponses.StatementLRSResponse;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import javax.ws.rs.core.UriBuilderException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
@@ -23,6 +27,7 @@ public class TinCanAPI extends InteractionRecord {
 
     final RemoteLRS lrs = new RemoteLRS();
     final ExecutorService executor;
+    final LRSTimestamp lastResponseTime;
 
     private URIFactory factory;
     private String sessionId;
@@ -31,11 +36,13 @@ public class TinCanAPI extends InteractionRecord {
     // For testing
     protected TinCanAPI() {
         this.executor = null;
+        this.lastResponseTime = new LRSTimestamp();
     }
 
     // Constructor used by the factory
-    protected TinCanAPI(String endpoint, String username, String password, ExecutorService executor) throws MalformedURLException {
+    protected TinCanAPI(String endpoint, String username, String password, ExecutorService executor, LRSTimestamp latest) throws MalformedURLException {
         this.executor = executor;
+        this.lastResponseTime = latest;
         this.lrs.setEndpoint(endpoint);
         this.lrs.setVersion(TCAPIVersion.V100);
         this.lrs.setUsername(username);
@@ -50,12 +57,25 @@ public class TinCanAPI extends InteractionRecord {
         this.factory = factory;
     }
 
+    // Copied from TinCanJava code.
+    protected DateTime getDateHeader(HTTPResponse response) {
+        DateTimeFormatter RFC1123_DATE_TIME_FORMATTER =
+                DateTimeFormat.forPattern("EEE, dd MMM yyyy HH:mm:ss 'GMT'").withZoneUTC();
+        try {
+            return DateTime.parse(response.getHeader("Date"), RFC1123_DATE_TIME_FORMATTER);
+        }
+        catch (Exception parseException) {
+            return null;
+        }
+    }
+
     protected void record(final Statement statement) {
         final Runnable saveTask = new Runnable() {
             @Override
             public void run() {
                 final StatementLRSResponse lrsRes = lrs.saveStatement(statement);
                 if (lrsRes.getSuccess()) {
+                    lastResponseTime.update(getDateHeader(lrsRes.getResponse()));
                     // success, use lrsRes.getContent() to get the statement back
                     LOGGER.debug("Everything went ok.");
                 } else {
@@ -75,7 +95,7 @@ public class TinCanAPI extends InteractionRecord {
     public void interactionStarted() {
         try {
             final StatementBuilder builder = new StatementBuilder(this.factory).
-                                                    anonymousUser(this.sessionId).verb(BaseVocabulary.INITIALIZED);
+                    anonymousUser(this.sessionId).verb(BaseVocabulary.INITIALIZED);
             builder.getActivityBuilder().widgetActivity();
             builder.getContextBuilder().addSession(this.sessionId);
             record(builder.build() );
@@ -104,7 +124,7 @@ public class TinCanAPI extends InteractionRecord {
     public void deviceDeleted(String deviceUri, String deviceName, String deviceType) {
         try {
             final StatementBuilder builder = new StatementBuilder(this.factory).
-                                                    anonymousUser(this.sessionId).verb(BaseVocabulary.DELETED);
+                    anonymousUser(this.sessionId).verb(BaseVocabulary.DELETED);
             builder.getActivityBuilder().simulatedDevice(deviceType);
             builder.getContextBuilder().addSession(this.sessionId).addParentActivity();
             builder.getResultBuilder().response(deviceName).
@@ -214,7 +234,11 @@ public class TinCanAPI extends InteractionRecord {
         try {
             final StatementBuilder builder = createCommandLine(deviceName, BaseVocabulary.USED);
             builder.getResultBuilder().response(input).deviceNameExt(deviceName);
-            record(builder.build());
+            final Statement stmt = builder.build();
+            // Response outputs are received so close that the timestamp is set here to avoid changing the original order
+            // due to differences in HTTP request handling in the LRS.
+            stmt.setTimestamp(this.lastResponseTime.getCurrentServerTime());
+            record(stmt);
         } catch(URISyntaxException | IllegalArgumentException | UriBuilderException e) {
             LOGGER.error(e.getMessage());
         }
@@ -225,7 +249,11 @@ public class TinCanAPI extends InteractionRecord {
         try {
             final StatementBuilder builder = createCommandLine(deviceName, BaseVocabulary.READ);
             builder.getResultBuilder().response(output).deviceNameExt(deviceName);
-            record(builder.build());
+            final Statement stmt = builder.build();
+            // Outputs are received so close that the timestamp is set here to avoid changing the original order
+            // due to differences in HTTP request handling in the LRS.
+            stmt.setTimestamp(this.lastResponseTime.getCurrentServerTime());
+            record(stmt);
         } catch(URISyntaxException | IllegalArgumentException | UriBuilderException e) {
             LOGGER.error(e.getMessage());
         }
