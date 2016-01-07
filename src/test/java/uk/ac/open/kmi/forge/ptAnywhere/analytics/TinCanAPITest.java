@@ -6,6 +6,7 @@ import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.skyscreamer.jsonassert.JSONAssert;
+import uk.ac.open.kmi.forge.ptAnywhere.analytics.tincanapi.SimpleStatementRecorder;
 import uk.ac.open.kmi.forge.ptAnywhere.analytics.vocab.BaseVocabulary;
 
 import javax.json.Json;
@@ -34,13 +35,15 @@ public class TinCanAPITest {
     final static String PORT2NAME = "port2";
     final static String COMMANDLINE_TEXT = "ping 127.0.0.1";
 
-    TestableTinCanAPI testable;
+    TestableRecorder checkable;
+    TinCanAPI tested;
 
     @Before
     public void setUp() throws MalformedURLException {
-        this.testable = new TestableTinCanAPI();
-        this.testable.setURIFactory(new URIFactory(WIDGETURI));
-        this.testable.setSession(SESSIONID);
+        this.checkable = new TestableRecorder();
+        this.tested = new TinCanAPI(this.checkable);
+        this.tested.setURIFactory(new URIFactory(WIDGETURI));
+        this.tested.setSession(SESSIONID);
     }
 
     protected String getJson(String field, String valueInJson) {
@@ -92,8 +95,8 @@ public class TinCanAPITest {
 
     @Test
     public void testInteractionStarted() throws JSONException {
-        this.testable.interactionStarted();
-        final String jsonGenerated = this.testable.statementToRecord.toJSON();
+        this.tested.interactionStarted();
+        final String jsonGenerated = this.checkable.statementToRecord.toJSON();
         assertContains("actor", getExpectedActor(), jsonGenerated);
         assertContains("verb", getExpectedVerb(BaseVocabulary.INITIALIZED), jsonGenerated);
         assertContains("object", getExpectedActivity(WIDGETURI, BaseVocabulary.SIMULATION), jsonGenerated);
@@ -130,8 +133,8 @@ public class TinCanAPITest {
 
     @Test
     public void testDeviceCreated() throws JSONException {
-        this.testable.deviceCreated(DEVICE1URI, DEVICE1NAME, DEVICETYPE, 44, 66);
-        final String jsonGenerated = this.testable.statementToRecord.toJSON();
+        this.tested.deviceCreated(DEVICE1URI, DEVICE1NAME, DEVICETYPE, 44, 66);
+        final String jsonGenerated = this.checkable.statementToRecord.toJSON();
         assertContains("actor", getExpectedActor(), jsonGenerated);
         assertContains("verb", getExpectedVerb(BaseVocabulary.CREATED), jsonGenerated);
         assertContains("object", getExpectedActivity(BaseVocabulary.SIMULATED_DEVICE + "/" + DEVICETYPE, BaseVocabulary.SIMULATION, "Simulated router"), jsonGenerated);
@@ -147,8 +150,8 @@ public class TinCanAPITest {
 
     @Test
     public void testDeviceDeleted() throws JSONException {
-        this.testable.deviceDeleted(DEVICE1URI, DEVICE1NAME, DEVICETYPE);
-        final String jsonGenerated = this.testable.statementToRecord.toJSON();
+        this.tested.deviceDeleted(DEVICE1URI, DEVICE1NAME, DEVICETYPE);
+        final String jsonGenerated = this.checkable.statementToRecord.toJSON();
         assertContains("actor", getExpectedActor(), jsonGenerated);
         assertContains("verb", getExpectedVerb(BaseVocabulary.DELETED), jsonGenerated);
         assertContains("object", getExpectedActivity(BaseVocabulary.SIMULATED_DEVICE + "/" + DEVICETYPE, BaseVocabulary.SIMULATION, "Simulated router"), jsonGenerated);
@@ -163,8 +166,8 @@ public class TinCanAPITest {
 
     @Test
     public void testDeviceModified() throws JSONException {
-        this.testable.deviceModified(DEVICE1URI, DEVICE1NAME, DEVICETYPE, DEVICE2NAME);
-        final String jsonGenerated = this.testable.statementToRecord.toJSON();
+        this.tested.deviceModified(DEVICE1URI, DEVICE1NAME, DEVICETYPE, DEVICE2NAME);
+        final String jsonGenerated = this.checkable.statementToRecord.toJSON();
         assertContains("actor", getExpectedActor(), jsonGenerated);
         assertContains("verb", getExpectedVerb(BaseVocabulary.UPDATED), jsonGenerated);
         assertContains("object", getExpectedActivity(BaseVocabulary.SIMULATED_DEVICE + "/" + DEVICETYPE, BaseVocabulary.SIMULATION, "Simulated router"), jsonGenerated);
@@ -179,8 +182,8 @@ public class TinCanAPITest {
 
     @Test
     public void testDeviceModifiedWithDefaultGateway() throws JSONException {
-        this.testable.deviceModified(DEVICE1URI, DEVICE1NAME, DEVICETYPE, DEVICE2NAME, DEVICEGW);
-        final String jsonGenerated = this.testable.statementToRecord.toJSON();
+        this.tested.deviceModified(DEVICE1URI, DEVICE1NAME, DEVICETYPE, DEVICE2NAME, DEVICEGW);
+        final String jsonGenerated = this.checkable.statementToRecord.toJSON();
         assertContains("actor", getExpectedActor(), jsonGenerated);
         assertContains("verb", getExpectedVerb(BaseVocabulary.UPDATED), jsonGenerated);
         assertContains("object", getExpectedActivity(BaseVocabulary.SIMULATED_DEVICE + "/" + DEVICETYPE, BaseVocabulary.SIMULATION, "Simulated router"), jsonGenerated);
@@ -197,8 +200,8 @@ public class TinCanAPITest {
     @Test
     public void testPortModified() throws JSONException {
         final String portActivityId = WIDGETURI + "device/"  + DEVICE1NAME.hashCode() + "/port/Port%20One";
-        this.testable.portModified(PORTURI, DEVICE1NAME, PORTNAME, PORTIPADDR, PORTSUBNETMASK);
-        final String jsonGenerated = this.testable.statementToRecord.toJSON();
+        this.tested.portModified(PORTURI, DEVICE1NAME, PORTNAME, PORTIPADDR, PORTSUBNETMASK);
+        final String jsonGenerated = this.checkable.statementToRecord.toJSON();
         assertContains("actor", getExpectedActor(), jsonGenerated);
         assertContains("verb", getExpectedVerb(BaseVocabulary.UPDATED), jsonGenerated);
         assertContains("object", getExpectedActivity(portActivityId, BaseVocabulary.SIMULATED_PORT, "Device One's port Port One"), jsonGenerated);
@@ -226,8 +229,8 @@ public class TinCanAPITest {
 
     @Test
     public void testDeviceConnected() throws JSONException {
-        this.testable.deviceConnected(LINKURI, DEVICE1NAME, PORT1NAME, DEVICE2NAME, PORT2NAME);
-        final String jsonGenerated = this.testable.statementToRecord.toJSON();
+        this.tested.deviceConnected(LINKURI, DEVICE1NAME, PORT1NAME, DEVICE2NAME, PORT2NAME);
+        final String jsonGenerated = this.checkable.statementToRecord.toJSON();
         assertContains("actor", getExpectedActor(), jsonGenerated);
         assertContains("verb", getExpectedVerb(BaseVocabulary.CREATED), jsonGenerated);
         assertContains("object", getExpectedActivity(BaseVocabulary.SIMULATED_LINK, BaseVocabulary.SIMULATION, "Link"), jsonGenerated);
@@ -241,8 +244,8 @@ public class TinCanAPITest {
 
     @Test
     public void testDeviceDisconnected() throws JSONException {
-        this.testable.deviceDisconnected(LINKURI, DEVICE1NAME, PORT1NAME, DEVICE2NAME, PORT2NAME);
-        final String jsonGenerated = this.testable.statementToRecord.toJSON();
+        this.tested.deviceDisconnected(LINKURI, DEVICE1NAME, PORT1NAME, DEVICE2NAME, PORT2NAME);
+        final String jsonGenerated = this.checkable.statementToRecord.toJSON();
         assertContains("actor", getExpectedActor(), jsonGenerated);
         assertContains("verb", getExpectedVerb(BaseVocabulary.DELETED), jsonGenerated);
         assertContains("object", getExpectedActivity(BaseVocabulary.SIMULATED_LINK, BaseVocabulary.SIMULATION, "Link"), jsonGenerated);
@@ -257,8 +260,8 @@ public class TinCanAPITest {
     @Test
     public void testCommandLineStarted() throws JSONException {
         final String consoleActivityId = WIDGETURI + "device/"  + DEVICE1NAME.hashCode() + "/console";
-        this.testable.commandLineStarted(DEVICE1NAME);
-        final String jsonGenerated = this.testable.statementToRecord.toJSON();
+        this.tested.commandLineStarted(DEVICE1NAME);
+        final String jsonGenerated = this.checkable.statementToRecord.toJSON();
         assertContains("actor", getExpectedActor(), jsonGenerated);
         assertContains("verb", getExpectedVerb(BaseVocabulary.INITIALIZED), jsonGenerated);
         assertContains("object", getExpectedActivity(consoleActivityId, BaseVocabulary.COMMAND_LINE, DEVICE1NAME + "'s command line"), jsonGenerated);
@@ -269,8 +272,8 @@ public class TinCanAPITest {
     @Test
     public void testCommandLineUsed() throws JSONException {
         final String consoleActivityId = WIDGETURI + "device/"  + DEVICE1NAME.hashCode() + "/console";
-        this.testable.commandLineUsed(DEVICE1NAME, COMMANDLINE_TEXT);
-        final String jsonGenerated = this.testable.statementToRecord.toJSON();
+        this.tested.commandLineUsed(DEVICE1NAME, COMMANDLINE_TEXT);
+        final String jsonGenerated = this.checkable.statementToRecord.toJSON();
         assertContains("actor", getExpectedActor(), jsonGenerated);
         assertContains("verb", getExpectedVerb(BaseVocabulary.USED), jsonGenerated);
         assertContains("object", getExpectedActivity(consoleActivityId, BaseVocabulary.COMMAND_LINE, DEVICE1NAME + "'s command line"), jsonGenerated);
@@ -284,8 +287,8 @@ public class TinCanAPITest {
     @Test
     public void testCommandLineRead() throws JSONException {
         final String consoleActivityId = WIDGETURI + "device/"  + DEVICE1NAME.hashCode() + "/console";
-        this.testable.commandLineRead(DEVICE1NAME, COMMANDLINE_TEXT);
-        final String jsonGenerated = this.testable.statementToRecord.toJSON();
+        this.tested.commandLineRead(DEVICE1NAME, COMMANDLINE_TEXT);
+        final String jsonGenerated = this.checkable.statementToRecord.toJSON();
         assertContains("actor", getExpectedActor(), jsonGenerated);
         assertContains("verb", getExpectedVerb(BaseVocabulary.READ), jsonGenerated);
         assertContains("object", getExpectedActivity(consoleActivityId, BaseVocabulary.COMMAND_LINE, DEVICE1NAME + "'s command line"), jsonGenerated);
@@ -299,8 +302,8 @@ public class TinCanAPITest {
     @Test
     public void testCommandLineEnded() throws JSONException {
         final String consoleActivityId = WIDGETURI + "device/"  + DEVICE1NAME.hashCode() + "/console";
-        this.testable.commandLineEnded(DEVICE1NAME);
-        final String jsonGenerated = this.testable.statementToRecord.toJSON();
+        this.tested.commandLineEnded(DEVICE1NAME);
+        final String jsonGenerated = this.checkable.statementToRecord.toJSON();
         assertContains("actor", getExpectedActor(), jsonGenerated);
         assertContains("verb", getExpectedVerb(BaseVocabulary.TERMINATED), jsonGenerated);
         assertContains("object", getExpectedActivity(consoleActivityId, BaseVocabulary.COMMAND_LINE, DEVICE1NAME + "'s command line"), jsonGenerated);
@@ -309,11 +312,11 @@ public class TinCanAPITest {
     }
 }
 
-class TestableTinCanAPI extends TinCanAPI {
+class TestableRecorder extends SimpleStatementRecorder {
     Statement statementToRecord;
 
     @Override
-    protected void record(final Statement statement) {
+    public void record(final Statement statement) {
         this.statementToRecord = statement;
     }
 }

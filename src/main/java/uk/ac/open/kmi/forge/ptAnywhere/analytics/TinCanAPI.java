@@ -1,17 +1,13 @@
 package uk.ac.open.kmi.forge.ptAnywhere.analytics;
 
 import com.rusticisoftware.tincan.*;
-import com.rusticisoftware.tincan.http.HTTPResponse;
-import com.rusticisoftware.tincan.lrsresponses.StatementLRSResponse;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
 import javax.ws.rs.core.UriBuilderException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
-import java.util.concurrent.ExecutorService;
+
+import uk.ac.open.kmi.forge.ptAnywhere.analytics.tincanapi.SimpleStatementRecorder;
 import uk.ac.open.kmi.forge.ptAnywhere.analytics.vocab.*;
 
 
@@ -25,28 +21,19 @@ public class TinCanAPI extends InteractionRecord {
 
     private static final Log LOGGER = LogFactory.getLog(TinCanAPI.class);
 
-    final RemoteLRS lrs = new RemoteLRS();
-    final ExecutorService executor;
-    final LRSTimestamp lastResponseTime;
-
+    private SimpleStatementRecorder recorder;
     private URIFactory factory;
     private String sessionId;
 
 
     // For testing
     protected TinCanAPI() {
-        this.executor = null;
-        this.lastResponseTime = new LRSTimestamp();
+        this.recorder = null;
     }
 
     // Constructor used by the factory
-    protected TinCanAPI(String endpoint, String username, String password, ExecutorService executor, LRSTimestamp latest) throws MalformedURLException {
-        this.executor = executor;
-        this.lastResponseTime = latest;
-        this.lrs.setEndpoint(endpoint);
-        this.lrs.setVersion(TCAPIVersion.V100);
-        this.lrs.setUsername(username);
-        this.lrs.setPassword(password);
+    protected TinCanAPI(SimpleStatementRecorder recorder) throws MalformedURLException {
+        this.recorder = recorder;
     }
 
     public void setSession(String sessionId) {
@@ -57,38 +44,8 @@ public class TinCanAPI extends InteractionRecord {
         this.factory = factory;
     }
 
-    // Copied from TinCanJava code.
-    protected DateTime getDateHeader(HTTPResponse response) {
-        DateTimeFormatter RFC1123_DATE_TIME_FORMATTER =
-                DateTimeFormat.forPattern("EEE, dd MMM yyyy HH:mm:ss 'GMT'").withZoneUTC();
-        try {
-            return DateTime.parse(response.getHeader("Date"), RFC1123_DATE_TIME_FORMATTER);
-        }
-        catch (Exception parseException) {
-            return null;
-        }
-    }
-
-    protected void record(final Statement statement) {
-        final Runnable saveTask = new Runnable() {
-            @Override
-            public void run() {
-                final StatementLRSResponse lrsRes = lrs.saveStatement(statement);
-                if (lrsRes.getSuccess()) {
-                    lastResponseTime.update(getDateHeader(lrsRes.getResponse()));
-                    // success, use lrsRes.getContent() to get the statement back
-                    LOGGER.debug("Everything went ok.");
-                } else {
-                    // failure, error information is available in lrsRes.getErrMsg()
-                    LOGGER.error("Something went wrong recording the sentence.");
-                    LOGGER.error("    HTTP error: " + lrsRes.getResponse().getStatusMsg());
-                    LOGGER.error("    HTTP response: " + lrsRes.getResponse().getContent());
-                }
-            }
-        };
-        // To avoid adding uneeded delays in the HTTP request which is recording
-        // the statement, we do it in a different Thread...
-        this.executor.submit(saveTask);
+    private void record(Statement statement) {
+        this.recorder.record(statement);
     }
 
     @Override
@@ -237,7 +194,7 @@ public class TinCanAPI extends InteractionRecord {
             final Statement stmt = builder.build();
             // Response outputs are received so close that the timestamp is set here to avoid changing the original order
             // due to differences in HTTP request handling in the LRS.
-            stmt.setTimestamp(this.lastResponseTime.getCurrentServerTime());
+            stmt.setTimestamp(this.recorder.getCurrentServerTime());
             record(stmt);
         } catch(URISyntaxException | IllegalArgumentException | UriBuilderException e) {
             LOGGER.error(e.getMessage());
@@ -252,7 +209,7 @@ public class TinCanAPI extends InteractionRecord {
             final Statement stmt = builder.build();
             // Outputs are received so close that the timestamp is set here to avoid changing the original order
             // due to differences in HTTP request handling in the LRS.
-            stmt.setTimestamp(this.lastResponseTime.getCurrentServerTime());
+            stmt.setTimestamp(this.recorder.getCurrentServerTime());
             record(stmt);
         } catch(URISyntaxException | IllegalArgumentException | UriBuilderException e) {
             LOGGER.error(e.getMessage());
