@@ -282,6 +282,21 @@ public class TinCanAPITest {
     }
 
     @Test
+    public void testCommandLineRead() throws JSONException {
+        final String consoleActivityId = WIDGETURI + "device/"  + DEVICE1NAME.hashCode() + "/console";
+        this.testable.commandLineRead(DEVICE1NAME, COMMANDLINE_TEXT);
+        final String jsonGenerated = this.testable.statementToRecord.toJSON();
+        assertContains("actor", getExpectedActor(), jsonGenerated);
+        assertContains("verb", getExpectedVerb(BaseVocabulary.READ), jsonGenerated);
+        assertContains("object", getExpectedActivity(consoleActivityId, BaseVocabulary.COMMAND_LINE, DEVICE1NAME + "'s command line"), jsonGenerated);
+        assertContains("context", getExpectedContext(WIDGETURI), jsonGenerated);
+        final String[][] exts = new String[][] {
+                {BaseVocabulary.EXT_DEVICE_NAME, DEVICE1NAME}
+        };
+        assertContains("result", getExpectedResult(COMMANDLINE_TEXT, exts), jsonGenerated);
+    }
+
+    @Test
     public void testCommandLineEnded() throws JSONException {
         final String consoleActivityId = WIDGETURI + "device/"  + DEVICE1NAME.hashCode() + "/console";
         this.testable.commandLineEnded(DEVICE1NAME);

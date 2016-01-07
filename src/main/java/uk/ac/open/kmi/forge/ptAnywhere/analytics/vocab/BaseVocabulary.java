@@ -20,6 +20,7 @@ public class BaseVocabulary {
     public static final String UPDATED = "http://activitystrea.ms/schema/1.0/update";
     // For command line, instead of initialized and terminated we could also register: "open" or "close".
     public static final String USED = "http://activitystrea.ms/schema/1.0/use";
+    public static final String READ = "http://activitystrea.ms/schema/1.0/read";
 
     /* Objects */
     /** Objects -> Actitivies **/

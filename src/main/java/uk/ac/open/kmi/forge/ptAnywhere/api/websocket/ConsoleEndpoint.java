@@ -62,7 +62,7 @@ public class ConsoleEndpoint implements TerminalLineEventListener {
     private InteractionRecord createInteractionRecordSession(String widgetURI, String sessionId) {
         final InteractionRecordFactory irf = ConsoleEndpoint.lrsFactory.get();
         if (irf==null) return null;
-        return ConsoleEndpoint.lrsFactory.get().create(widgetURI, sessionId);
+        return irf.create(widgetURI, sessionId);
     }
 
     private String getSessionId(Session session) {
@@ -181,6 +181,17 @@ public class ConsoleEndpoint implements TerminalLineEventListener {
         }
     }
 
+    private void registerResponse(Session session, TerminalLineEvent.OutputWritten event) {
+        final InteractionRecord ir = createInteractionRecordSession(this.widgetURI, getSessionId(session));
+        if (ir==null) {
+            if (LOGGER.isInfoEnabled()) {
+                LOGGER.info("No interaction record.");
+            }
+        } else {
+            ir.commandLineRead(getDeviceName(session), event.newOutput);
+        }
+    }
+
     private void registerActivityEnd(Session session) {
         final InteractionRecord ir = createInteractionRecordSession(this.widgetURI, getSessionId(session));
         if (ir==null) {
@@ -210,11 +221,13 @@ public class ConsoleEndpoint implements TerminalLineEventListener {
         }
     }
 
+    @Override
     public void handleEvent(TerminalLineEvent event) throws EncodeException {
         // Maybe we could use other events: commandAutoCompleted, promptChanged, terminalUpdated, etc.
         if (event.eventName.equals("outputWritten")) {
             try {
                 this.session.getBasicRemote().sendObject((TerminalLineEvent.OutputWritten) event);
+                registerResponse(this.session, (TerminalLineEvent.OutputWritten) event);
             } catch(IOException e) {
                 LOGGER.error(e.getMessage(), e);
             }

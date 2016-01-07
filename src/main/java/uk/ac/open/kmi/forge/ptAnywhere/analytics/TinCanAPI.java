@@ -4,11 +4,11 @@ import com.rusticisoftware.tincan.*;
 import com.rusticisoftware.tincan.lrsresponses.StatementLRSResponse;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import uk.ac.open.kmi.forge.ptAnywhere.analytics.vocab.*;
 import javax.ws.rs.core.UriBuilderException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.util.concurrent.ExecutorService;
+import uk.ac.open.kmi.forge.ptAnywhere.analytics.vocab.*;
 
 
 /**
@@ -104,7 +104,7 @@ public class TinCanAPI extends InteractionRecord {
     public void deviceDeleted(String deviceUri, String deviceName, String deviceType) {
         try {
             final StatementBuilder builder = new StatementBuilder(this.factory).
-                    anonymousUser(this.sessionId).verb(BaseVocabulary.DELETED);
+                                                    anonymousUser(this.sessionId).verb(BaseVocabulary.DELETED);
             builder.getActivityBuilder().simulatedDevice(deviceType);
             builder.getContextBuilder().addSession(this.sessionId).addParentActivity();
             builder.getResultBuilder().response(deviceName).
@@ -214,6 +214,17 @@ public class TinCanAPI extends InteractionRecord {
         try {
             final StatementBuilder builder = createCommandLine(deviceName, BaseVocabulary.USED);
             builder.getResultBuilder().response(input).deviceNameExt(deviceName);
+            record(builder.build());
+        } catch(URISyntaxException | IllegalArgumentException | UriBuilderException e) {
+            LOGGER.error(e.getMessage());
+        }
+    }
+
+    @Override
+    public void commandLineRead(String deviceName, String output) {
+        try {
+            final StatementBuilder builder = createCommandLine(deviceName, BaseVocabulary.READ);
+            builder.getResultBuilder().response(output).deviceNameExt(deviceName);
             record(builder.build());
         } catch(URISyntaxException | IllegalArgumentException | UriBuilderException e) {
             LOGGER.error(e.getMessage());

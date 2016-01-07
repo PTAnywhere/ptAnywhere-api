@@ -14,5 +14,6 @@ public abstract class InteractionRecord {
     public void deviceDisconnected(String linkUri, String endpoint1Name, String endpoint1Port, String endpoint2Name, String endpoint2Port) {}
     public void commandLineStarted(String deviceUri) {}
     public void commandLineUsed(String deviceUri, String input) {}
+    public void commandLineRead(String deviceUri, String output) {}
     public void commandLineEnded(String deviceUri) {}
 }
