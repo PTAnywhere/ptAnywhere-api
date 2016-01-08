@@ -122,7 +122,9 @@ public class ConsoleEndpoint implements TerminalLineEventListener {
                             // Here, we free the client from doing this task.
                             enterCommand(session, "", false);
                         } else {
-                            this.session.getBasicRemote().sendObject(this.cmd.getPrompt());
+                            final String prompt = this.cmd.getPrompt();
+                            this.session.getBasicRemote().sendObject(prompt);
+                            registerResponse(session, prompt);
                         }
                     } catch (IOException e) {
                         LOGGER.error(e.getMessage(), e);
@@ -181,14 +183,14 @@ public class ConsoleEndpoint implements TerminalLineEventListener {
         }
     }
 
-    private void registerResponse(Session session, TerminalLineEvent.OutputWritten event) {
+    private void registerResponse(Session session, String output) {
         final InteractionRecord ir = createInteractionRecordSession(this.widgetURI, getSessionId(session));
         if (ir==null) {
             if (LOGGER.isInfoEnabled()) {
                 LOGGER.info("No interaction record.");
             }
         } else {
-            ir.commandLineRead(getDeviceName(session), event.newOutput);
+            ir.commandLineRead(getDeviceName(session), output);
         }
     }
 
@@ -227,7 +229,7 @@ public class ConsoleEndpoint implements TerminalLineEventListener {
         if (event.eventName.equals("outputWritten")) {
             try {
                 this.session.getBasicRemote().sendObject((TerminalLineEvent.OutputWritten) event);
-                registerResponse(this.session, (TerminalLineEvent.OutputWritten) event);
+                registerResponse(this.session, ((TerminalLineEvent.OutputWritten) event).newOutput);
             } catch(IOException e) {
                 LOGGER.error(e.getMessage(), e);
             }
