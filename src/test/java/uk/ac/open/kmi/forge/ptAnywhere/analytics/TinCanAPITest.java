@@ -21,7 +21,6 @@ public class TinCanAPITest {
     final static String SESSIONID = "b8d5exozT9eNsR1udGjbZQ--";
     final static String SESSIONUUID = "6fc7797b-1a33-4fd7-8db1-1d6e7468db65";
     final static String DEVICE1URI = "http://device1";
-    final static String DEVICE2URI = "http://device2";
     final static String DEVICE1NAME = "Device One";
     final static String DEVICE2NAME = "Device Two";
     final static String DEVICETYPE = "router";

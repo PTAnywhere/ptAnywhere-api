@@ -1,5 +1,7 @@
 package uk.ac.open.kmi.forge.ptAnywhere.analytics.tincanapi;
 
+import java.net.MalformedURLException;
+import java.util.concurrent.ExecutorService;
 import com.rusticisoftware.tincan.RemoteLRS;
 import com.rusticisoftware.tincan.Statement;
 import com.rusticisoftware.tincan.TCAPIVersion;
@@ -10,10 +12,6 @@ import org.apache.commons.logging.LogFactory;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
-import uk.ac.open.kmi.forge.ptAnywhere.analytics.LRSTimestamp;
-
-import java.net.MalformedURLException;
-import java.util.concurrent.ExecutorService;
 
 
 /**
@@ -26,18 +24,15 @@ public class SimpleStatementRecorder implements StatementRecorder {
 
     final RemoteLRS lrs = new RemoteLRS();
     final ExecutorService executor;
-    final LRSTimestamp lastResponseTime;
 
     // For testing
     protected SimpleStatementRecorder() {
         this.executor = null;
-        this.lastResponseTime = new LRSTimestamp();
     }
 
     // Constructor used by the factory
     public SimpleStatementRecorder(String endpoint, String username, String password, ExecutorService executor) throws MalformedURLException {
         this.executor = executor;
-        this.lastResponseTime = new LRSTimestamp();
         this.lrs.setEndpoint(endpoint);
         this.lrs.setVersion(TCAPIVersion.V100);
         this.lrs.setUsername(username);
@@ -62,7 +57,6 @@ public class SimpleStatementRecorder implements StatementRecorder {
             public void run() {
                 final StatementLRSResponse lrsRes = lrs.saveStatement(statement);
                 if (lrsRes.getSuccess()) {
-                    lastResponseTime.update(getDateHeader(lrsRes.getResponse()));
                     // success, use lrsRes.getContent() to get the statement back
                     LOGGER.debug("Everything went ok.");
                 } else {
@@ -76,9 +70,5 @@ public class SimpleStatementRecorder implements StatementRecorder {
         // To avoid adding uneeded delays in the HTTP request which is recording
         // the statement, we do it in a different Thread...
         this.executor.submit(saveTask);
-    }
-
-    public DateTime getCurrentServerTime() {
-        return lastResponseTime.getCurrentServerTime();
     }
 }

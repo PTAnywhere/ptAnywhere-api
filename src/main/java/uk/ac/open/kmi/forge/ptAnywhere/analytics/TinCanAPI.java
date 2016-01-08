@@ -8,6 +8,7 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 
 import uk.ac.open.kmi.forge.ptAnywhere.analytics.tincanapi.SimpleStatementRecorder;
+import uk.ac.open.kmi.forge.ptAnywhere.analytics.tincanapi.StatementRecorder;
 import uk.ac.open.kmi.forge.ptAnywhere.analytics.vocab.*;
 
 
@@ -21,7 +22,7 @@ public class TinCanAPI extends InteractionRecord {
 
     private static final Log LOGGER = LogFactory.getLog(TinCanAPI.class);
 
-    private SimpleStatementRecorder recorder;
+    private StatementRecorder recorder;
     private URIFactory factory;
     private String sessionId;
 
@@ -32,7 +33,7 @@ public class TinCanAPI extends InteractionRecord {
     }
 
     // Constructor used by the factory
-    protected TinCanAPI(SimpleStatementRecorder recorder) throws MalformedURLException {
+    protected TinCanAPI(StatementRecorder recorder) throws MalformedURLException {
         this.recorder = recorder;
     }
 
@@ -192,9 +193,6 @@ public class TinCanAPI extends InteractionRecord {
             final StatementBuilder builder = createCommandLine(deviceName, BaseVocabulary.USED);
             builder.getResultBuilder().response(input).deviceNameExt(deviceName);
             final Statement stmt = builder.build();
-            // Response outputs are received so close that the timestamp is set here to avoid changing the original order
-            // due to differences in HTTP request handling in the LRS.
-            stmt.setTimestamp(this.recorder.getCurrentServerTime());
             record(stmt);
         } catch(URISyntaxException | IllegalArgumentException | UriBuilderException e) {
             LOGGER.error(e.getMessage());
@@ -207,9 +205,6 @@ public class TinCanAPI extends InteractionRecord {
             final StatementBuilder builder = createCommandLine(deviceName, BaseVocabulary.READ);
             builder.getResultBuilder().response(output).deviceNameExt(deviceName);
             final Statement stmt = builder.build();
-            // Outputs are received so close that the timestamp is set here to avoid changing the original order
-            // due to differences in HTTP request handling in the LRS.
-            stmt.setTimestamp(this.recorder.getCurrentServerTime());
             record(stmt);
         } catch(URISyntaxException | IllegalArgumentException | UriBuilderException e) {
             LOGGER.error(e.getMessage());
