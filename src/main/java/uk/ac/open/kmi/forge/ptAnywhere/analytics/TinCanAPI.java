@@ -181,7 +181,7 @@ public class TinCanAPI extends InteractionRecord {
     @Override
     public void commandLineStarted(String deviceName) {
         try {
-            record( createCommandLine(deviceName, BaseVocabulary.INITIALIZED).build() );
+            record( createCommandLine(deviceName, BaseVocabulary.OPENED).build() );
         } catch(URISyntaxException | IllegalArgumentException | UriBuilderException e) {
             LOGGER.error(e.getMessage());
         }
@@ -214,7 +214,7 @@ public class TinCanAPI extends InteractionRecord {
     @Override
     public void commandLineEnded(String deviceName) {
         try {
-            record( createCommandLine(deviceName, BaseVocabulary.TERMINATED).build() );
+            record( createCommandLine(deviceName, BaseVocabulary.CLOSED).build() );
         } catch(URISyntaxException | IllegalArgumentException | UriBuilderException e) {
             LOGGER.error(e.getMessage());
         }

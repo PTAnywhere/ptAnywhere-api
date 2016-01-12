@@ -262,7 +262,7 @@ public class TinCanAPITest {
         this.tested.commandLineStarted(DEVICE1NAME);
         final String jsonGenerated = this.checkable.statementToRecord.toJSON();
         assertContains("actor", getExpectedActor(), jsonGenerated);
-        assertContains("verb", getExpectedVerb(BaseVocabulary.INITIALIZED), jsonGenerated);
+        assertContains("verb", getExpectedVerb(BaseVocabulary.OPENED), jsonGenerated);
         assertContains("object", getExpectedActivity(consoleActivityId, BaseVocabulary.COMMAND_LINE, DEVICE1NAME + "'s command line"), jsonGenerated);
         assertContains("context", getExpectedContext(WIDGETURI), jsonGenerated);
         assertNotContains("result", jsonGenerated);
@@ -304,7 +304,7 @@ public class TinCanAPITest {
         this.tested.commandLineEnded(DEVICE1NAME);
         final String jsonGenerated = this.checkable.statementToRecord.toJSON();
         assertContains("actor", getExpectedActor(), jsonGenerated);
-        assertContains("verb", getExpectedVerb(BaseVocabulary.TERMINATED), jsonGenerated);
+        assertContains("verb", getExpectedVerb(BaseVocabulary.CLOSED), jsonGenerated);
         assertContains("object", getExpectedActivity(consoleActivityId, BaseVocabulary.COMMAND_LINE, DEVICE1NAME + "'s command line"), jsonGenerated);
         assertContains("context", getExpectedContext(WIDGETURI), jsonGenerated);
         assertNotContains("result", jsonGenerated);

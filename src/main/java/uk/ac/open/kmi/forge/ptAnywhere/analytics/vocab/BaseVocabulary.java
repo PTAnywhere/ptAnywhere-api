@@ -18,7 +18,9 @@ public class BaseVocabulary {
     public static final String CREATED = "http://activitystrea.ms/schema/1.0/create";
     public static final String DELETED = "http://activitystrea.ms/schema/1.0/delete";
     public static final String UPDATED = "http://activitystrea.ms/schema/1.0/update";
-    // For command line, instead of initialized and terminated we could also register: "open" or "close".
+    // Verbs used with command line activities:
+    public static final String OPENED = "http://activitystrea.ms/schema/1.0/open";
+    public static final String CLOSED = "http://activitystrea.ms/schema/1.0/close";
     public static final String USED = "http://activitystrea.ms/schema/1.0/use";
     public static final String READ = "http://activitystrea.ms/schema/1.0/read";
 
