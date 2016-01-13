@@ -110,7 +110,7 @@ public class OnePerRegistrationRecorder implements StatementRecorder {
 
         RecordRequest(List<Statement> statements) {
             this.registrationId = statements.get(0).getContext().getRegistration().toString();
-            this.statements = statements;
+            this.statements = StatementConsolidator.consolidate(statements);
         }
 
         // To avoid adding uneeded delays in the HTTP request which is recording

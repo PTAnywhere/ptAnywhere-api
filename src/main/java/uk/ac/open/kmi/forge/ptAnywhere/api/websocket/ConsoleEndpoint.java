@@ -218,8 +218,8 @@ public class ConsoleEndpoint implements TerminalLineEventListener {
             } else {
                 LOGGER.info("Running normal command.");
             }
-            enterCommand(session, msg, last);
             registerInteraction(session, msg);
+            enterCommand(session, msg, last);
         }
     }
 
