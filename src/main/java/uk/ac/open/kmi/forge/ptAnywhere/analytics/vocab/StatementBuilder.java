@@ -2,6 +2,8 @@ package uk.ac.open.kmi.forge.ptAnywhere.analytics.vocab;
 
 import com.rusticisoftware.tincan.*;
 import uk.ac.open.kmi.forge.ptAnywhere.analytics.URIFactory;
+import uk.ac.open.kmi.forge.ptAnywhere.identity.Identifiable;
+
 import java.net.URISyntaxException;
 
 
@@ -21,11 +23,10 @@ public class StatementBuilder {
         this.contextBuilder = new PTContextBuilder(this.factory);
     }
 
-    public StatementBuilder anonymousUser(String sessionId) {
+    public StatementBuilder anonymousUser(Identifiable identity) {
         final AgentAccount aa = new AgentAccount();
-        // This could be set to the real URL where the app is deployed.
-        aa.setHomePage("http://forge.kmi.open.ac.uk/pt/widget");
-        aa.setName("anonymous_" + sessionId);
+        aa.setHomePage(identity.getHomePage());
+        aa.setName(identity.getName());
         this.agent.setAccount(aa);
         return this;
     }

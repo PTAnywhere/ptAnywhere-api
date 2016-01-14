@@ -1,9 +1,12 @@
 package uk.ac.open.kmi.forge.ptAnywhere.analytics;
 
+import uk.ac.open.kmi.forge.ptAnywhere.identity.Identifiable;
+
 
 public abstract class InteractionRecord {
     public void setURIFactory(URIFactory factory) {}
     public void setSession(String sessionId) {}
+    public void setIdentity(Identifiable identity) {}
     public void interactionStarted() {}
     public void deviceCreated(String deviceUri, String deviceName, String deviceType, double x, double y) {}
     public void deviceDeleted(String deviceUri, String deviceName, String deviceType) {}

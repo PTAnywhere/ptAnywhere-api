@@ -5,7 +5,8 @@ import java.util.concurrent.ExecutorService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import uk.ac.open.kmi.forge.ptAnywhere.analytics.tincanapi.OnePerRegistrationRecorder;
-import uk.ac.open.kmi.forge.ptAnywhere.analytics.tincanapi.SimpleStatementRecorder;
+import uk.ac.open.kmi.forge.ptAnywhere.identity.finder.IdentityFinder;
+import uk.ac.open.kmi.forge.ptAnywhere.identity.finder.UniqueAnonymousFinder;
 import uk.ac.open.kmi.forge.ptAnywhere.properties.InteractionRecordingProperties;
 
 
@@ -17,10 +18,12 @@ public class InteractionRecordFactory {
     private final InteractionRecordingProperties irp;
 
     private OnePerRegistrationRecorder recorder;
+    final private IdentityFinder idFinder;
 
-    public InteractionRecordFactory(ExecutorService executor, InteractionRecordingProperties props) {
+    public InteractionRecordFactory(ExecutorService executor, InteractionRecordingProperties props, IdentityFinder idFinder) {
         this.executor = executor;
         this.irp = props;
+        this.idFinder = idFinder;
         this.recorder = null;
     }
 
@@ -41,6 +44,9 @@ public class InteractionRecordFactory {
         final InteractionRecord ir = create();
         ir.setURIFactory(new URIFactory(widgetURI));
         ir.setSession(sessionId);
+        if (this.idFinder!=null) {
+            ir.setIdentity(this.idFinder.findIdentity(new UniqueAnonymousFinder.ByToken(sessionId)));
+        }
         return ir;
     }
 }

@@ -7,9 +7,9 @@ import javax.ws.rs.core.UriBuilderException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 
-import uk.ac.open.kmi.forge.ptAnywhere.analytics.tincanapi.SimpleStatementRecorder;
 import uk.ac.open.kmi.forge.ptAnywhere.analytics.tincanapi.StatementRecorder;
 import uk.ac.open.kmi.forge.ptAnywhere.analytics.vocab.*;
+import uk.ac.open.kmi.forge.ptAnywhere.identity.Identifiable;
 
 
 /**
@@ -25,6 +25,7 @@ public class TinCanAPI extends InteractionRecord {
     private StatementRecorder recorder;
     private URIFactory factory;
     private String sessionId;
+    private Identifiable identity;
 
 
     // For testing
@@ -45,15 +46,22 @@ public class TinCanAPI extends InteractionRecord {
         this.factory = factory;
     }
 
+    public void setIdentity(Identifiable identity) {
+        this.identity = identity;
+    }
+
     private void record(Statement statement) {
         this.recorder.record(statement);
+    }
+
+    protected StatementBuilder getStatementBuilder() {
+        return new StatementBuilder(this.factory).anonymousUser(this.identity);
     }
 
     @Override
     public void interactionStarted() {
         try {
-            final StatementBuilder builder = new StatementBuilder(this.factory).
-                    anonymousUser(this.sessionId).verb(BaseVocabulary.INITIALIZED);
+            final StatementBuilder builder = getStatementBuilder().verb(BaseVocabulary.INITIALIZED);
             builder.getActivityBuilder().widgetActivity();
             builder.getContextBuilder().addSession(this.sessionId);
             record(builder.build() );
@@ -65,8 +73,7 @@ public class TinCanAPI extends InteractionRecord {
     @Override
     public void deviceCreated(String deviceUri, String deviceName, String deviceType, double x, double y) {
         try {
-            final StatementBuilder builder = new StatementBuilder(this.factory).
-                    anonymousUser(this.sessionId).verb(BaseVocabulary.CREATED);
+            final StatementBuilder builder = getStatementBuilder().verb(BaseVocabulary.CREATED);
             builder.getActivityBuilder().simulatedDevice(deviceType);
             builder.getContextBuilder().addSession(this.sessionId).addParentActivity();
             builder.getResultBuilder().response(deviceName).
@@ -81,8 +88,7 @@ public class TinCanAPI extends InteractionRecord {
     @Override
     public void deviceDeleted(String deviceUri, String deviceName, String deviceType) {
         try {
-            final StatementBuilder builder = new StatementBuilder(this.factory).
-                    anonymousUser(this.sessionId).verb(BaseVocabulary.DELETED);
+            final StatementBuilder builder = getStatementBuilder().verb(BaseVocabulary.DELETED);
             builder.getActivityBuilder().simulatedDevice(deviceType);
             builder.getContextBuilder().addSession(this.sessionId).addParentActivity();
             builder.getResultBuilder().response(deviceName).
@@ -101,8 +107,7 @@ public class TinCanAPI extends InteractionRecord {
     @Override
     public void deviceModified(String deviceUri, String deviceName, String deviceType, String newDeviceName, String defaultGateway) {
         try {
-            final StatementBuilder builder = new StatementBuilder(this.factory).
-                    anonymousUser(this.sessionId).verb(BaseVocabulary.UPDATED);
+            final StatementBuilder builder = getStatementBuilder().verb(BaseVocabulary.UPDATED);
             builder.getActivityBuilder().simulatedDevice(deviceType);
             builder.getContextBuilder().addSession(this.sessionId).addParentActivity();
             builder.getResultBuilder().response(newDeviceName).
@@ -119,8 +124,7 @@ public class TinCanAPI extends InteractionRecord {
     @Override
     public void portModified(String portUri, String deviceName, String portName, String ipAddress, String subnetMask) {
         try {
-            final StatementBuilder builder = new StatementBuilder(this.factory).
-                    anonymousUser(this.sessionId).verb(BaseVocabulary.UPDATED);
+            final StatementBuilder builder = getStatementBuilder().verb(BaseVocabulary.UPDATED);
             builder.getActivityBuilder().simulatedPort(deviceName, portName);
             builder.getContextBuilder().addSession(this.sessionId).addParentActivity();
             builder.getResultBuilder().response(portName).
@@ -143,8 +147,7 @@ public class TinCanAPI extends InteractionRecord {
     @Override
     public void deviceConnected(String linkUri, String endpoint1Name, String endpoint1Port, String endpoint2Name, String endpoint2Port) {
         try {
-            final StatementBuilder builder = new StatementBuilder(this.factory).
-                    anonymousUser(this.sessionId).verb(BaseVocabulary.CREATED);
+            final StatementBuilder builder = getStatementBuilder().verb(BaseVocabulary.CREATED);
             builder.getActivityBuilder().simulatedLink();
             builder.getContextBuilder().addSession(this.sessionId).addParentActivity();
             builder.getResultBuilder().response(linkUri).linkUriExt(linkUri);  // TODO check if it makes sense or not
@@ -158,8 +161,7 @@ public class TinCanAPI extends InteractionRecord {
     @Override
     public void deviceDisconnected(String linkUri, String endpoint1Name, String endpoint1Port, String endpoint2Name, String endpoint2Port) {
         try {
-            final StatementBuilder builder = new StatementBuilder(this.factory).
-                    anonymousUser(this.sessionId).verb(BaseVocabulary.DELETED);
+            final StatementBuilder builder = getStatementBuilder().verb(BaseVocabulary.DELETED);
             builder.getActivityBuilder().simulatedLink();
             builder.getContextBuilder().addSession(this.sessionId).addParentActivity();
             builder.getResultBuilder().response(linkUri).linkUriExt(linkUri);  // TODO check if it makes sense or not
@@ -171,8 +173,7 @@ public class TinCanAPI extends InteractionRecord {
     }
 
     protected StatementBuilder createCommandLine(String deviceName, String verb) throws URISyntaxException {
-        final StatementBuilder builder = new StatementBuilder(this.factory).
-                anonymousUser(this.sessionId).verb(verb);
+        final StatementBuilder builder = getStatementBuilder().verb(verb);
         builder.getContextBuilder().addSession(this.sessionId).addParentActivity();
         builder.getActivityBuilder().commandLineActivity(deviceName);
         return builder;

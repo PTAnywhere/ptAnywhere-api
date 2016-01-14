@@ -13,6 +13,7 @@ import uk.ac.open.kmi.forge.ptAnywhere.analytics.InteractionRecord;
 import uk.ac.open.kmi.forge.ptAnywhere.analytics.InteractionRecordFactory;
 import uk.ac.open.kmi.forge.ptAnywhere.api.http.filters.CORSFilter;
 import uk.ac.open.kmi.forge.ptAnywhere.api.websocket.ConsoleEndpoint;
+import uk.ac.open.kmi.forge.ptAnywhere.identity.finder.IdentityFinderFactory;
 import uk.ac.open.kmi.forge.ptAnywhere.properties.PropertyFileManager;
 import uk.ac.open.kmi.forge.ptAnywhere.session.ExpirationSubscriber;
 import uk.ac.open.kmi.forge.ptAnywhere.session.SessionsManager;
@@ -65,7 +66,7 @@ public class APIApplication extends ResourceConfig {
         this.es =  this.sessionsManagerFactory.createExpirationSubscription();  // WARNING: it can return null.
 
         this.executor = Executors.newFixedThreadPool(20, new SimpleDaemonFactory());
-        this.irf = new InteractionRecordFactory(this.executor, pfm.getInteractionRecordingDetails());
+        this.irf = new InteractionRecordFactory(this.executor, pfm.getInteractionRecordingDetails(), IdentityFinderFactory.createUniqueAnonymous());
         ConsoleEndpoint.setInteractionRecordFactory(this.irf);
         servletContext.setAttribute(INTERACTION_RECORD_FACTORY, this.irf);
 
