@@ -248,14 +248,14 @@
         <dependency>
             <groupId>io.swagger</groupId>
             <artifactId>swagger-jersey2-jaxrs</artifactId>
-            <version>1.5.3</version>
+            <version>1.5.6</version>
         </dependency>
 
         <!-- TinCanJava library locally installed, hopefully it will be updated to a Maven repo soon. -->
         <dependency>
             <groupId>com.rusticisoftware</groupId>
             <artifactId>tincan</artifactId>
-            <version>0.7.1-SNAPSHOT</version>
+            <version>0.8.1-SNAPSHOT</version>
         </dependency>
         <!-- TinCanJava's dependencies, hopefully this won't be needed soon. -->
         <dependency>
@@ -263,12 +263,17 @@
             <artifactId>jetty-client</artifactId>
             <version>9.3.6.v20151106</version>
         </dependency>
-        <!-- We now rely on the Jackson version added by io.swagger -->
-        <!--<dependency>
-            <groupId>com.fasterxml.jackson.datatype</groupId>
-            <artifactId>jackson-datatype-joda</artifactId>
-            <version>2.1.1</version>
-        </dependency>-->
+
+        <!-- Both tincan and swagger depend on Jackson 2.x.
+             However, they might depend on different versions (this is very likely since a new Jackson releases appear almost every month).
+             In case of conflict, we will define which version to use below. -->
+        <!-- Jackson 2.7.0 does not work with swagger, but in 2.7.1 it should work again. -->
+        <!-- Check this issue here: https://github.com/swagger-api/swagger-core/issues/1601 -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.6.4</version>
+        </dependency>
     </dependencies>
 
 </project>
