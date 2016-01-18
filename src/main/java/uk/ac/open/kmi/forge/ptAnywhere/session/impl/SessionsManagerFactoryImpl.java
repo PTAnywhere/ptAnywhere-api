@@ -10,7 +10,7 @@ public class SessionsManagerFactoryImpl {
     public static SessionsManagerFactory create(PropertyFileManager properties) {
         final PacketTracerInstanceProperties sharedInstance = properties.getSharedInstanceDetails();
         if (sharedInstance==null)
-            return new MultipleSessionsManagerFactory(properties.getRedisConnectionDetails());
+            return new MultipleSessionsManagerFactory(properties.getSessionHandlingDetails());
         else
             return new SharedSessionsManagerFactory(sharedInstance);
     }

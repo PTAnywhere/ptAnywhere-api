@@ -47,11 +47,22 @@ public class PropertyFileManager {
     /**
      * By default, the Redis server runs in the same machine as the web server.
      */
-    public  RedisConnectionProperties getRedisConnectionDetails() {
+    public RedisConnectionProperties getSessionHandlingDetails() {
         return new RedisConnectionProperties(
-                this.props.getProperty("redis-host", PropertyFileManager.defaultHostname),
-                Integer.parseInt(this.props.getProperty("redis-port", "6379")),
-                Integer.parseInt(this.props.getProperty("redis-db", "0"))
+                this.props.getProperty("sessions-redis-host", PropertyFileManager.defaultHostname),
+                Integer.parseInt(this.props.getProperty("sessions-redis-port", "6379")),
+                Integer.parseInt(this.props.getProperty("sessions-redis-db", "0"))
+        );
+    }
+
+    /**
+     * By default, the Redis server runs in the same machine as the web server.
+     */
+    public RedisConnectionProperties getCacheDetails() {
+        return new RedisConnectionProperties(
+                this.props.getProperty("cache-redis-host", PropertyFileManager.defaultHostname),
+                Integer.parseInt(this.props.getProperty("cache-redis-port", "6379")),
+                Integer.parseInt(this.props.getProperty("cache-redis-db", "1"))
         );
     }
 

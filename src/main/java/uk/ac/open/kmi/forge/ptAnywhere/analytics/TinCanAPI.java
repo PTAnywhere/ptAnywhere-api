@@ -22,10 +22,10 @@ public class TinCanAPI extends InteractionRecord {
 
     private static final Log LOGGER = LogFactory.getLog(TinCanAPI.class);
 
-    private StatementRecorder recorder;
-    private URIFactory factory;
-    private String sessionId;
-    private Identifiable identity;
+    private final StatementRecorder recorder;
+    private URIFactory factory = null;
+    private String sessionId = null;
+    private Identifiable identity = null;
 
 
     // For testing
@@ -55,7 +55,7 @@ public class TinCanAPI extends InteractionRecord {
     }
 
     protected StatementBuilder getStatementBuilder() {
-        return new StatementBuilder(this.factory).anonymousUser(this.identity);
+        return new StatementBuilder(this.factory).student(this.identity);
     }
 
     @Override

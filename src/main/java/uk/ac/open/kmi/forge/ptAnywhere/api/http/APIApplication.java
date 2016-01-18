@@ -9,12 +9,15 @@ import io.swagger.models.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.glassfish.jersey.server.ResourceConfig;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
 import uk.ac.open.kmi.forge.ptAnywhere.analytics.InteractionRecord;
 import uk.ac.open.kmi.forge.ptAnywhere.analytics.InteractionRecordFactory;
 import uk.ac.open.kmi.forge.ptAnywhere.api.http.filters.CORSFilter;
 import uk.ac.open.kmi.forge.ptAnywhere.api.websocket.ConsoleEndpoint;
 import uk.ac.open.kmi.forge.ptAnywhere.identity.finder.IdentityFinderFactory;
 import uk.ac.open.kmi.forge.ptAnywhere.properties.PropertyFileManager;
+import uk.ac.open.kmi.forge.ptAnywhere.properties.RedisConnectionProperties;
 import uk.ac.open.kmi.forge.ptAnywhere.session.ExpirationSubscriber;
 import uk.ac.open.kmi.forge.ptAnywhere.session.SessionsManager;
 import uk.ac.open.kmi.forge.ptAnywhere.session.SessionsManagerFactory;
@@ -46,6 +49,8 @@ public class APIApplication extends ResourceConfig {
     private final SessionsManagerFactory sessionsManagerFactory;
     private final ExpirationSubscriber es;
 
+    private final JedisPool cachePool;
+
 
     public APIApplication(@Context ServletContext servletContext) {
         LOGGER.info("Creating API webapp.");
@@ -66,7 +71,12 @@ public class APIApplication extends ResourceConfig {
         this.es =  this.sessionsManagerFactory.createExpirationSubscription();  // WARNING: it can return null.
 
         this.executor = Executors.newFixedThreadPool(20, new SimpleDaemonFactory());
-        this.irf = new InteractionRecordFactory(this.executor, pfm.getInteractionRecordingDetails(), IdentityFinderFactory.createUniqueAnonymous());
+
+        final RedisConnectionProperties rProp = pfm.getCacheDetails();
+        this.cachePool = new JedisPool(new JedisPoolConfig(), rProp.getHostname(), rProp.getPort(), 2000, null, rProp.getDbNumber());
+        this.irf = new InteractionRecordFactory(this.executor,
+                                                pfm.getInteractionRecordingDetails(),
+                                                IdentityFinderFactory.createHistoricalAnonymous(pfm.getInteractionRecordingDetails(), this.cachePool));
         ConsoleEndpoint.setInteractionRecordFactory(this.irf);
         servletContext.setAttribute(INTERACTION_RECORD_FACTORY, this.irf);
 
@@ -122,6 +132,10 @@ public class APIApplication extends ResourceConfig {
         return ((InteractionRecordFactory) servletContext.getAttribute(APIApplication.INTERACTION_RECORD_FACTORY));
     }
 
+    public static InteractionRecord createInteractionRecordForNewSession(ServletContext servletContext, HttpServletRequest request, String sessionId, String oldSessionId) {
+        return getRecordFactory(servletContext).createForNewSession(getReferrerWidgetURL(request), sessionId, oldSessionId);
+    }
+
     public static InteractionRecord createInteractionRecord(ServletContext servletContext, HttpServletRequest request, String sessionId) {
         return getRecordFactory(servletContext).create(getReferrerWidgetURL(request), sessionId);
     }
@@ -144,6 +158,7 @@ public class APIApplication extends ResourceConfig {
             LOGGER.error("The RemoteLRS was not properly destroyed.");
             LOGGER.error(e.getMessage());
         }
+        this.cachePool.destroy();
         this.executor.shutdownNow();
     }
 }

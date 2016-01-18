@@ -10,6 +10,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import uk.ac.open.kmi.forge.ptAnywhere.analytics.InteractionRecord;
 import uk.ac.open.kmi.forge.ptAnywhere.exceptions.ErrorBean;
 import uk.ac.open.kmi.forge.ptAnywhere.exceptions.NoPTInstanceAvailableException;
@@ -23,6 +25,8 @@ import static uk.ac.open.kmi.forge.ptAnywhere.api.http.URLFactory.SESSION_PARAM;
 @Api
 @Produces(MediaType.APPLICATION_JSON)
 public class SessionsResource {
+    private static final Log LOGGER = LogFactory.getLog(SessionsResource.class);
+
     @Context
     UriInfo uri;
 
@@ -61,8 +65,11 @@ public class SessionsResource {
                                   @ApiParam(value = "Session to be created. <br> 'fileUrl' " +
                                                     "specifies the file to be opened at the beginning.") NewSession newSession)
             throws URISyntaxException, NoPTInstanceAvailableException {
+        final String formerSessionId = "previous";  // This can be used to track anonymous users
         final String id = APIApplication.createSessionsManager(servletContext).createSession(newSession.getFileUrl());  // May throw NoPTInstanceAvailableException
-        final InteractionRecord ir = APIApplication.createInteractionRecord(servletContext, request, id);
+        LOGGER.error("New session id: " + id);
+        // Note that "sameUserAsInSession" can be null and the InteractionRecordFactory will handle it.
+        final InteractionRecord ir = APIApplication.createInteractionRecordForNewSession(servletContext, request, id, newSession.getSameUserAsInSession());
         ir.interactionStarted();
         final String newSessionURL = getSessionRelativeURI(id);
         return Response.created(new URI(newSessionURL)).entity(Utils.toJsonString(newSessionURL)).

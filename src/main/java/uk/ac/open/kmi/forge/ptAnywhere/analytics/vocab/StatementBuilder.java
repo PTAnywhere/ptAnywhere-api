@@ -1,6 +1,8 @@
 package uk.ac.open.kmi.forge.ptAnywhere.analytics.vocab;
 
 import com.rusticisoftware.tincan.*;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import uk.ac.open.kmi.forge.ptAnywhere.analytics.URIFactory;
 import uk.ac.open.kmi.forge.ptAnywhere.identity.Identifiable;
 
@@ -8,6 +10,8 @@ import java.net.URISyntaxException;
 
 
 public class StatementBuilder {
+
+    private static final Log LOGGER = LogFactory.getLog(StatementBuilder.class);
 
     final URIFactory factory;
     final Agent agent = new Agent();
@@ -23,11 +27,18 @@ public class StatementBuilder {
         this.contextBuilder = new PTContextBuilder(this.factory);
     }
 
-    public StatementBuilder anonymousUser(Identifiable identity) {
-        final AgentAccount aa = new AgentAccount();
-        aa.setHomePage(identity.getHomePage());
-        aa.setName(identity.getName());
-        this.agent.setAccount(aa);
+    public StatementBuilder student(Identifiable identity) {
+        if (identity==null) {
+            // TODO treat it properly as TinCanAPI might not accept a null agent
+            LOGGER.error("The identity provided was not valid.");
+            LOGGER.error("The identity is null, which means that (1) it was not properly set or " +
+                         "(2) the IdentityFinder did not find it.");
+        } else {
+            final AgentAccount aa = new AgentAccount();
+            aa.setHomePage(identity.getHomePage());
+            aa.setName(identity.getName());
+            this.agent.setAccount(aa);
+        }
         return this;
     }
 
