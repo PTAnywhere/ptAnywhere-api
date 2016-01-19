@@ -51,7 +51,7 @@ public class SessionResource {
     @ApiOperation(value = "Retrieves information of a session", tags = "session",
             notes = "It returns the identifier of the session in a JSON string format.")
     @ApiResponses(value = {
-       @ApiResponse(code=200, message="Successful operation."),
+       @ApiResponse(code=200, message="Returns the id of associated to the session.", response = String.class),
        @ApiResponse(code=SessionNotFoundException.status, response=ErrorBean.class, message=SessionNotFoundException.description)
     })
     public Response getSession(

@@ -1,5 +1,7 @@
 package uk.ac.open.kmi.forge.ptAnywhere.pojo;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import uk.ac.open.kmi.forge.ptAnywhere.api.http.AbstractWebRepresentable;
 
 import javax.xml.bind.annotation.XmlType;
@@ -10,6 +12,7 @@ import javax.xml.bind.annotation.XmlType;
  * It is used when the network map is loaded.
  */
 @XmlType(name="")
+@ApiModel(value="Edge", description="Short way to describe the connection between two devices for the graphical representation of the network.")
 public class Edge extends AbstractWebRepresentable<Edge> {
     String id;  // E.g., a9101f6bef7c437291c29391e94ee233
     String from;  // E.g., 4e70e5d74399485eb4096c9d1c9446ea
@@ -24,6 +27,7 @@ public class Edge extends AbstractWebRepresentable<Edge> {
         this.to = to;
     }
 
+    @ApiModelProperty(value="Identifier of the edge", required=true)
     public String getId() {
         return id;
     }
@@ -32,12 +36,14 @@ public class Edge extends AbstractWebRepresentable<Edge> {
         this.id = id;
     }
 
+    @ApiModelProperty(value="URL of the link that this edge represents", required=true)
     @Override
     public String getUrl() {
         if (this.uf==null) return null;
         return this.uf.createLinkURL(this.id);
     }
 
+    @ApiModelProperty(value="Identifier of one of the two devices that this edge connects", required=true)
     public String getFrom() {
         return from;
     }
@@ -46,6 +52,7 @@ public class Edge extends AbstractWebRepresentable<Edge> {
         this.from = from;
     }
 
+    @ApiModelProperty(value="Identifier of one of the two devices that this edge connects", required=true)
     public String getTo() {
         return to;
     }

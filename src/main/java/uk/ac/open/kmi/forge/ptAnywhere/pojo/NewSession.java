@@ -16,7 +16,7 @@ public class NewSession {
         this.fileUrl = fileUrl;
     }
 
-    @ApiModelProperty(value="URL of a Packet Tracer file to be opened in the new session.", required=true)
+    @ApiModelProperty(value="URL of a Packet Tracer file to be opened in the new session", required=true)
     public String getFileUrl() {
         return fileUrl;
     }
@@ -25,7 +25,7 @@ public class NewSession {
         this.fileUrl = fileUrl;
     }
 
-    @ApiModelProperty(value="Identifies the user of the new session as the same as the session ID provided.")
+    @ApiModelProperty(value="Identifies the user of the new session as the same as the session ID provided", required=false)
     public String getSameUserAsInSession() {
         return sessionId;
     }

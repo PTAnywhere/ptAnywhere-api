@@ -2,6 +2,8 @@ package uk.ac.open.kmi.forge.ptAnywhere.pojo;
 
 import com.cisco.pt.ipc.sim.port.HostPort;
 import com.cisco.pt.ipc.sim.port.Link;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import uk.ac.open.kmi.forge.ptAnywhere.api.http.AbstractWebRepresentable;
 import uk.ac.open.kmi.forge.ptAnywhere.api.http.Utils;
 
@@ -9,6 +11,7 @@ import javax.xml.bind.annotation.XmlType;
 
 // { "portName": "Vlan1", "portIpAddress": "0.0.0.0","portSubnetMask": "0.0.0.0"}
 @XmlType(name="")
+@ApiModel(value="Port", description="Port in a device.")
 public class Port extends AbstractWebRepresentable<Port> {
 
     String portName;  // E.g., "Vlan1"
@@ -43,12 +46,14 @@ public class Port extends AbstractWebRepresentable<Port> {
         return ret;
     }
 
+    @ApiModelProperty(value="URL which identifies the port")
     @Override
     public String getUrl() {
         if (this.uf==null) return null;
         return this.uf.createPortURL(this.portName);
     }
 
+    @ApiModelProperty(value="Name of the port", required=true)
     public String getPortName() {
         return portName;
     }
@@ -57,6 +62,7 @@ public class Port extends AbstractWebRepresentable<Port> {
         this.portName = portName;
     }
 
+    @ApiModelProperty(value="IP address associated to the port", required=true)
     public String getPortIpAddress() {
         return portIpAddress;
     }
@@ -65,6 +71,7 @@ public class Port extends AbstractWebRepresentable<Port> {
         this.portIpAddress = portIpAddress;
     }
 
+    @ApiModelProperty(value="Subnet mask associated to the port", required=true)
     public String getPortSubnetMask() {
         return portSubnetMask;
     }
@@ -73,6 +80,7 @@ public class Port extends AbstractWebRepresentable<Port> {
         this.portSubnetMask = portSubnetMask;
     }
 
+    @ApiModelProperty(value="If the port is connected, the identifier of the link associated", required=false)
     public String getLink() {
         return linkId;
     }

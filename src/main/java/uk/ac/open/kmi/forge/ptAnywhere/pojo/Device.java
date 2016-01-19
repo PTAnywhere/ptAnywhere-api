@@ -3,6 +3,8 @@ package uk.ac.open.kmi.forge.ptAnywhere.pojo;
 import com.cisco.pt.ipc.sim.Cloud;
 import com.cisco.pt.ipc.sim.Pc;
 import com.cisco.pt.ipc.sim.Router;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import uk.ac.open.kmi.forge.ptAnywhere.api.http.Utils;
 import uk.ac.open.kmi.forge.ptAnywhere.api.http.WebRepresentableDevice;
 
@@ -13,6 +15,7 @@ import java.util.List;
 
 @XmlRootElement
 @XmlType(name="")
+@ApiModel(value="Device", description="Device in a network.")
 public class Device extends WebRepresentableDevice {
     // Shorter version of the identifier (URL) for vis.js
     // TODO check if this is useful at all regarding the widget performance.
@@ -71,6 +74,7 @@ public class Device extends WebRepresentableDevice {
         return fromCiscoObject(device, null);
     }
 
+    @ApiModelProperty(value="Identifier of the device", required=true)
     public String getId() {
         return id;
     }
@@ -79,6 +83,7 @@ public class Device extends WebRepresentableDevice {
         this.id = id;
     }
 
+    @ApiModelProperty(value="URL which identifies the device")
     @Override
     public String getUrl() {
         if (this.uf==null) return null;
@@ -91,6 +96,7 @@ public class Device extends WebRepresentableDevice {
         return this.uf.createConsoleEndpoint(this.id);
     }
 
+    @ApiModelProperty(value="The human readable name of the device", required=true)
     public String getLabel() {
         return label;
     }
@@ -99,6 +105,7 @@ public class Device extends WebRepresentableDevice {
         this.label = label;
     }
 
+    @ApiModelProperty(value="Position of the device in the network (x axis)")
     public double getX() {
         return x;
     }
@@ -107,6 +114,7 @@ public class Device extends WebRepresentableDevice {
         this.x = x;
     }
 
+    @ApiModelProperty(value="Position of the device in the network (y axis)")
     public double getY() {
         return y;
     }
@@ -115,6 +123,7 @@ public class Device extends WebRepresentableDevice {
         this.y = y;
     }
 
+    @ApiModelProperty(value="Type of device", allowableValues="routerDevice, cloudDevice, pcDevice, switchDevice")
     public String getGroup() {
         return group;
     }
@@ -123,6 +132,7 @@ public class Device extends WebRepresentableDevice {
         this.group = group;
     }
 
+    @ApiModelProperty(value="Ports of a device")
     public List<Port> getPorts() {
         return ports;
     }
@@ -131,6 +141,7 @@ public class Device extends WebRepresentableDevice {
         this.ports = ports;
     }
 
+    @ApiModelProperty(value="Default gateway used by the device (when it applies)", required=false)
     public String getDefaultGateway() {
         return defaultGateway;
     }
