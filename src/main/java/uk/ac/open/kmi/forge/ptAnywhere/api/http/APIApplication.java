@@ -49,7 +49,9 @@ public class APIApplication extends ResourceConfig {
     private final SessionsManagerFactory sessionsManagerFactory;
     private final ExpirationSubscriber es;
 
-    private final JedisPool cachePool;
+    // "You can store the pool somewhere statically, it is thread-safe."
+    // Accessed by PTConnection and HistoricalAnonymousFinder
+    private static JedisPool cachePool;
 
 
     public APIApplication(@Context ServletContext servletContext) {
@@ -73,7 +75,7 @@ public class APIApplication extends ResourceConfig {
         this.executor = Executors.newFixedThreadPool(20, new SimpleDaemonFactory());
 
         final RedisConnectionProperties rProp = pfm.getCacheDetails();
-        this.cachePool = new JedisPool(new JedisPoolConfig(), rProp.getHostname(), rProp.getPort(), 2000, null, rProp.getDbNumber());
+        cachePool = new JedisPool(new JedisPoolConfig(), rProp.getHostname(), rProp.getPort(), 2000, null, rProp.getDbNumber());
         this.irf = new InteractionRecordFactory(this.executor,
                                                 pfm.getInteractionRecordingDetails(),
                                                 IdentityFinderFactory.createHistoricalAnonymous(pfm.getInteractionRecordingDetails(), this.cachePool));
@@ -144,6 +146,10 @@ public class APIApplication extends ResourceConfig {
         return ((SessionsManagerFactory) servletContext.getAttribute(APIApplication.SESSIONS_MANAGER_FACTORY)).create();
     }
 
+    public static JedisPool getCachePool() {
+        return cachePool;
+    }
+
     //@PostConstruct
     @PreDestroy
     public void stop() {
@@ -158,7 +164,12 @@ public class APIApplication extends ResourceConfig {
             LOGGER.error("The RemoteLRS was not properly destroyed.");
             LOGGER.error(e.getMessage());
         }
-        this.cachePool.destroy();
+        // Uncomment to clean the cache DB once the app stops.
+        /*try (Jedis jedis = cachePool.getResource()) {
+            jedis.flushDB();
+        }*/
+        cachePool.destroy();
+        cachePool = null;
         this.executor.shutdownNow();
     }
 }

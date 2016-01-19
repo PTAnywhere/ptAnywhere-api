@@ -11,9 +11,11 @@ import com.cisco.pt.ptmp.PacketTracerSessionFactory;
 import com.cisco.pt.ptmp.impl.PacketTracerSessionFactoryImpl;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import uk.ac.open.kmi.forge.ptAnywhere.api.http.APIApplication;
 import uk.ac.open.kmi.forge.ptAnywhere.exceptions.PacketTracerConnectionException;
 import uk.ac.open.kmi.forge.ptAnywhere.gateway.impl.CachedPacketTracerDAO;
 import uk.ac.open.kmi.forge.ptAnywhere.gateway.impl.MemoryCache;
+import uk.ac.open.kmi.forge.ptAnywhere.gateway.impl.RedisCache;
 import uk.ac.open.kmi.forge.ptAnywhere.session.FileLoadingTask;
 
 
@@ -102,7 +104,10 @@ public class PTConnection {
     }
 
     public PacketTracerDAO getDataAccessObject() {
-        return new CachedPacketTracerDAO(getIPC(), new MemoryCache());
+        if (APIApplication.getCachePool()==null) {
+            return new CachedPacketTracerDAO(getIPC(), new MemoryCache());
+        }
+        return new CachedPacketTracerDAO(getIPC(), new RedisCache(APIApplication.getCachePool()));
     }
 
     public void open() {

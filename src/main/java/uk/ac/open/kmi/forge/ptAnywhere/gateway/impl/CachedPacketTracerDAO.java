@@ -7,6 +7,7 @@ import com.cisco.pt.ipc.ui.LogicalWorkspace;
 import uk.ac.open.kmi.forge.ptAnywhere.api.http.Utils;
 import uk.ac.open.kmi.forge.ptAnywhere.exceptions.DeviceNotFoundException;
 import uk.ac.open.kmi.forge.ptAnywhere.gateway.Cache;
+
 import java.util.*;
 
 
@@ -28,6 +29,16 @@ public class CachedPacketTracerDAO extends BasicPacketTracerDAO {
         super(workspace, new CachingNetwork(network, cache));
         this.networkId = Utils.toSimplifiedId(network.getObjectUUID());
         this.cache = cache;
+    }
+
+    @Override
+    public uk.ac.open.kmi.forge.ptAnywhere.pojo.Network getWholeNetwork() {
+        final uk.ac.open.kmi.forge.ptAnywhere.pojo.Network ret = super.getWholeNetwork();
+        // Additional loop. We could improve this, but it is cleaner this way.
+        for (uk.ac.open.kmi.forge.ptAnywhere.pojo.Device d: ret.getDevices()) {
+            this.cache.add(this.networkId, d.getId(), d.getLabel());
+        }
+        return ret;
     }
 
     @Override
