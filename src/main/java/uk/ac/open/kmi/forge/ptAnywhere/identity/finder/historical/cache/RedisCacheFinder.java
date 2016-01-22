@@ -25,6 +25,7 @@ public class RedisCacheFinder implements IdentityFinder<BySessionId> {
 
     final static String NAME = "name";
     final static String HOMEPAGE = "homepage";
+    final static String ACCOUNTNAME = "account";
 
     protected WeakReference<JedisPool> pool;
 
@@ -76,6 +77,8 @@ public class RedisCacheFinder implements IdentityFinder<BySessionId> {
             t.zadd(LRU_SESSION, System.currentTimeMillis(), sessionId);
             t.hset(USER_PREFIX + sessionId, NAME, identity.getName());
             t.hset(USER_PREFIX + sessionId, HOMEPAGE, identity.getHomePage());
+            t.hset(USER_PREFIX + sessionId, ACCOUNTNAME, identity.getAccountName());
+
             t.exec();
             removeLastAccessedIfLimitExceeded(jedis);
         }
@@ -109,6 +112,11 @@ public class RedisCacheFinder implements IdentityFinder<BySessionId> {
         @Override
         public String getHomePage() {
             return this.redisHash.get(HOMEPAGE);
+        }
+
+        @Override
+        public String getAccountName() {
+            return this.redisHash.get(ACCOUNTNAME);
         }
     }
 }

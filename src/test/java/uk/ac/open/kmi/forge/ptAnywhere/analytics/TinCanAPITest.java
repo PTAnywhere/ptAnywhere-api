@@ -19,7 +19,8 @@ import java.net.MalformedURLException;
 public class TinCanAPITest {
 
     final static String USER_NAME = "User name";
-    final static String USER_HOMEPAGE = "http://user/name";
+    final static String USER_HOMEPAGE = "http://users/";
+    final static String USER_ACCOUNT = "name";
     final static String WIDGET_URI = "http://testuri/";
     final static String SESSION_ID = "b8d5exozT9eNsR1udGjbZQ--";
     final static String SESSION_UUID = "6fc7797b-1a33-4fd7-8db1-1d6e7468db65";
@@ -55,6 +56,10 @@ public class TinCanAPITest {
             public String getHomePage() {
                 return USER_HOMEPAGE;
             }
+            @Override
+            public String getAccountName() {
+                return USER_ACCOUNT;
+            }
         });
     }
 
@@ -67,9 +72,9 @@ public class TinCanAPITest {
     }
 
     protected String getExpectedActor() {
-        return "{\"objectType\":\"Agent\",\"account\":" +
+        return "{\"objectType\":\"Agent\",\"name\":\"" + USER_NAME + "\",\"account\":" +
                 "{\"homePage\":\"" + USER_HOMEPAGE + "\"," +
-                "\"name\":\"" + USER_NAME + "\"}}";
+                "\"name\":\"" + USER_ACCOUNT + "\"}}";
     }
 
     protected String getExpectedVerb(String verb) {

@@ -17,7 +17,8 @@ import uk.ac.open.kmi.forge.ptAnywhere.identity.finder.historical.lrs.LRSFinder;
 public class HistoricalAnonymousFinderTest {
 
     final static String NAME = "Identity name";
-    final static String HOMEPAGE = "http://identity.is/aitor";
+    final static String HOMEPAGE = "http://identity.is/";
+    final static String ACCOUNT_NAME = "aitor";
     final static String PREVIOUS_SESSION = "previous";
     final static String CURRENT_SESSION = "current";
 
@@ -38,6 +39,7 @@ public class HistoricalAnonymousFinderTest {
         this.identifiable = mock(Identifiable.class);
         when(this.identifiable.getName()).thenReturn(NAME);
         when(this.identifiable.getHomePage()).thenReturn(HOMEPAGE);
+        when(this.identifiable.getAccountName()).thenReturn(ACCOUNT_NAME);
     }
 
     @Test
@@ -46,6 +48,7 @@ public class HistoricalAnonymousFinderTest {
 
         assertEquals(NAME, this.testable.findIdentity(this.criterion).getName());
         assertEquals(HOMEPAGE, this.testable.findIdentity(this.criterion).getHomePage());
+        assertEquals(ACCOUNT_NAME, this.testable.findIdentity(this.criterion).getAccountName());
     }
 
     @Test
@@ -54,9 +57,10 @@ public class HistoricalAnonymousFinderTest {
 
         assertEquals(NAME, this.testable.findIdentity(this.criterion, this.factory).getName());
         assertEquals(HOMEPAGE, this.testable.findIdentity(this.criterion, this.factory).getHomePage());
+        assertEquals(ACCOUNT_NAME, this.testable.findIdentity(this.criterion, this.factory).getAccountName());
 
-        // findIdentity() called twice in assertExpectedIdentity
-        verify(this.testable.cacheFinder, VerificationModeFactory.times(2)).cacheIdentity(CURRENT_SESSION, this.identifiable);
+        // findIdentity() called three times in assertExpectedIdentity
+        verify(this.testable.cacheFinder, VerificationModeFactory.times(3)).cacheIdentity(CURRENT_SESSION, this.identifiable);
     }
 
     @Test
@@ -66,9 +70,10 @@ public class HistoricalAnonymousFinderTest {
 
         assertEquals(NAME, this.testable.findIdentity(this.criterion).getName());
         assertEquals(HOMEPAGE, this.testable.findIdentity(this.criterion).getHomePage());
+        assertEquals(ACCOUNT_NAME, this.testable.findIdentity(this.criterion).getAccountName());
 
-        // findIdentity() called twice in this test
-        verify(this.testable.cacheFinder, VerificationModeFactory.times(2)).cacheIdentity(PREVIOUS_SESSION, this.identifiable);
+        // findIdentity() called three times in this test
+        verify(this.testable.cacheFinder, VerificationModeFactory.times(3)).cacheIdentity(PREVIOUS_SESSION, this.identifiable);
     }
 
     @Test
@@ -78,9 +83,10 @@ public class HistoricalAnonymousFinderTest {
 
         assertEquals(NAME, this.testable.findIdentity(this.criterion, this.factory).getName());
         assertEquals(HOMEPAGE, this.testable.findIdentity(this.criterion, this.factory).getHomePage());
+        assertEquals(ACCOUNT_NAME, this.testable.findIdentity(this.criterion, this.factory).getAccountName());
 
-        // findIdentity() called twice in this test
-        verify(this.testable.cacheFinder, VerificationModeFactory.times(2)).cacheIdentity(CURRENT_SESSION, this.identifiable);
+        // findIdentity() called three times in this test
+        verify(this.testable.cacheFinder, VerificationModeFactory.times(3)).cacheIdentity(CURRENT_SESSION, this.identifiable);
     }
 
     @Test
@@ -96,9 +102,10 @@ public class HistoricalAnonymousFinderTest {
         when(this.testable.lrsFinder.findIdentity(this.criterion)).thenReturn(null);
 
         assertEquals("Anonymous user (current)", this.testable.findIdentity(this.criterion, this.factory).getName());
-        assertEquals(AnonymousIdentityFactory.AnonymousIdentity.ANONYMOUS_URI + "current", this.testable.findIdentity(this.criterion, this.factory).getHomePage());
+        assertEquals(AnonymousIdentityFactory.AnonymousIdentity.ANONYMOUS_URI, this.testable.findIdentity(this.criterion, this.factory).getHomePage());
+        assertEquals("current", this.testable.findIdentity(this.criterion, this.factory).getAccountName());
 
-        // findIdentity() called twice in this test
-        verify(this.testable.cacheFinder, VerificationModeFactory.times(2)).cacheIdentity(eq(CURRENT_SESSION), Matchers.<Identifiable>any());
+        // findIdentity() called three times in this test
+        verify(this.testable.cacheFinder, VerificationModeFactory.times(3)).cacheIdentity(eq(CURRENT_SESSION), Matchers.<Identifiable>any());
     }
 }

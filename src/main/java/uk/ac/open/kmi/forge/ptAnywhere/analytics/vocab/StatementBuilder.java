@@ -36,8 +36,9 @@ public class StatementBuilder {
         } else {
             final AgentAccount aa = new AgentAccount();
             aa.setHomePage(identity.getHomePage());
-            aa.setName(identity.getName());
+            aa.setName(identity.getAccountName());
             this.agent.setAccount(aa);
+            this.agent.setName(identity.getName());  // Human readable
         }
         return this;
     }

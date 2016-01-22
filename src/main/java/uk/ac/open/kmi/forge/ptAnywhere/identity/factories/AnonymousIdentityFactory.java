@@ -20,7 +20,7 @@ public class AnonymousIdentityFactory implements IdentityFactory {
 
     public static class AnonymousIdentity implements Identifiable {
 
-        public final static String ANONYMOUS_URI = "http://forge.kmi.open.ac.uk/pt/user/anonymous/";
+        public final static String ANONYMOUS_URI = "http://forge.kmi.open.ac.uk/pt/user/anonymous";
         final String tokenId;
 
         protected AnonymousIdentity(String tokenId) {
@@ -31,9 +31,12 @@ public class AnonymousIdentityFactory implements IdentityFactory {
             return "Anonymous user (" + this.tokenId + ")";
         }
 
+        public String getAccountName() {
+            return this.tokenId;
+        }
 
         public String getHomePage() {
-            return ANONYMOUS_URI + this.tokenId;
+            return ANONYMOUS_URI;
         }
     }
 }
