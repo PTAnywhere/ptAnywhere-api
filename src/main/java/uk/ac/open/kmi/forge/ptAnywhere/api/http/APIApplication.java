@@ -72,7 +72,7 @@ public class APIApplication extends ResourceConfig {
         ConsoleEndpoint.setSessionsManagerFactory(this.sessionsManagerFactory);
         this.es =  this.sessionsManagerFactory.createExpirationSubscription();  // WARNING: it can return null.
 
-        this.executor = Executors.newFixedThreadPool(20, new SimpleDaemonFactory());
+        this.executor = Executors.newFixedThreadPool(200, new SimpleDaemonFactory());
 
         final RedisConnectionProperties rProp = pfm.getCacheDetails();
         cachePool = new JedisPool(new JedisPoolConfig(), rProp.getHostname(), rProp.getPort(), 2000, null, rProp.getDbNumber());
