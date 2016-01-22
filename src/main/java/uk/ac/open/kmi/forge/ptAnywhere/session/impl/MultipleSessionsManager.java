@@ -29,12 +29,6 @@ public class MultipleSessionsManager implements SessionsManager {
 
     protected static final Log LOGGER = LogFactory.getLog(MultipleSessionsManager.class);
 
-    /**
-     * Minutes that a reservation will last.
-     */
-    private static final int RESERVATION_TIME = 5;
-
-
     private static final String AVAILABLE_APIS = "apis";
     // TODO use subscriptions to ensure that after deleting a busy-instance-key it is inserted again in the list of available ones.
     private static final String INSTANCE_URL = "url";
@@ -51,10 +45,12 @@ public class MultipleSessionsManager implements SessionsManager {
 
     protected WeakReference<JedisPool> pool;
     protected int dbNumber;
+    protected int maximumLength;
 
-    protected MultipleSessionsManager(JedisPool pool, int dbNumber) {
+    protected MultipleSessionsManager(JedisPool pool, int dbNumber, int maximumLength) {
         this.pool = new WeakReference<JedisPool>(pool);
         this.dbNumber = dbNumber;
+        this.maximumLength = maximumLength;
     }
 
     private JedisPool getPool() {
@@ -114,10 +110,10 @@ public class MultipleSessionsManager implements SessionsManager {
      *      Port of the PT instance.
      * @return The new session id.
      */
-    private String createSession(String instanceUrl, String ptHost, int ptPort, String inputFilename) {
+    private String createSession(String instanceUrl, String ptHost, int ptPort, String inputFilename, int maximumReservationTime) {
         final String sessionId  = generateSessionId();
         final String rSessionId = toRedisSessionId(sessionId);
-        final int expirationAfter = RESERVATION_TIME * 60;
+        final int expirationAfter = maximumReservationTime * 60;
 
         try (Jedis jedis = getPool().getResource()) {
             final Transaction t = jedis.multi();
@@ -141,13 +137,15 @@ public class MultipleSessionsManager implements SessionsManager {
 
     /**
      * Assigns an available PT instance to a new session.
+     * @param inputFileUrl
+     * @param maximumLength
      * @return The new session id.
      */
-    @Override
-    public String createSession(String inputFileUrl) throws NoPTInstanceAvailableException {
+    private String createSession(String inputFileUrl, int maximumLength) throws NoPTInstanceAvailableException {
         try (Jedis jedis = getPool().getResource()) {
             for (String apiUrl : jedis.smembers(AVAILABLE_APIS)) {
                 try {
+                    LOGGER.info("Attempting session creation in API: " + apiUrl);
                     final PTManagementClient cli = new PTManagementClient(apiUrl);
                     final Allocation i = cli.createInstance();
                     // We cache the file in that API and store the cached file local path instead of its URL.
@@ -156,13 +154,25 @@ public class MultipleSessionsManager implements SessionsManager {
                     // cons: 1) The files are not cached close to when they are opened.
                     //          In the meantime (worse case scenario: matter of seconds) they could be destroyed.
                     final String filename = cli.getCachedFile(inputFileUrl).getFilename();
-                    return createSession(i.getUrl(), i.getPacketTracerHostname(), i.getPacketTracerPort(), filename);
+                    return createSession(i.getUrl(), i.getPacketTracerHostname(), i.getPacketTracerPort(), filename, maximumLength);
                 } catch (NoPTInstanceAvailableException e) {
                     // Let's try with the next API...
+                    LOGGER.error("API not available: " + apiUrl);
+                    LOGGER.error(e.getMessage());
                 }
             }
             throw new NoPTInstanceAvailableException();
         }
+    }
+
+    /**
+     * Assigns an available PT instance to a new session.
+     * @param inputFileUrl
+     * @return The new session id.
+     */
+    @Override
+    public String createSession(String inputFileUrl) throws NoPTInstanceAvailableException {
+        return createSession(inputFileUrl, this.maximumLength);
     }
 
     @Override

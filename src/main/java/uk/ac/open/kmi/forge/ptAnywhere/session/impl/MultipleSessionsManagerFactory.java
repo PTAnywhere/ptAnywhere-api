@@ -16,10 +16,12 @@ public class MultipleSessionsManagerFactory implements SessionsManagerFactory {
     //   "You can store the pool somewhere statically, it is thread-safe."
     protected static JedisPool pool;
     private static Lock poolLock = new ReentrantLock();  // Lock used to ensure that the pool is not created or destroyed twice by concurrent Threads.
+    protected int maxLength;
     protected int dbNumber;
 
 
-    protected MultipleSessionsManagerFactory(RedisConnectionProperties redis) {
+    protected MultipleSessionsManagerFactory(RedisConnectionProperties redis, int maximumLength) {
+        this.maxLength = maximumLength;
         this.dbNumber = redis.getDbNumber();
         poolLock.lock();
         try {
@@ -34,7 +36,7 @@ public class MultipleSessionsManagerFactory implements SessionsManagerFactory {
 
     @Override
     public MultipleSessionsManager create() {
-        return new MultipleSessionsManager(pool, this.dbNumber);
+        return new MultipleSessionsManager(pool, this.dbNumber, this.maxLength);
     }
 
     /**

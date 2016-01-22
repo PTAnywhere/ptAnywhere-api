@@ -45,13 +45,21 @@ public class PropertyFileManager {
     }
 
     /**
+     * @return How many minutes should a session last before expiring?
+     *  Default value: 5.
+     */
+    public int getMaximumSessionLength() {
+        return Integer.valueOf(this.props.getProperty("session.time.maximum", "5"));
+    }
+
+    /**
      * By default, the Redis server runs in the same machine as the web server.
      */
     public RedisConnectionProperties getSessionHandlingDetails() {
         return new RedisConnectionProperties(
-                this.props.getProperty("sessions-redis-host", PropertyFileManager.defaultHostname),
-                Integer.parseInt(this.props.getProperty("sessions-redis-port", "6379")),
-                Integer.parseInt(this.props.getProperty("sessions-redis-db", "0"))
+                this.props.getProperty("session.redis.host", PropertyFileManager.defaultHostname),
+                Integer.parseInt(this.props.getProperty("session.redis.port", "6379")),
+                Integer.parseInt(this.props.getProperty("session.redis.db", "0"))
         );
     }
 
@@ -60,9 +68,9 @@ public class PropertyFileManager {
      */
     public RedisConnectionProperties getCacheDetails() {
         return new RedisConnectionProperties(
-                this.props.getProperty("cache-redis-host", PropertyFileManager.defaultHostname),
-                Integer.parseInt(this.props.getProperty("cache-redis-port", "6379")),
-                Integer.parseInt(this.props.getProperty("cache-redis-db", "1"))
+                this.props.getProperty("cache.redis.host", PropertyFileManager.defaultHostname),
+                Integer.parseInt(this.props.getProperty("cache.redis.port", "6379")),
+                Integer.parseInt(this.props.getProperty("cache.redis.db", "1"))
         );
     }
 

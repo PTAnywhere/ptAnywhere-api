@@ -10,7 +10,8 @@ public class SessionsManagerFactoryImpl {
     public static SessionsManagerFactory create(PropertyFileManager properties) {
         final PacketTracerInstanceProperties sharedInstance = properties.getSharedInstanceDetails();
         if (sharedInstance==null)
-            return new MultipleSessionsManagerFactory(properties.getSessionHandlingDetails());
+            return new MultipleSessionsManagerFactory(properties.getSessionHandlingDetails(),
+                                                      properties.getMaximumSessionLength());
         else
             return new SharedSessionsManagerFactory(sharedInstance);
     }
