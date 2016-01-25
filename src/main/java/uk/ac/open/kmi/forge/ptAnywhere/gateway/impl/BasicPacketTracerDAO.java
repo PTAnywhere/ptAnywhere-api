@@ -123,14 +123,8 @@ public class BasicPacketTracerDAO implements PacketTracerDAO {
             ret.setY(device.getY());
         }
         if (device.getLabel()!=null) {
-            // Problem: setName() makes deviceAdded.getObjectUUID() return null
-            //          and moveToLocation not to work :-S
-            // Cause: I guess that the name is used as an identify a device in all the related IPC
-            //        protocol communications and (at least) these methods use IPC.
-            // That's why we set it at the end and without calling either
-            //   a) getObjectUUID() (fromCiscoObject calls it) or
-            //   b) moveToLocation
-            // afterwards.
+            // Problem: https://github.com/PTAnywhere/ptAnywhere-api/issues/25
+            // Therefore, we should not use "deviceAdded" after calling "setName".
             deviceAdded.setName(device.getLabel());
             ret.setLabel(device.getLabel());
         }
@@ -218,16 +212,22 @@ public class BasicPacketTracerDAO implements PacketTracerDAO {
 
     @Override
     public Device modifyDevice(Device modification) {
-        final com.cisco.pt.ipc.sim.Device ret = getSimDeviceById(modification.getId());
-        if (ret!=null) {
-            ret.setName(modification.getLabel());
+        Device ret = null;
+        final com.cisco.pt.ipc.sim.Device dev = getSimDeviceById(modification.getId());
+        if (dev!=null) {
             // TODO distinguish between devices in a more elegant way
             if (ret instanceof Pc && modification.getDefaultGateway()!=null) {
                 final IPAddress gateway = new IPAddressImpl(modification.getDefaultGateway());
-                ((Pc) ret).setDefaultGateway(gateway);
+                ((Pc) dev).setDefaultGateway(gateway);
             }
+            ret = Device.fromCiscoObject(dev, modification.getDefaultGateway());
+            ret.setLabel(modification.getLabel());
+
+            // Problem: https://github.com/PTAnywhere/ptAnywhere-api/issues/25
+            // Therefore, we should not use "dev" after calling "setName".
+            dev.setName(modification.getLabel());
         }
-        return Device.fromCiscoObject(ret, modification.getDefaultGateway());
+        return ret;
     }
 
     private List<Port> getPorts(com.cisco.pt.ipc.sim.Device device) {
