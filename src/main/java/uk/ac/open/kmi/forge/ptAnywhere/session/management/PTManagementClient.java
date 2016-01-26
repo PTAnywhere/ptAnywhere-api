@@ -23,7 +23,8 @@ public class PTManagementClient {
     final WebTarget target;
 
 
-    public PTManagementClient(WebTarget target) {
+    // For testing
+    protected PTManagementClient(WebTarget target) {
         this.target = target;
     }
 
@@ -33,22 +34,20 @@ public class PTManagementClient {
     }
 
     public Allocation createInstance() throws NoPTInstanceAvailableException {
-        /*  .path("resource/helloworld")
-            .queryParam("greeting", "Hi World!")
-            .request(MediaType.TEXT_PLAIN_TYPE)
-            .header("some-header", "true")
-            .get(String.class);
-        */
         final Response response = this.target.path(ALLOCATIONS_PATH)
-                //.queryParam()
-                .request(MediaType.APPLICATION_JSON)
-                        //.header("some-header", "true")
-                .post(null);
-        // List<Customer> customers = .get(new GenericType<List<Customer>>(){});
-        if (response.getStatus()==Response.Status.SERVICE_UNAVAILABLE.getStatusCode()) {
-            throw new NoPTInstanceAvailableException(response.readEntity(ErrorBean.class).getErrorMsg());
+                                                //.queryParam()
+                                                .request(MediaType.APPLICATION_JSON)
+                                                //.header("some-header", "true")
+                                                .post(null);
+        try {
+            // List<Customer> customers = .get(new GenericType<List<Customer>>(){});
+            if (response.getStatus() == Response.Status.SERVICE_UNAVAILABLE.getStatusCode()) {
+                throw new NoPTInstanceAvailableException(response.readEntity(ErrorBean.class).getErrorMsg());
+            }
+            return response.readEntity(Allocation.class);
+        } finally {
+            response.close();
         }
-        return response.readEntity(Allocation.class);
     }
 
     public Allocation deleteInstance(int instanceId) throws NotFoundException {
@@ -62,10 +61,14 @@ public class PTManagementClient {
         final Response response = this.target.path(FILES_PATH)
                 .request(MediaType.APPLICATION_JSON)
                 .post(Entity.entity(url, MediaType.TEXT_PLAIN));
-        if (response.getStatus()==Response.Status.BAD_REQUEST.getStatusCode()) {
-            final ErrorBean error = response.readEntity(ErrorBean.class);
-            throw new UnresolvableFileUrlException((error==null)? null: error.getErrorMsg());
+        try {
+            if (response.getStatus() == Response.Status.BAD_REQUEST.getStatusCode()) {
+                final ErrorBean error = response.readEntity(ErrorBean.class);
+                throw new UnresolvableFileUrlException((error == null) ? null : error.getErrorMsg());
+            }
+            return response.readEntity(File.class);
+        } finally {
+            response.close();
         }
-        return response.readEntity(File.class);
     }
 }
