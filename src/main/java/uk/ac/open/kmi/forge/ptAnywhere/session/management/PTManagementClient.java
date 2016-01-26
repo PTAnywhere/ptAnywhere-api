@@ -6,7 +6,6 @@ import uk.ac.open.kmi.forge.ptAnywhere.exceptions.UnresolvableFileUrlException;
 
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
@@ -28,8 +27,7 @@ public class PTManagementClient {
         this.target = target;
     }
 
-    public PTManagementClient(String managementApiUrl) {
-        final Client client = ClientBuilder.newClient();
+    public PTManagementClient(String managementApiUrl, Client client) {
         this.target = client.target(managementApiUrl);
     }
 

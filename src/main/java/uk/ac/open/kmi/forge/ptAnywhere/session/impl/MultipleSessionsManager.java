@@ -43,14 +43,17 @@ public class MultipleSessionsManager implements SessionsManager {
     private static final String SESSION_PREFIX = "session:";
     private static final String URL_PREFIX = INSTANCE_URL + ":";
 
-    protected WeakReference<JedisPool> pool;
-    protected int dbNumber;
-    protected int maximumLength;
+    protected final WeakReference<JedisPool> pool;
+    protected final int dbNumber;
+    protected final int maximumLength;
+    private final javax.ws.rs.client.Client httpClient;
 
-    protected MultipleSessionsManager(JedisPool pool, int dbNumber, int maximumLength) {
-        this.pool = new WeakReference<JedisPool>(pool);
+
+    protected MultipleSessionsManager(JedisPool pool, int dbNumber, int maximumLength, javax.ws.rs.client.Client client) {
+        this.pool = new WeakReference<>(pool);
         this.dbNumber = dbNumber;
         this.maximumLength = maximumLength;
+        this.httpClient = client;
     }
 
     private JedisPool getPool() {
@@ -64,7 +67,7 @@ public class MultipleSessionsManager implements SessionsManager {
             final Set<PTInstanceDetails> unfinished = getAllInstances();
             for (PTInstanceDetails instance: unfinished) {
                 try {
-                    final AllocationResourceClient cli = new AllocationResourceClient(instance.getUrl());
+                    final AllocationResourceClient cli = new AllocationResourceClient(instance.getUrl(), this.httpClient);
                     cli.delete();  // If it throws an exception the element is not deleted.
                 } catch(NotFoundException e) {
                     LOGGER.error("The instance " + instance.getUrl() +  " could not be removed (maybe another thread already delete it?).");
@@ -146,7 +149,7 @@ public class MultipleSessionsManager implements SessionsManager {
             for (String apiUrl : jedis.smembers(AVAILABLE_APIS)) {
                 try {
                     LOGGER.info("Attempting session creation in API: " + apiUrl);
-                    final PTManagementClient cli = new PTManagementClient(apiUrl);
+                    final PTManagementClient cli = new PTManagementClient(apiUrl, this.httpClient);
                     final Allocation i = cli.createInstance();
                     // We cache the file in that API and store the cached file local path instead of its URL.
                     // Pros: 1) we avoid storing the API associated to the instance to cache it later
@@ -239,7 +242,7 @@ public class MultipleSessionsManager implements SessionsManager {
         try (Jedis jedis = getPool().getResource()) {
             final String instanceUrl = jedis.get(URL_PREFIX + rSessionId);
             if (instanceUrl!=null) {
-                final AllocationResourceClient cli = new AllocationResourceClient(instanceUrl);
+                final AllocationResourceClient cli = new AllocationResourceClient(instanceUrl, this.httpClient);
                 cli.delete();  // If it throws an exception the element is not deleted.
 
                 // If everything went well...

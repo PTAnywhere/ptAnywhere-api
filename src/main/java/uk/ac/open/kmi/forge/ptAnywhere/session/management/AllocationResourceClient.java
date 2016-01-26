@@ -1,7 +1,7 @@
 package uk.ac.open.kmi.forge.ptAnywhere.session.management;
 
 import javax.ws.rs.NotFoundException;
-import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Client;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 
@@ -13,8 +13,8 @@ public class AllocationResourceClient {
         this.target = target;
     }
 
-    public AllocationResourceClient(String instanceUrl) {
-        this.target = ClientBuilder.newClient().target(instanceUrl);
+    public AllocationResourceClient(String instanceUrl, Client client) {
+        this.target = client.target(instanceUrl);
     }
 
     public Allocation delete() throws NotFoundException {
