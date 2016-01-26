@@ -3,6 +3,7 @@ package uk.ac.open.kmi.forge.ptAnywhere.management;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.glassfish.jersey.server.mvc.Viewable;
+import uk.ac.open.kmi.forge.ptAnywhere.ContextListener;
 import uk.ac.open.kmi.forge.ptAnywhere.session.SessionsManager;
 import uk.ac.open.kmi.forge.ptAnywhere.session.SessionsManagerFactory;
 import javax.servlet.ServletContext;
@@ -39,11 +40,11 @@ public abstract class CustomAbstractResource {
     }
 
     String getAppRootURL() {
-        return (String) this.servletContext.getAttribute(ManagementApplication.APP_ROOT);
+        return (String) this.servletContext.getAttribute(ContextListener.APPLICATION_ROOT);
     }
 
     SessionsManager getSessionsManager() {
-        return ((SessionsManagerFactory) this.servletContext.getAttribute(ManagementApplication.SESSIONS_MANAGER)).create();
+        return ((SessionsManagerFactory) this.servletContext.getAttribute(ContextListener.SESSIONS_MANAGER_FACTORY)).create();
     }
 
     String getAPIURL() {

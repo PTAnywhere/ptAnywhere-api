@@ -15,7 +15,7 @@ public class SharedSessionsManagerFactory implements SessionsManagerFactory {
     final String SESSION_ID = "kmiPacketTracerSession0--";
     final PTInstanceDetails uniqueInstance;
 
-    protected SharedSessionsManagerFactory(PacketTracerInstanceProperties instanceDetails) {
+    public SharedSessionsManagerFactory(PacketTracerInstanceProperties instanceDetails) {
         this.uniqueInstance = new PTInstanceDetails(null, instanceDetails.getHostname(), instanceDetails.getPort(), null);
     }
 

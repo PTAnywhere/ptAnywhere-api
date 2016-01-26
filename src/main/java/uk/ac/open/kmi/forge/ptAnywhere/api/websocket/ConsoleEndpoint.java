@@ -27,8 +27,8 @@ public class ConsoleEndpoint implements TerminalLineEventListener {
 
     private final static Log LOGGER = LogFactory.getLog(ConsoleEndpoint.class);
 
-    // "lrsFactory" is a weak reference because it is handled by the APIApplication class.
-    // TODO better way to access it directly in the APIApplication (which is the manager).
+    // TODO Find a better way to access them directly through the ServletContext.
+    // They are a weak references because it is handled by the ContextListener class.
     private static WeakReference<InteractionRecordFactory> lrsFactory;
     private static WeakReference<SessionsManagerFactory> sessionsManagerFactory;
 

@@ -1,6 +1,5 @@
 package uk.ac.open.kmi.forge.ptAnywhere.api.http;
 
-import com.rusticisoftware.tincan.RemoteLRS;
 import io.swagger.config.ScannerFactory;
 import io.swagger.jaxrs.config.ReflectiveJaxrsScanner;
 import io.swagger.jaxrs.listing.ApiListingResource;
@@ -9,83 +8,38 @@ import io.swagger.models.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.glassfish.jersey.server.ResourceConfig;
-import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.JedisPoolConfig;
+import uk.ac.open.kmi.forge.ptAnywhere.ContextListener;
 import uk.ac.open.kmi.forge.ptAnywhere.analytics.InteractionRecord;
 import uk.ac.open.kmi.forge.ptAnywhere.analytics.InteractionRecordFactory;
 import uk.ac.open.kmi.forge.ptAnywhere.api.http.filters.CORSFilter;
-import uk.ac.open.kmi.forge.ptAnywhere.api.websocket.ConsoleEndpoint;
-import uk.ac.open.kmi.forge.ptAnywhere.identity.finder.IdentityFinderFactory;
 import uk.ac.open.kmi.forge.ptAnywhere.properties.PropertyFileManager;
-import uk.ac.open.kmi.forge.ptAnywhere.properties.RedisConnectionProperties;
-import uk.ac.open.kmi.forge.ptAnywhere.session.ExpirationSubscriber;
 import uk.ac.open.kmi.forge.ptAnywhere.session.SessionsManager;
 import uk.ac.open.kmi.forge.ptAnywhere.session.SessionsManagerFactory;
-import uk.ac.open.kmi.forge.ptAnywhere.session.impl.SessionsManagerFactoryImpl;
 
 import javax.annotation.PreDestroy;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Context;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 
 
 @ApplicationPath("v1")
 public class APIApplication extends ResourceConfig {
 
-    private static final String SESSIONS_MANAGER_FACTORY = "sessionsManagerFactory";
-    private static final String INTERACTION_RECORD_FACTORY = "interactionRecordFactory";
     private static final Log LOGGER = LogFactory.getLog(APIApplication.class);
 
-    // Executor used by the application for:
-    //   1. Ensuring that the TinCanAPI clients execute in their own threads.
-    //   2. Have a blocking Redis subscription object running during the application lifetime.
-    private final ExecutorService executor;
 
-    private final InteractionRecordFactory irf;
-    private final SessionsManagerFactory sessionsManagerFactory;
-    private final ExpirationSubscriber es;
+    public APIApplication(@Context ServletContext servletContext) throws InterruptedException {
+        ContextListener.initSignal.await();
 
-    // "You can store the pool somewhere statically, it is thread-safe."
-    // Accessed by PTConnection and HistoricalAnonymousFinder
-    private static JedisPool cachePool;
-
-
-    public APIApplication(@Context ServletContext servletContext) {
         LOGGER.info("Creating API webapp.");
 
-        // Only an object is created per application, so we are not reading the file over and over again.
-        // However, I'm not sure whether creating one PropertyFileManager per request could be harmful or desirable.
-        final PropertyFileManager pfm = new PropertyFileManager();
-
+        final PropertyFileManager pfm = getPropertyFile(servletContext);
         packages(false, getClass().getPackage().getName());  // Not recursive
         if (pfm.doesAPIAllowCORS()) {
             register(CORSFilter.class);
         }
         configSwagger(servletContext, pfm.getApplicationPath());
-
-        this.sessionsManagerFactory = SessionsManagerFactoryImpl.create(pfm);
-        servletContext.setAttribute(SESSIONS_MANAGER_FACTORY, this.sessionsManagerFactory);
-        ConsoleEndpoint.setSessionsManagerFactory(this.sessionsManagerFactory);
-        this.es =  this.sessionsManagerFactory.createExpirationSubscription();  // WARNING: it can return null.
-
-        this.executor = Executors.newFixedThreadPool(200, new SimpleDaemonFactory());
-
-        final RedisConnectionProperties rProp = pfm.getCacheDetails();
-        cachePool = new JedisPool(new JedisPoolConfig(), rProp.getHostname(), rProp.getPort(), 2000, null, rProp.getDbNumber());
-        this.irf = new InteractionRecordFactory(this.executor,
-                                                pfm.getInteractionRecordingDetails(),
-                                                IdentityFinderFactory.createHistoricalAnonymous(pfm.getInteractionRecordingDetails(), this.cachePool));
-        ConsoleEndpoint.setInteractionRecordFactory(this.irf);
-        servletContext.setAttribute(INTERACTION_RECORD_FACTORY, this.irf);
-
-        if (this.es!=null) {
-            // WARNING: Blocking thread. It won't stop during the Application lifecycle.
-            this.executor.submit(this.es);
-        }
     }
 
     protected void configSwagger(ServletContext context, String appPath) {
@@ -122,6 +76,10 @@ public class APIApplication extends ResourceConfig {
         context.setAttribute("swagger", swagger);
     }
 
+    private PropertyFileManager getPropertyFile(ServletContext servletContext) {
+        return ((PropertyFileManager) servletContext.getAttribute(ContextListener.PROPERTIES));
+    }
+
     private static String getReferrerWidgetURL(HttpServletRequest request) {
         final String referrer = request.getHeader("referer");
         if (referrer==null) return null;
@@ -131,7 +89,7 @@ public class APIApplication extends ResourceConfig {
     }
 
     private static InteractionRecordFactory getRecordFactory(ServletContext servletContext) {
-        return ((InteractionRecordFactory) servletContext.getAttribute(APIApplication.INTERACTION_RECORD_FACTORY));
+        return ((InteractionRecordFactory) servletContext.getAttribute(ContextListener.INTERACTION_RECORD_FACTORY));
     }
 
     public static InteractionRecord createInteractionRecordForNewSession(ServletContext servletContext, HttpServletRequest request, String sessionId, String oldSessionId) {
@@ -142,55 +100,21 @@ public class APIApplication extends ResourceConfig {
         return getRecordFactory(servletContext).create(getReferrerWidgetURL(request), sessionId);
     }
 
-    public static SessionsManager createSessionsManager(ServletContext servletContext) {
-        return ((SessionsManagerFactory) servletContext.getAttribute(APIApplication.SESSIONS_MANAGER_FACTORY)).create();
+    protected static SessionsManagerFactory getSessionsManagerFactory(ServletContext servletContext) {
+        return (SessionsManagerFactory) servletContext.getAttribute(ContextListener.SESSIONS_MANAGER_FACTORY);
     }
 
-    public static JedisPool getCachePool() {
-        return cachePool;
+    public static SessionsManager createSessionsManager(ServletContext servletContext) {
+        return getSessionsManagerFactory(servletContext).create();
     }
 
     //@PostConstruct
     @PreDestroy
     public void stop() {
         LOGGER.info("Destroying API webapp.");
-        if (this.es!=null) {
-            this.es.stop();  // Destroying the Executor would do the work too, but just in case.
-        }
-        this.sessionsManagerFactory.destroy();
-        try {
-            RemoteLRS.destroy();
-        } catch(Exception e) {
-            LOGGER.error("The RemoteLRS was not properly destroyed.");
-            LOGGER.error(e.getMessage());
-        }
-        // Uncomment to clean the cache DB once the app stops.
-        /*try (Jedis jedis = cachePool.getResource()) {
-            jedis.flushDB();
-        }*/
-        cachePool.destroy();
-        cachePool = null;
-        this.executor.shutdownNow();
     }
 }
 
-// Following the advice from:
-//   http://stackoverflow.com/questions/3745905/what-is-recommended-way-for-spawning-threads-from-a-servlet-in-tomcat
-class SimpleDaemonFactory implements ThreadFactory {
-    public Thread newThread(Runnable r) {
-        final Thread t = new Thread(r);
-        t.setDaemon(true);
-        t.setUncaughtExceptionHandler(new UEHLogger());
-        return t;
-    }
-}
-
-class UEHLogger implements Thread.UncaughtExceptionHandler {
-    private static final Log LOGGER = LogFactory.getLog(UEHLogger.class);
-    public void uncaughtException(Thread t, Throwable e) {
-        LOGGER.fatal("Thread terminated with exception: " + t.getName(), e);
-    }
-}
 
 /*@Provider
 class JsonMoxyConfigurationContextResolver implements ContextResolver<MoxyJsonConfig> {
