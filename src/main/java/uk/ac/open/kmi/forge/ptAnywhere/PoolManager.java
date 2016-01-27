@@ -26,6 +26,12 @@ public class PoolManager {
     // Accessed by PTConnection and HistoricalAnonymousFinder
     private static JedisPool cachePool;
 
+    // Documentation of limits:
+    //     JedisPoolConfig:
+    //            max total: 8, max idle: 8, min idle: 0,
+    //            blockWhenExhausted: true,
+    //            borrowMaxWaitMillis: -1 (blocks indefinitely)
+    //     Thread pool: 200 threads, unbounded queue
 
     public PoolManager(PropertyFileManager properties) {
         this.executor = Executors.newFixedThreadPool(200, new SimpleDaemonFactory());
