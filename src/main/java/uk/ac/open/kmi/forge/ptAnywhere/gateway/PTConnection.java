@@ -7,8 +7,7 @@ import com.cisco.pt.ipc.events.TerminalLineEventRegistry;
 import com.cisco.pt.ipc.ui.IPC;
 import com.cisco.pt.ptmp.ConnectionNegotiationProperties;
 import com.cisco.pt.ptmp.PacketTracerSession;
-import com.cisco.pt.ptmp.PacketTracerSessionFactory;
-import com.cisco.pt.ptmp.impl.PacketTracerSessionFactoryImpl;
+import com.cisco.pt.ptmp.impl.PacketTracerSessionImpl;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import uk.ac.open.kmi.forge.ptAnywhere.PoolManager;
@@ -50,8 +49,7 @@ public class PTConnection {
     }
 
     protected void before(FileLoadingTask loadingTask) throws IOException {
-        final PacketTracerSessionFactory sessionFactory = PacketTracerSessionFactoryImpl.getInstance();
-        this.packetTracerSession = createSession(sessionFactory);
+        this.packetTracerSession = createSession();
         this.ipcFactory = new IPCFactory(this.packetTracerSession);
         // Open file if needed
         if (loadingTask!=null) {
@@ -65,18 +63,20 @@ public class PTConnection {
 
     protected void after() throws IOException {
         if (this.packetTracerSession != null) {
+            this.ipcFactory = null;
             this.packetTracerSession.close();
+            this.packetTracerSession = null;
         }
     }
 
-    protected PacketTracerSession createSession(PacketTracerSessionFactory sessionFactory)
+    protected PacketTracerSession createSession()
             throws IOException, PacketTracerConnectionException {
         final ConnectionNegotiationProperties negotiationProperties = getNegotiationProperties();
         try {
             if (negotiationProperties == null) {
-                return createDefaultSession(sessionFactory);
+                return createDefaultSession();
             }
-            return createSession(sessionFactory, negotiationProperties);
+            return createSession(negotiationProperties);
         } catch(Error e) {
             getLog().error(e);
             if (e.getMessage().equals("Unable to connect to Packet Tracer"))
@@ -85,14 +85,14 @@ public class PTConnection {
         }
     }
 
-    protected PacketTracerSession createDefaultSession(PacketTracerSessionFactory sessionFactory)
+    protected PacketTracerSession createDefaultSession()
             throws IOException {
-        return sessionFactory.openSession(this.hostName, this.port);
+        return new PacketTracerSessionImpl(this.hostName, this.port);
     }
 
-    protected PacketTracerSession createSession(PacketTracerSessionFactory sessionFactory, ConnectionNegotiationProperties negotiationProperties)
+    protected PacketTracerSession createSession(ConnectionNegotiationProperties negotiationProperties)
             throws IOException, PacketTracerConnectionException {
-        return sessionFactory.openSession(this.hostName, this.port, negotiationProperties);
+        return new PacketTracerSessionImpl(this.hostName, this.port, negotiationProperties);
     }
 
     protected ConnectionNegotiationProperties getNegotiationProperties() {
