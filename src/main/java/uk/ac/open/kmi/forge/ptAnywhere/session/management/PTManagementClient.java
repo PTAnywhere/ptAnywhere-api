@@ -60,7 +60,8 @@ public class PTManagementClient {
                 .request(MediaType.APPLICATION_JSON)
                 .post(Entity.entity(url, MediaType.TEXT_PLAIN));
         try {
-            if (response.getStatus() == Response.Status.BAD_REQUEST.getStatusCode()) {
+            if (response.getStatus() == Response.Status.BAD_REQUEST.getStatusCode() ||
+                    response.getStatus() == Response.Status.INTERNAL_SERVER_ERROR.getStatusCode()) {
                 final ErrorBean error = response.readEntity(ErrorBean.class);
                 throw new UnresolvableFileUrlException((error == null) ? null : error.getErrorMsg());
             }
