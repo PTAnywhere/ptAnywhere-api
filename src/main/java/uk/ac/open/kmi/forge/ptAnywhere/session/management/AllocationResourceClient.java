@@ -9,7 +9,8 @@ import javax.ws.rs.core.MediaType;
 public class AllocationResourceClient {
     final WebTarget target;
 
-    public AllocationResourceClient(WebTarget target) {
+    // Only used by PTManagementClient
+    protected AllocationResourceClient(WebTarget target) {
         this.target = target;
     }
 

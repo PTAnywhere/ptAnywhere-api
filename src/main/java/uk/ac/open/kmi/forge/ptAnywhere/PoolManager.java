@@ -2,11 +2,17 @@ package uk.ac.open.kmi.forge.ptAnywhere;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.glassfish.jersey.apache.connector.ApacheClientProperties;
+import org.glassfish.jersey.apache.connector.ApacheConnectorProvider;
+import org.glassfish.jersey.client.ClientConfig;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 import uk.ac.open.kmi.forge.ptAnywhere.properties.PropertyFileManager;
 import uk.ac.open.kmi.forge.ptAnywhere.properties.RedisConnectionProperties;
 
+import javax.ws.rs.client.ClientBuilder;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -65,6 +71,76 @@ public class PoolManager {
     public void close() {
         destroyCache();
         this.executor.shutdownNow();
+    }
+
+
+    // STATIC methods to help other objects configure pools and still have all these parameters centralized in this class.
+
+
+    /**
+     * Adds a client pool to the client configuration and returns the pool manager which will be used.
+     *
+     * @param clientConfig
+     *      The client configuration to be modified.
+     * @return
+     *      Shared pool manager which will be used.
+     *      WARNING: the pool must be appropriately closed after using it.
+     */
+    public static PoolingHttpClientConnectionManager configureClientPool(ClientConfig clientConfig) {
+        final PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
+        // Default: "no more than than 2 concurrent connections per given route and no more 20 connections in total".
+        //connectionManager.setMaxTotal(100);
+        connectionManager.setDefaultMaxPerRoute(10);
+        clientConfig.property(ApacheClientProperties.CONNECTION_MANAGER, connectionManager);
+        // Avoid HTTP clients from closing pool by themselves.
+        clientConfig.property(ApacheClientProperties.CONNECTION_MANAGER_SHARED, true);
+        return connectionManager;
+    }
+
+    /**
+     * Sets the following timeouts to the requests of the provided client configuration:
+     * <ul>
+     *      <li>Connection timeout: 2 seconds.</li>
+     *      <li>Socket timeout: 2 seconds.</li>
+     *      <li>Connection request timeout: infinite.</li>
+     * </ul>
+     *
+     * See https://github.com/PTAnywhere/ptAnywhere-api/issues/20
+     *
+     * @param clientConfig
+     *      Client configuration to be set.
+     */
+    protected static void configureTimeout(ClientConfig clientConfig) {
+        final RequestConfig requestConfig = RequestConfig.custom()
+                                                            // ?Until a connection is established"
+                                                            .setConnectTimeout(2000)
+                                                            // "Timeout for waiting for data
+                                                            // a maximum period inactivity between two consecutive data packets"
+                                                            .setSocketTimeout(10000)
+                                                            // Requesting a connection from the connection manager:
+                                                            .setConnectionRequestTimeout(0)
+                                                            .build();
+        clientConfig.property(ApacheClientProperties.REQUEST_CONFIG, requestConfig); // jersey specific
+    }
+
+    /*
+     * Creates configuration for an Apache HTTP client.
+     * See https://github.com/PTAnywhere/ptAnywhere-api/issues/27
+     *
+     * Default behaviour:
+     * <ul>
+     *     <li>Only one connection will be established per factory.
+     *          To use a client pool, call the configureClientPool() method.
+     *          See https://github.com/PTAnywhere/ptAnywhere-api/issues/30
+     *     </li>
+     *     <li>Sets the timeouts defined in configureTimeout().</li>
+     * </ul>
+     */
+    public static ClientConfig getApacheClientConfig() {
+        final ClientConfig clientConfig = new ClientConfig();
+        clientConfig.connectorProvider(new ApacheConnectorProvider());
+        configureTimeout(clientConfig);
+        return clientConfig;
     }
 }
 
