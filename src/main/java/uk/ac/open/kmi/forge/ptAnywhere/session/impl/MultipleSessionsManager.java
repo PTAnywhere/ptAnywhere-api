@@ -309,7 +309,7 @@ class ExpirationSubscriberImpl implements ExpirationSubscriber {
     public ExpirationSubscriberImpl(MultipleSessionsManager newManager, int dbNumber, JedisPool pool) {
         this.listener = new ExpirationListener(newManager);
         this.dbNumber = dbNumber;
-        this.pool = new WeakReference<JedisPool>(pool);
+        this.pool = new WeakReference<>(pool);
     }
 
     private JedisPool getPool() {

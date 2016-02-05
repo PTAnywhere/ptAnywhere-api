@@ -32,6 +32,11 @@ public class PoolManager {
     // Accessed by PTConnection and HistoricalAnonymousFinder
     private static JedisPool cachePool;
 
+    // Default timeouts
+    private final int connectTimeout;
+    private final int socketTimeout;
+    private final int connectionRequestTimeout;
+
     // Documentation of limits:
     //     JedisPoolConfig:
     //            max total: 8, max idle: 8, min idle: 0,
@@ -41,6 +46,9 @@ public class PoolManager {
 
     public PoolManager(PropertyFileManager properties) {
         this.executor = Executors.newFixedThreadPool(200, new SimpleDaemonFactory());
+        this.connectTimeout = properties.getConnectTimeout();
+        this.socketTimeout = properties.getSocketTimeout();
+        this.connectionRequestTimeout = properties.getConnectionRequestTimeout();
         createCache(properties);
     }
 
@@ -98,29 +106,36 @@ public class PoolManager {
     }
 
     /**
-     * Sets the following timeouts to the requests of the provided client configuration:
-     * <ul>
-     *      <li>Connection timeout: 2 seconds.</li>
-     *      <li>Socket timeout: 2 seconds.</li>
-     *      <li>Connection request timeout: infinite.</li>
-     * </ul>
+     * Sets the timeouts to the requests of the provided client configuration.
      *
      * See https://github.com/PTAnywhere/ptAnywhere-api/issues/20
      *
      * @param clientConfig
      *      Client configuration to be set.
+     * @param connectTimeout
+     *      Timeout "until a connection is established"
+     * @param socketTimeout
+     *      "Timeout for waiting for data a maximum period inactivity between two consecutive data packets"
+     * @param connectionRequestTimeout
+     *      Timeout of requesting a connection from the connection manager.
      */
-    protected static void configureTimeout(ClientConfig clientConfig) {
+    protected void configureTimeouts(ClientConfig clientConfig, int connectTimeout, int socketTimeout, int connectionRequestTimeout) {
         final RequestConfig requestConfig = RequestConfig.custom()
-                                                            // ?Until a connection is established"
-                                                            .setConnectTimeout(2000)
-                                                            // "Timeout for waiting for data
-                                                            // a maximum period inactivity between two consecutive data packets"
-                                                            .setSocketTimeout(10000)
-                                                            // Requesting a connection from the connection manager:
-                                                            .setConnectionRequestTimeout(0)
+                                                            .setConnectTimeout(connectTimeout)
+                                                            .setSocketTimeout(socketTimeout)
+                                                            .setConnectionRequestTimeout(connectionRequestTimeout)
                                                             .build();
         clientConfig.property(ApacheClientProperties.REQUEST_CONFIG, requestConfig); // jersey specific
+    }
+
+    /**
+     * Sets the timeouts defined as properties to the requests of the provided client configuration.
+     *
+     * @param clientConfig
+     *      Client configuration to be set.
+     */
+    protected void configureDefaultTimeouts(ClientConfig clientConfig) {
+        configureTimeouts(clientConfig, this.connectTimeout, this.socketTimeout, this.connectionRequestTimeout);
     }
 
     /*
@@ -136,10 +151,10 @@ public class PoolManager {
      *     <li>Sets the timeouts defined in configureTimeout().</li>
      * </ul>
      */
-    public static ClientConfig getApacheClientConfig() {
+    public ClientConfig getApacheClientConfig() {
         final ClientConfig clientConfig = new ClientConfig();
         clientConfig.connectorProvider(new ApacheConnectorProvider());
-        configureTimeout(clientConfig);
+        configureDefaultTimeouts(clientConfig);
         return clientConfig;
     }
 }

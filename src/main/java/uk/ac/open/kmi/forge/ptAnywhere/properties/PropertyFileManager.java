@@ -114,6 +114,18 @@ public class PropertyFileManager {
         return apis;
     }
 
+    public int getConnectTimeout() {
+        return Integer.parseInt(this.props.getProperty("pt-apis.timeout.connect", "2000"));
+    }
+
+    public int getSocketTimeout() {
+        return Integer.parseInt(this.props.getProperty("pt-apis.timeout.socket", "6000"));
+    }
+
+    public int getConnectionRequestTimeout() {
+        return Integer.parseInt(this.props.getProperty("pt-apis.timeout.connectionRequest", "2000"));
+    }
+
     /**
      * By default, the Redis server runs in the same machine as the web server.
      */

@@ -84,17 +84,15 @@ public class ContextListener implements ServletContextListener {
      * Initializes Redis DB.
      */
     private void initRedis(SessionsManager session, Set<String> apis) {
-        session.clear();
+        //session.clear();
         session.addManagementAPIs(apis.toArray(new String[apis.size()]));
     }
 
     private SessionsManagerFactory createSessionManagerFactory(PropertyFileManager properties) {
         final PacketTracerInstanceProperties sharedInstance = properties.getSharedInstanceDetails();
         if (sharedInstance==null) {
-            LOGGER.info(properties.getSessionHandlingDetails().getDbNumber());
-            LOGGER.info(properties.getSessionHandlingDetails().getHostname());
-            LOGGER.info(properties.getSessionHandlingDetails().getPort());
             return new MultipleSessionsManagerFactory(properties.getSessionHandlingDetails(),
+                                                        this.pools,  // Needs to be initialized before calling this method
                                                         properties.getMaximumSessionLength());
         } else {
             return new SharedSessionsManagerFactory(sharedInstance);

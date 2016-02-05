@@ -1,5 +1,8 @@
 package uk.ac.open.kmi.forge.ptAnywhere.session.impl;
 
+
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.glassfish.jersey.client.ClientConfig;
 import redis.clients.jedis.JedisPool;
@@ -8,7 +11,6 @@ import uk.ac.open.kmi.forge.ptAnywhere.PoolManager;
 import uk.ac.open.kmi.forge.ptAnywhere.properties.RedisConnectionProperties;
 import uk.ac.open.kmi.forge.ptAnywhere.session.ExpirationSubscriber;
 import uk.ac.open.kmi.forge.ptAnywhere.session.SessionsManagerFactory;
-import javax.ws.rs.client.ClientBuilder;
 
 
 public class MultipleSessionsManagerFactory implements SessionsManagerFactory {
@@ -22,14 +24,15 @@ public class MultipleSessionsManagerFactory implements SessionsManagerFactory {
     final PoolingHttpClientConnectionManager connectionManager;
 
 
-    public MultipleSessionsManagerFactory(RedisConnectionProperties redis, int maximumLength) {
+    public MultipleSessionsManagerFactory(RedisConnectionProperties redis, PoolManager poolManager, int maximumLength) {
         this.maxLength = maximumLength;
         this.dbNumber = redis.getDbNumber();
         // 2000 and null are the default values used in JedisPool...
         this.pool = new JedisPool(new JedisPoolConfig(), redis.getHostname(), redis.getPort(), 2000, null, this.dbNumber);
 
-        this.reusableClientConfiguration = PoolManager.getApacheClientConfig();
-        this.connectionManager = PoolManager.configureClientPool(this.reusableClientConfiguration);
+        // Reusable client configuration for clients created by the pool.
+        this.reusableClientConfiguration = poolManager.getApacheClientConfig();
+        this.connectionManager = poolManager.configureClientPool(this.reusableClientConfiguration);
     }
 
     /*
@@ -38,7 +41,7 @@ public class MultipleSessionsManagerFactory implements SessionsManagerFactory {
      * From the ApacheConnector documentation:
      *  "Client operations are thread safe, the HTTP connection may be shared between different threads."
      */
-    private javax.ws.rs.client.Client createReusableClient() {
+    private Client createReusableClient() {
         return ClientBuilder.newClient(this.reusableClientConfiguration);
     }
 
