@@ -22,6 +22,7 @@ public class MultipleSessionsManagerFactory implements SessionsManagerFactory {
 
     final ClientConfig reusableClientConfiguration;
     final PoolingHttpClientConnectionManager connectionManager;
+    final PoolManager poolManager;  // Not managed by this object.
 
 
     public MultipleSessionsManagerFactory(RedisConnectionProperties redis, PoolManager poolManager, int maximumLength) {
@@ -32,7 +33,10 @@ public class MultipleSessionsManagerFactory implements SessionsManagerFactory {
 
         // Reusable client configuration for clients created by the pool.
         this.reusableClientConfiguration = poolManager.getApacheClientConfig();
+        poolManager.configureDefaultTimeouts(this.reusableClientConfiguration);
         this.connectionManager = poolManager.configureClientPool(this.reusableClientConfiguration);
+
+        this.poolManager = poolManager;  // For in createExpirationSubscription
     }
 
     /*
@@ -55,7 +59,10 @@ public class MultipleSessionsManagerFactory implements SessionsManagerFactory {
      */
     @Override
     public ExpirationSubscriber createExpirationSubscription() {
-        return new ExpirationSubscriberImpl(create(), this.dbNumber, this.pool);
+        final ClientConfig config = this.poolManager.getApacheClientConfig();
+        this.poolManager.configureDefaultTimeoutsAndInfiniteConnectionRequestTimeout(config);
+        final Client httpClient = ClientBuilder.newClient(config);
+        return new ExpirationSubscriberImpl(this.pool, this.dbNumber, httpClient);
     }
 
     @Override

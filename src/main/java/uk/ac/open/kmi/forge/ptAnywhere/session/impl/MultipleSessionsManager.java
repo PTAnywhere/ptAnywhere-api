@@ -1,24 +1,25 @@
 package uk.ac.open.kmi.forge.ptAnywhere.session.impl;
 
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.NotFoundException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import redis.clients.jedis.*;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.Transaction;
 import uk.ac.open.kmi.forge.ptAnywhere.api.http.Utils;
 import uk.ac.open.kmi.forge.ptAnywhere.exceptions.NoPTInstanceAvailableException;
-import uk.ac.open.kmi.forge.ptAnywhere.session.ExpirationSubscriber;
 import uk.ac.open.kmi.forge.ptAnywhere.session.FileLoadingTask;
 import uk.ac.open.kmi.forge.ptAnywhere.session.PTInstanceDetails;
 import uk.ac.open.kmi.forge.ptAnywhere.session.SessionsManager;
 import uk.ac.open.kmi.forge.ptAnywhere.session.management.Allocation;
 import uk.ac.open.kmi.forge.ptAnywhere.session.management.AllocationResourceClient;
 import uk.ac.open.kmi.forge.ptAnywhere.session.management.PTManagementClient;
-
-import javax.ws.rs.NotFoundException;
-import java.lang.ref.WeakReference;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import static uk.ac.open.kmi.forge.ptAnywhere.session.impl.RedisKeys.*;
 
 
 /**
@@ -29,40 +30,22 @@ public class MultipleSessionsManager implements SessionsManager {
 
     protected static final Log LOGGER = LogFactory.getLog(MultipleSessionsManager.class);
 
-    private static final String AVAILABLE_APIS = "apis";
-    // TODO use subscriptions to ensure that after deleting a busy-instance-key it is inserted again in the list of available ones.
-    private static final String INSTANCE_URL = "url";
-    private static final String INSTANCE_HOSTNAME = "hostname";
-    private static final String INSTANCE_PORT = "port";
-    private static final String INSTANCE_INPUT_FILE = "input_file";
-
-
-    /**
-     * List of IDs of session that ever existed
-     */
-    private static final String SESSION_PREFIX = "session:";
-    private static final String URL_PREFIX = INSTANCE_URL + ":";
-
-    protected final WeakReference<JedisPool> pool;
+    protected final JedisPool pool;
     protected final int dbNumber;
     protected final int maximumLength;
-    private final javax.ws.rs.client.Client httpClient;
+    private final Client httpClient;
 
 
-    protected MultipleSessionsManager(JedisPool pool, int dbNumber, int maximumLength, javax.ws.rs.client.Client client) {
-        this.pool = new WeakReference<>(pool);
+    protected MultipleSessionsManager(JedisPool pool, int dbNumber, int maximumLength, Client client) {
+        this.pool = pool;
         this.dbNumber = dbNumber;
         this.maximumLength = maximumLength;
         this.httpClient = client;
     }
 
-    private JedisPool getPool() {
-        return this.pool.get();
-    }
-
     @Override
     public void clear() {
-        try (Jedis jedis = getPool().getResource()) {
+        try (Jedis jedis = this.pool.getResource()) {
             // Make sure that no unfinished sessions are left behind!
             final Set<PTInstanceDetails> unfinished = getAllInstances();
             for (PTInstanceDetails instance: unfinished) {
@@ -83,7 +66,7 @@ public class MultipleSessionsManager implements SessionsManager {
      */
     @Override
     public void addManagementAPIs(String... apiUrls) {
-        try (Jedis jedis = getPool().getResource()) {
+        try (Jedis jedis = this.pool.getResource()) {
             // Is it better to set it in the config file? http://redis.io/commands/config-set
             jedis.configSet("notify-keyspace-events", "Ex");  // Activate notifications on expiration
             jedis.sadd(AVAILABLE_APIS, apiUrls);
@@ -118,7 +101,7 @@ public class MultipleSessionsManager implements SessionsManager {
         final String rSessionId = toRedisSessionId(sessionId);
         final int expirationAfter = maximumReservationTime * 60;
 
-        try (Jedis jedis = getPool().getResource()) {
+        try (Jedis jedis = this.pool.getResource()) {
             final Transaction t = jedis.multi();
             // Use hset if more details are needed
             t.hset(rSessionId, INSTANCE_URL, instanceUrl);
@@ -145,7 +128,7 @@ public class MultipleSessionsManager implements SessionsManager {
      * @return The new session id.
      */
     private String createSession(String inputFileUrl, int maximumLength) throws NoPTInstanceAvailableException {
-        try (Jedis jedis = getPool().getResource()) {
+        try (Jedis jedis = this.pool.getResource()) {
             for (String apiUrl : jedis.smembers(AVAILABLE_APIS)) {
                 try {
                     LOGGER.info("Attempting session creation in API: " + apiUrl);
@@ -181,7 +164,7 @@ public class MultipleSessionsManager implements SessionsManager {
     @Override
     public Set<String> getCurrentSessions() {
         final Set<String> ret = new HashSet<String>();
-        try (Jedis jedis = getPool().getResource()) {
+        try (Jedis jedis = this.pool.getResource()) {
             for (String rSessionId : jedis.keys(SESSION_PREFIX + "*")) {
                 ret.add(fromRedisSessionId(rSessionId));
             }
@@ -204,17 +187,18 @@ public class MultipleSessionsManager implements SessionsManager {
         }
 
         public void markAsLoaded() {
-            try (Jedis jedis = getPool().getResource()) {
+            try (Jedis jedis = pool.getResource()) {
                 jedis.hdel(rSessionId, INSTANCE_INPUT_FILE);
             }
         }
     }
 
     protected PTInstanceDetails getInstanceWithRSessionId(String rSessionId) {
-        try (Jedis jedis = getPool().getResource()) {
+        try (Jedis jedis = this.pool.getResource()) {
             final Map<String, String> details = jedis.hgetAll(rSessionId);
             if (details != null && details.containsKey(INSTANCE_URL) &&
-                    details.containsKey(INSTANCE_HOSTNAME) && details.containsKey(INSTANCE_PORT)) {
+                    details.containsKey(INSTANCE_HOSTNAME) &&
+                    details.containsKey(INSTANCE_PORT)) {
                 final String inputFileUrl = details.get(INSTANCE_INPUT_FILE);
                 return new PTInstanceDetails(details.get(INSTANCE_URL),
                         details.get(INSTANCE_HOSTNAME),
@@ -233,27 +217,8 @@ public class MultipleSessionsManager implements SessionsManager {
     @Override
     public boolean doesExist(String sessionId) {
         final String rSessionId = toRedisSessionId(sessionId);
-        try (Jedis jedis = getPool().getResource()) {
+        try (Jedis jedis = this.pool.getResource()) {
             return jedis.exists(rSessionId);
-        }
-    }
-
-    protected void deleteRSession(String rSessionId) {
-        try (Jedis jedis = getPool().getResource()) {
-            final String instanceUrl = jedis.get(URL_PREFIX + rSessionId);
-            if (instanceUrl!=null) {
-                final AllocationResourceClient cli = new AllocationResourceClient(instanceUrl, this.httpClient);
-                cli.delete();  // If it throws an exception the element is not deleted.
-
-                // If everything went well...
-                final Transaction t = jedis.multi();
-                t.del(rSessionId); // If it has expired then no problem?
-                t.del(URL_PREFIX + rSessionId);
-                //t.set(rSessionId + "_DELETED", "true");  // For debuging with redis... 0:-)
-                t.exec();
-
-                LOGGER.debug("Expired instance removed for " + rSessionId + ".");
-            }
         }
     }
 
@@ -264,69 +229,20 @@ public class MultipleSessionsManager implements SessionsManager {
     @Override
     public void deleteSession(String sessionId) {
         final String rSessionId = toRedisSessionId(sessionId);
-        deleteRSession(rSessionId);
+        final SessionRemovalManager srm = SessionRemovalManager.create(this.pool, this.httpClient);
+        srm.deleteRSession(rSessionId);
     }
 
     /* Methods to ease webapp management */
     @Override
     public Set<PTInstanceDetails> getAllInstances() {
         final Set<PTInstanceDetails> ret = new HashSet<PTInstanceDetails>();
-        try (Jedis jedis = getPool().getResource()) {
+        try (Jedis jedis = this.pool.getResource()) {
             for (String rSessionId : jedis.keys(SESSION_PREFIX + "*")) {
                 final PTInstanceDetails details = getInstanceWithRSessionId(rSessionId);
                 if (details != null) ret.add(details);
             }
             return ret;
         }
-    }
-}
-
-
-class ExpirationListener extends JedisPubSub {
-
-    final MultipleSessionsManager ownManager;
-
-    ExpirationListener(MultipleSessionsManager ownManager) {
-        this.ownManager = ownManager;
-    }
-
-    @Override
-    public void onPMessage(String pattern, String channel, String message) {
-        // channel == "__keyevent@0__:expired" and message == "session:id"
-        this.ownManager.deleteRSession(message);
-    }
-}
-
-class ExpirationSubscriberImpl implements ExpirationSubscriber {
-    final ExpirationListener listener;
-    final int dbNumber;
-    final WeakReference<JedisPool> pool;
-    /**
-     * @param newManager This should be a new session manager to avoid Thread issues.
-     * @param dbNumber
-     * @param pool
-     */
-    public ExpirationSubscriberImpl(MultipleSessionsManager newManager, int dbNumber, JedisPool pool) {
-        this.listener = new ExpirationListener(newManager);
-        this.dbNumber = dbNumber;
-        this.pool = new WeakReference<>(pool);
-    }
-
-    private JedisPool getPool() {
-        return this.pool.get();
-    }
-
-    @Override
-    public void run() {
-        try (Jedis jedis = getPool().getResource()) {            // Recommended readings:
-            //   + http://redis.io/topics/notifications
-            //   + https://github.com/xetorthio/jedis/wiki/AdvancedUsage
-            jedis.psubscribe(this.listener, "__keyevent@" + this.dbNumber + "__:expired");
-        }
-    }
-
-    @Override
-    public void stop() {
-        this.listener.punsubscribe();
     }
 }

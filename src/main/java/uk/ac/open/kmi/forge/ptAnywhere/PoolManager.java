@@ -1,5 +1,8 @@
 package uk.ac.open.kmi.forge.ptAnywhere;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.client.config.RequestConfig;
@@ -12,10 +15,6 @@ import redis.clients.jedis.JedisPoolConfig;
 import uk.ac.open.kmi.forge.ptAnywhere.properties.PropertyFileManager;
 import uk.ac.open.kmi.forge.ptAnywhere.properties.RedisConnectionProperties;
 
-import javax.ws.rs.client.ClientBuilder;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 
 /**
  * This class simply centralizes the management of thread and clients pools shared across the application.
@@ -134,8 +133,24 @@ public class PoolManager {
      * @param clientConfig
      *      Client configuration to be set.
      */
-    protected void configureDefaultTimeouts(ClientConfig clientConfig) {
+    public void configureDefaultTimeouts(ClientConfig clientConfig) {
         configureTimeouts(clientConfig, this.connectTimeout, this.socketTimeout, this.connectionRequestTimeout);
+    }
+
+    /**
+     * Sets the timeouts defined as properties to the requests of the provided client configuration
+     * but establishes an infinite connection request timeout.
+     *
+     * This way, the clients created with this configuration will be queued until they are processed.
+     *
+     * In other words, this clients will never be discarded and their request will always be sent.
+     * This behavior is interesting for background processes like session destroyers that nobody is expecting feedback from.
+     *
+     * @param clientConfig
+     *      Client configuration to be set.
+     */
+    public void configureDefaultTimeoutsAndInfiniteConnectionRequestTimeout(ClientConfig clientConfig) {
+        configureTimeouts(clientConfig, this.connectTimeout, this.socketTimeout, 0);
     }
 
     /*
@@ -154,7 +169,6 @@ public class PoolManager {
     public ClientConfig getApacheClientConfig() {
         final ClientConfig clientConfig = new ClientConfig();
         clientConfig.connectorProvider(new ApacheConnectorProvider());
-        configureDefaultTimeouts(clientConfig);
         return clientConfig;
     }
 }
