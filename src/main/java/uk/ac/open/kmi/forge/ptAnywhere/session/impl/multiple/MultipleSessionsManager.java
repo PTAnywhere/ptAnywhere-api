@@ -1,4 +1,4 @@
-package uk.ac.open.kmi.forge.ptAnywhere.session.impl;
+package uk.ac.open.kmi.forge.ptAnywhere.session.impl.multiple;
 
 import java.util.HashSet;
 import java.util.Map;
@@ -19,7 +19,6 @@ import uk.ac.open.kmi.forge.ptAnywhere.session.SessionsManager;
 import uk.ac.open.kmi.forge.ptAnywhere.session.management.Allocation;
 import uk.ac.open.kmi.forge.ptAnywhere.session.management.AllocationResourceClient;
 import uk.ac.open.kmi.forge.ptAnywhere.session.management.PTManagementClient;
-import static uk.ac.open.kmi.forge.ptAnywhere.session.impl.RedisKeys.*;
 
 
 /**
@@ -69,7 +68,7 @@ public class MultipleSessionsManager implements SessionsManager {
         try (Jedis jedis = this.pool.getResource()) {
             // Is it better to set it in the config file? http://redis.io/commands/config-set
             jedis.configSet("notify-keyspace-events", "Ex");  // Activate notifications on expiration
-            jedis.sadd(AVAILABLE_APIS, apiUrls);
+            jedis.sadd(RedisKeys.AVAILABLE_APIS, apiUrls);
         }
     }
 
@@ -78,11 +77,11 @@ public class MultipleSessionsManager implements SessionsManager {
     }
 
     private String toRedisSessionId(String sessionId) {
-        return SESSION_PREFIX + sessionId;
+        return RedisKeys.SESSION_PREFIX + sessionId;
     }
 
     private String fromRedisSessionId(String redisSessionId) {
-        return redisSessionId.substring(SESSION_PREFIX.length());
+        return redisSessionId.substring(RedisKeys.SESSION_PREFIX.length());
     }
 
     /**
@@ -104,16 +103,16 @@ public class MultipleSessionsManager implements SessionsManager {
         try (Jedis jedis = this.pool.getResource()) {
             final Transaction t = jedis.multi();
             // Use hset if more details are needed
-            t.hset(rSessionId, INSTANCE_URL, instanceUrl);
-            t.hset(rSessionId, INSTANCE_HOSTNAME, ptHost);
-            t.hset(rSessionId, INSTANCE_PORT, String.valueOf(ptPort));
+            t.hset(rSessionId, RedisKeys.INSTANCE_URL, instanceUrl);
+            t.hset(rSessionId, RedisKeys.INSTANCE_HOSTNAME, ptHost);
+            t.hset(rSessionId, RedisKeys.INSTANCE_PORT, String.valueOf(ptPort));
             if (inputFilename!=null)
-                t.hset(rSessionId, INSTANCE_INPUT_FILE, inputFilename);
+                t.hset(rSessionId, RedisKeys.INSTANCE_INPUT_FILE, inputFilename);
             // We could also expire the last thing whenever the keyspace events work
             t.expire(rSessionId, expirationAfter);
             // Also stored in a separate key to ensure that we still have the URL after the key expires
             // (to be able to delete the Docker container in the expiration listener!).
-            t.set(URL_PREFIX + rSessionId, instanceUrl);
+            t.set(RedisKeys.URL_PREFIX + rSessionId, instanceUrl);
 
             t.exec();
 
@@ -129,7 +128,7 @@ public class MultipleSessionsManager implements SessionsManager {
      */
     private String createSession(String inputFileUrl, int maximumLength) throws NoPTInstanceAvailableException {
         try (Jedis jedis = this.pool.getResource()) {
-            for (String apiUrl : jedis.smembers(AVAILABLE_APIS)) {
+            for (String apiUrl : jedis.smembers(RedisKeys.AVAILABLE_APIS)) {
                 try {
                     LOGGER.info("Attempting session creation in API: " + apiUrl);
                     final PTManagementClient cli = new PTManagementClient(apiUrl, this.httpClient);
@@ -165,7 +164,7 @@ public class MultipleSessionsManager implements SessionsManager {
     public Set<String> getCurrentSessions() {
         final Set<String> ret = new HashSet<String>();
         try (Jedis jedis = this.pool.getResource()) {
-            for (String rSessionId : jedis.keys(SESSION_PREFIX + "*")) {
+            for (String rSessionId : jedis.keys(RedisKeys.SESSION_PREFIX + "*")) {
                 ret.add(fromRedisSessionId(rSessionId));
             }
             return ret;
@@ -188,7 +187,7 @@ public class MultipleSessionsManager implements SessionsManager {
 
         public void markAsLoaded() {
             try (Jedis jedis = pool.getResource()) {
-                jedis.hdel(rSessionId, INSTANCE_INPUT_FILE);
+                jedis.hdel(rSessionId, RedisKeys.INSTANCE_INPUT_FILE);
             }
         }
     }
@@ -196,13 +195,13 @@ public class MultipleSessionsManager implements SessionsManager {
     protected PTInstanceDetails getInstanceWithRSessionId(String rSessionId) {
         try (Jedis jedis = this.pool.getResource()) {
             final Map<String, String> details = jedis.hgetAll(rSessionId);
-            if (details != null && details.containsKey(INSTANCE_URL) &&
-                    details.containsKey(INSTANCE_HOSTNAME) &&
-                    details.containsKey(INSTANCE_PORT)) {
-                final String inputFileUrl = details.get(INSTANCE_INPUT_FILE);
-                return new PTInstanceDetails(details.get(INSTANCE_URL),
-                        details.get(INSTANCE_HOSTNAME),
-                        Integer.valueOf(details.get(INSTANCE_PORT)),
+            if (details != null && details.containsKey(RedisKeys.INSTANCE_URL) &&
+                    details.containsKey(RedisKeys.INSTANCE_HOSTNAME) &&
+                    details.containsKey(RedisKeys.INSTANCE_PORT)) {
+                final String inputFileUrl = details.get(RedisKeys.INSTANCE_INPUT_FILE);
+                return new PTInstanceDetails(details.get(RedisKeys.INSTANCE_URL),
+                        details.get(RedisKeys.INSTANCE_HOSTNAME),
+                        Integer.valueOf(details.get(RedisKeys.INSTANCE_PORT)),
                         (inputFileUrl==null)? null: new FileLoadingTaskImpl(inputFileUrl, rSessionId) );
             }
             return null;
@@ -238,7 +237,7 @@ public class MultipleSessionsManager implements SessionsManager {
     public Set<PTInstanceDetails> getAllInstances() {
         final Set<PTInstanceDetails> ret = new HashSet<PTInstanceDetails>();
         try (Jedis jedis = this.pool.getResource()) {
-            for (String rSessionId : jedis.keys(SESSION_PREFIX + "*")) {
+            for (String rSessionId : jedis.keys(RedisKeys.SESSION_PREFIX + "*")) {
                 final PTInstanceDetails details = getInstanceWithRSessionId(rSessionId);
                 if (details != null) ret.add(details);
             }

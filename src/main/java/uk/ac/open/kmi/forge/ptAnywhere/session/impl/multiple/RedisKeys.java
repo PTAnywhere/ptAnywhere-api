@@ -1,4 +1,4 @@
-package uk.ac.open.kmi.forge.ptAnywhere.session.impl;
+package uk.ac.open.kmi.forge.ptAnywhere.session.impl.multiple;
 
 
 public interface RedisKeys {

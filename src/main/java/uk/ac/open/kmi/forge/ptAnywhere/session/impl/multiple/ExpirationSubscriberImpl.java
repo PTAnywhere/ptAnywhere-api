@@ -1,4 +1,4 @@
-package uk.ac.open.kmi.forge.ptAnywhere.session.impl;
+package uk.ac.open.kmi.forge.ptAnywhere.session.impl.multiple;
 
 import javax.ws.rs.client.Client;
 import redis.clients.jedis.Jedis;
@@ -19,7 +19,7 @@ public class ExpirationSubscriberImpl implements ExpirationSubscriber {
      * @param dbNumber
      * @param httpClient An Http client whose lifecycle will be managed by this object.
      */
-    public ExpirationSubscriberImpl(JedisPool pool, int dbNumber, Client httpClient) {
+    protected ExpirationSubscriberImpl(JedisPool pool, int dbNumber, Client httpClient) {
         this.httpClient = httpClient;
         this.listener = new ExpirationListener(SessionRemovalManager.createReusable(pool, httpClient));
         this.dbNumber = dbNumber;

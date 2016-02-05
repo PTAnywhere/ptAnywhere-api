@@ -1,5 +1,4 @@
-package uk.ac.open.kmi.forge.ptAnywhere.session.impl;
-
+package uk.ac.open.kmi.forge.ptAnywhere.session.impl.multiple;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;

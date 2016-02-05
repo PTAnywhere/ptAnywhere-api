@@ -12,7 +12,7 @@ import uk.ac.open.kmi.forge.ptAnywhere.properties.PropertyFileManager;
 import uk.ac.open.kmi.forge.ptAnywhere.session.ExpirationSubscriber;
 import uk.ac.open.kmi.forge.ptAnywhere.session.SessionsManager;
 import uk.ac.open.kmi.forge.ptAnywhere.session.SessionsManagerFactory;
-import uk.ac.open.kmi.forge.ptAnywhere.session.impl.MultipleSessionsManagerFactory;
+import uk.ac.open.kmi.forge.ptAnywhere.session.impl.multiple.MultipleSessionsManagerFactory;
 import uk.ac.open.kmi.forge.ptAnywhere.session.impl.SharedSessionsManagerFactory;
 
 import javax.servlet.ServletContext;

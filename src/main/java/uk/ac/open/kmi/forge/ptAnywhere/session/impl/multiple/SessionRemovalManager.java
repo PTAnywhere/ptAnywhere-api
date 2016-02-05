@@ -1,5 +1,7 @@
-package uk.ac.open.kmi.forge.ptAnywhere.session.impl;
+package uk.ac.open.kmi.forge.ptAnywhere.session.impl.multiple;
 
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import javax.ws.rs.client.Client;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -7,9 +9,6 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.Transaction;
 import uk.ac.open.kmi.forge.ptAnywhere.session.management.AllocationResourceClient;
-
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 
 public class SessionRemovalManager {
