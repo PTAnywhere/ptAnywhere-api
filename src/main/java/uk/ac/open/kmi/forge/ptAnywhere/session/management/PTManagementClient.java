@@ -41,6 +41,8 @@ public class PTManagementClient {
             // List<Customer> customers = .get(new GenericType<List<Customer>>(){});
             if (response.getStatus() == Response.Status.SERVICE_UNAVAILABLE.getStatusCode()) {
                 throw new NoPTInstanceAvailableException(response.readEntity(ErrorBean.class).getErrorMsg());
+            } else if (response.getStatus() == Response.Status.INTERNAL_SERVER_ERROR.getStatusCode()) {
+                throw new NoPTInstanceAvailableException(response.readEntity(ErrorBean.class).getErrorMsg());
             }
             return response.readEntity(Allocation.class);
         } finally {
