@@ -13,7 +13,7 @@ import uk.ac.open.kmi.forge.ptAnywhere.ContextListener;
 // TODO I would like to get rid of this, but I have not found other way to register Freemarker.
 // https://jersey.java.net/documentation/latest/mvc.html#mvc.registration
 // https://github.com/jersey/jersey/blob/master/examples/freemarker-webapp/
-@ApplicationPath("management")
+//@ApplicationPath("management")
 public class ManagementApplication extends ResourceConfig {
 
     public ManagementApplication(@Context ServletContext servletContext) throws InterruptedException {

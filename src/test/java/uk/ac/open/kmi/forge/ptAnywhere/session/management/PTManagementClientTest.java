@@ -33,7 +33,8 @@ public class PTManagementClientTest extends JerseyTest {
         @Produces(MediaType.APPLICATION_JSON)
         public Response createInstance() {
             if (createdAllocation ==null) {
-                throw new NoPTInstanceAvailableException();
+                return Response.status(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode()).
+                        entity(new PTManagementError(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "file not reached")).build();
             }
             return Response.ok(createdAllocation).build();
         }

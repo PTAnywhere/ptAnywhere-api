@@ -1,6 +1,5 @@
 package uk.ac.open.kmi.forge.ptAnywhere.session.management;
 
-import uk.ac.open.kmi.forge.ptAnywhere.exceptions.ErrorBean;
 import uk.ac.open.kmi.forge.ptAnywhere.exceptions.NoPTInstanceAvailableException;
 import uk.ac.open.kmi.forge.ptAnywhere.exceptions.UnresolvableFileUrlException;
 
@@ -40,9 +39,9 @@ public class PTManagementClient {
         try {
             // List<Customer> customers = .get(new GenericType<List<Customer>>(){});
             if (response.getStatus() == Response.Status.SERVICE_UNAVAILABLE.getStatusCode()) {
-                throw new NoPTInstanceAvailableException(response.readEntity(ErrorBean.class).getErrorMsg());
+                throw new NoPTInstanceAvailableException(response.readEntity(PTManagementError.class).getMessage());
             } else if (response.getStatus() == Response.Status.INTERNAL_SERVER_ERROR.getStatusCode()) {
-                throw new NoPTInstanceAvailableException(response.readEntity(ErrorBean.class).getErrorMsg());
+                throw new NoPTInstanceAvailableException(response.readEntity(PTManagementError.class).getMessage());
             }
             return response.readEntity(Allocation.class);
         } finally {
@@ -64,8 +63,10 @@ public class PTManagementClient {
         try {
             if (response.getStatus() == Response.Status.BAD_REQUEST.getStatusCode() ||
                     response.getStatus() == Response.Status.INTERNAL_SERVER_ERROR.getStatusCode()) {
-                final ErrorBean error = response.readEntity(ErrorBean.class);
-                throw new UnresolvableFileUrlException((error == null) ? null : error.getErrorMsg());
+                //We could also reuse the message from the PTManagement API:
+                /*final PTManagementError error = response.readEntity(PTManagementError.class);
+                error.getMessage();*/
+                throw new UnresolvableFileUrlException(url);
             }
             return response.readEntity(File.class);
         } finally {

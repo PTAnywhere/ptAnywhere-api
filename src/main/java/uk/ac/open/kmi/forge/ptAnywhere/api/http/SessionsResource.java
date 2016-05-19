@@ -36,7 +36,7 @@ public class SessionsResource {
         return new SessionResource(u, sm);
     }
 
-    @GET
+    /*@GET
     @ApiOperation(value = "Get all the current sessions", tags = "session",
                     response = String.class, responseContainer = "set",
                     notes = "The returned strings correspond to the identifiers of the sessions")
@@ -45,7 +45,7 @@ public class SessionsResource {
         final SessionsManager sm = APIApplication.createSessionsManager(servletContext);
         final Set<String> sessions = sm.getCurrentSessions();
         return Response.ok(Utils.toJsonStringArray(sessions)).links(createLinks(sessions)).build();
-    }
+    }*/
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
@@ -65,7 +65,6 @@ public class SessionsResource {
                                   @ApiParam(value = "Session to be created. <br> 'fileUrl' " +
                                                     "specifies the file to be opened at the beginning.") NewSession newSession)
             throws URISyntaxException, NoPTInstanceAvailableException {
-        final String formerSessionId = "previous";  // This can be used to track anonymous users
         final String id = APIApplication.createSessionsManager(servletContext).createSession(newSession.getFileUrl());  // May throw NoPTInstanceAvailableException
         LOGGER.error("New session id: " + id);
         // Note that "sameUserAsInSession" can be null and the InteractionRecordFactory will handle it.
