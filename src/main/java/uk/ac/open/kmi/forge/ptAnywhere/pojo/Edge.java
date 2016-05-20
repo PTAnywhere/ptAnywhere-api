@@ -1,10 +1,9 @@
 package uk.ac.open.kmi.forge.ptAnywhere.pojo;
 
+import javax.xml.bind.annotation.XmlType;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import uk.ac.open.kmi.forge.ptAnywhere.api.http.AbstractWebRepresentable;
-
-import javax.xml.bind.annotation.XmlType;
 
 
 /**
@@ -17,14 +16,16 @@ public class Edge extends AbstractWebRepresentable<Edge> {
     String id;  // E.g., a9101f6bef7c437291c29391e94ee233
     String from;  // E.g., 4e70e5d74399485eb4096c9d1c9446ea
     String to;  // E.g., 6fc7797b1a334fd78db11d6e7468db65
+    String fromLabel;
+    String toLabel;
 
     public Edge() {
     }
 
-    public Edge(String id, String from, String to) {
+    public Edge(String id, String from, String fromLabel) {
         this.id = id;
         this.from = from;
-        this.to = to;
+        this.fromLabel = fromLabel;
     }
 
     @ApiModelProperty(value="Identifier of the edge", required=true)
@@ -59,6 +60,24 @@ public class Edge extends AbstractWebRepresentable<Edge> {
 
     public void setTo(String to) {
         this.to = to;
+    }
+
+    @ApiModelProperty(value="Name of one of the ports that this edge connects", required=true)
+    public String getFromLabel() {
+        return fromLabel;
+    }
+
+    public void setFromLabel(String fromLabel) {
+        this.fromLabel = fromLabel;
+    }
+
+    @ApiModelProperty(value="Name of one of the ports that this edge connects", required=true)
+    public String getToLabel() {
+        return toLabel;
+    }
+
+    public void setToLabel(String toLabel) {
+        this.toLabel = toLabel;
     }
 
     @Override

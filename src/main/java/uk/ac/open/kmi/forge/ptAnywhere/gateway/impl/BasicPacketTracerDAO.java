@@ -1,7 +1,10 @@
 package uk.ac.open.kmi.forge.ptAnywhere.gateway.impl;
 
 import java.util.*;
-import com.cisco.pt.*;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import com.cisco.pt.IPAddress;
 import com.cisco.pt.UUID;
 import com.cisco.pt.impl.IPAddressImpl;
 import com.cisco.pt.ipc.IPCConstants;
@@ -11,18 +14,13 @@ import com.cisco.pt.ipc.sim.Pc;
 import com.cisco.pt.ipc.sim.port.HostPort;
 import com.cisco.pt.ipc.ui.IPC;
 import com.cisco.pt.ipc.ui.LogicalWorkspace;
-import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import uk.ac.open.kmi.forge.ptAnywhere.pojo.*;
 import uk.ac.open.kmi.forge.ptAnywhere.api.http.URLFactory;
 import uk.ac.open.kmi.forge.ptAnywhere.api.http.Utils;
 import uk.ac.open.kmi.forge.ptAnywhere.exceptions.DeviceNotFoundException;
 import uk.ac.open.kmi.forge.ptAnywhere.exceptions.LinkNotFoundException;
 import uk.ac.open.kmi.forge.ptAnywhere.exceptions.PortNotFoundException;
 import uk.ac.open.kmi.forge.ptAnywhere.gateway.PacketTracerDAO;
-import uk.ac.open.kmi.forge.ptAnywhere.pojo.*;
-import uk.ac.open.kmi.forge.ptAnywhere.pojo.Device;
-import uk.ac.open.kmi.forge.ptAnywhere.pojo.Network;
 
 
 /**
@@ -47,7 +45,7 @@ public class BasicPacketTracerDAO implements PacketTracerDAO {
     @Override
     public Network getWholeNetwork() {
         final Network ret = new Network();
-        final Map<String, Edge> edges = new HashMap<String, Edge>();
+        final Map<String, Edge> edges = new HashMap<>();
         for (int i = 0; i < this.network.getDeviceCount(); i++) {
             final com.cisco.pt.ipc.sim.Device d = this.network.getDeviceAt(i);
             ret.getDevices().add(Device.fromCiscoObject(d));
@@ -57,10 +55,12 @@ public class BasicPacketTracerDAO implements PacketTracerDAO {
                 if (currentLink != null) {
                     final String linkId = Utils.toSimplifiedId(currentLink.getObjectUUID());
                     final String devId = Utils.toSimplifiedId(d.getObjectUUID());
+                    final String portName = port.getName();
                     if (edges.containsKey(linkId)) {
                         edges.get(linkId).setTo(devId);
+                        edges.get(linkId).setToLabel(portName);
                     } else {
-                        edges.put(linkId, new Edge(linkId, devId, null));
+                        edges.put(linkId, new Edge(linkId, devId, portName));
                     }
                 }
             }
@@ -71,7 +71,7 @@ public class BasicPacketTracerDAO implements PacketTracerDAO {
 
     @Override
     public Set<Device> getDevices() {
-        final Set<Device> ret = new HashSet<uk.ac.open.kmi.forge.ptAnywhere.pojo.Device>();
+        final Set<Device> ret = new HashSet<>();
         for(int i = 0; i<this.network.getDeviceCount();i++) {
             ret.add(Device.fromCiscoObject(this.network.getDeviceAt(i)));
         }

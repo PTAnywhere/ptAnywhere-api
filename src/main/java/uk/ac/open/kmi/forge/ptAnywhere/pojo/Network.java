@@ -1,9 +1,11 @@
 package uk.ac.open.kmi.forge.ptAnywhere.pojo;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Collection;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import uk.ac.open.kmi.forge.ptAnywhere.api.http.URLFactory;
+
 
 @ApiModel(value="Network", description="Information for graphically representing a network.")
 public class Network {
@@ -13,7 +15,7 @@ public class Network {
     private URLFactory uf = null;
 
     public Network() {
-        this.devices = new HashSet<Device>();
+        this.devices = new HashSet<>();
         this.edges = null;
     }
 
