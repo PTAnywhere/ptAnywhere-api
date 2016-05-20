@@ -76,7 +76,18 @@ public class CachedPacketTracerDAO extends BasicPacketTracerDAO {
     }
 
     /***************************** Cache Updates  *******************************/
-    // createDevice => already caches it when it calls to getSimDeviceById
+    @Override
+    public uk.ac.open.kmi.forge.ptAnywhere.pojo.Device createDevice(uk.ac.open.kmi.forge.ptAnywhere.pojo.Device device) {
+        // createDevice => already caches it when it calls to getSimDeviceById
+        final uk.ac.open.kmi.forge.ptAnywhere.pojo.Device ret = super.createDevice(device);
+        // However, the label might have been changed if it was specified in the original object.
+        // As a consequence, we should forget the cached name.
+        if (device.getLabel()!=null) {
+            this.cache.remove(this.networkId, ret.getId());
+            this.cache.add(this.networkId, ret.getId(), device.getLabel());
+        }
+        return ret;
+    }
 
     @Override
     public uk.ac.open.kmi.forge.ptAnywhere.pojo.Device removeDevice(String deviceId) {
