@@ -55,8 +55,7 @@ public class PTManagementClient {
         return irc.delete();
     }
 
-
-    public File getCachedFile(String url) {
+    public File getCachedFile(String url) throws UnresolvableFileUrlException {
         final Response response = this.target.path(FILES_PATH)
                 .request(MediaType.APPLICATION_JSON)
                 .post(Entity.entity(url, MediaType.TEXT_PLAIN));

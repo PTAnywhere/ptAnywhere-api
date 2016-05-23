@@ -14,8 +14,8 @@ public class AllocationResourceClient {
         this.target = target;
     }
 
-    public AllocationResourceClient(String instanceUrl, Client client) {
-        this.target = client.target(instanceUrl);
+    public AllocationResourceClient(String allocationUrl, Client client) {
+        this.target = client.target(allocationUrl);
     }
 
     public Allocation delete() throws NotFoundException {

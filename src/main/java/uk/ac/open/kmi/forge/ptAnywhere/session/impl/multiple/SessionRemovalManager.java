@@ -37,18 +37,18 @@ public class SessionRemovalManager {
         return new SessionRemovalManager(pool, client, null);
     }
 
-    private void simpleDeleteRequest(String instanceUrl) {
-        final AllocationResourceClient cli = new AllocationResourceClient(instanceUrl, this.httpClient);
+    private void simpleDeleteRequest(String allocationUrl) {
+        final AllocationResourceClient cli = new AllocationResourceClient(allocationUrl, this.httpClient);
         cli.delete();  // If it throws an exception the element is not deleted.
     }
 
-    private void requestDelete(String instanceUrl) {
+    private void requestDelete(String allocationUrl) {
         if (this.clientLock==null) {
-            simpleDeleteRequest(instanceUrl);
+            simpleDeleteRequest(allocationUrl);
         } else {
             this.clientLock.lock();
             try {
-                simpleDeleteRequest(instanceUrl);
+                simpleDeleteRequest(allocationUrl);
             } finally {
                 this.clientLock.unlock();
             }
@@ -57,15 +57,15 @@ public class SessionRemovalManager {
 
     public void deleteRSession(String rSessionId) {
         try (Jedis jedis = this.pool.getResource()) {
-            final String instanceUrl = jedis.get(RedisKeys.URL_PREFIX + rSessionId);
-            if (instanceUrl!=null) {
-                requestDelete(instanceUrl);
+            final String allocationUrl = jedis.get(RedisKeys.URL_PREFIX + rSessionId);
+            if (allocationUrl!=null) {
+                requestDelete(allocationUrl);
 
                 // If everything went well...
                 final Transaction t = jedis.multi();
                 t.del(rSessionId); // If it has expired then no problem?
                 t.del(RedisKeys.URL_PREFIX + rSessionId);
-                //t.set(rSessionId + "_DELETED", "true");  // For debuging with redis... 0:-)
+                //t.set(rSessionId + "_DELETED", "true");  // For debugging with redis... 0:-)
                 t.exec();
 
                 LOGGER.debug("Expired instance removed for " + rSessionId + ".");

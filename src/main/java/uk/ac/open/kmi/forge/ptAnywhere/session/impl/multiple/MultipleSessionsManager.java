@@ -13,6 +13,7 @@ import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.Transaction;
 import uk.ac.open.kmi.forge.ptAnywhere.api.http.Utils;
 import uk.ac.open.kmi.forge.ptAnywhere.exceptions.NoPTInstanceAvailableException;
+import uk.ac.open.kmi.forge.ptAnywhere.exceptions.UnresolvableFileUrlException;
 import uk.ac.open.kmi.forge.ptAnywhere.session.FileLoadingTask;
 import uk.ac.open.kmi.forge.ptAnywhere.session.PTInstanceDetails;
 import uk.ac.open.kmi.forge.ptAnywhere.session.SessionsManager;
@@ -132,14 +133,22 @@ public class MultipleSessionsManager implements SessionsManager {
                 try {
                     LOGGER.info("Attempting session creation in API: " + apiUrl);
                     final PTManagementClient cli = new PTManagementClient(apiUrl, this.httpClient);
-                    final Allocation i = cli.createInstance();
-                    // We cache the file in that API and store the cached file local path instead of its URL.
-                    // Pros: 1) we avoid storing the API associated to the instance to cache it later
-                    //       2) we can directly store the local file path instead to the URL
-                    // cons: 1) The files are not cached close to when they are opened.
-                    //          In the meantime (worse case scenario: matter of seconds) they could be destroyed.
-                    final String filename = cli.getCachedFile(inputFileUrl).getFilename();
-                    return createSession(i.getUrl(), i.getPacketTracerHostname(), i.getPacketTracerPort(), filename, maximumLength);
+                    final Allocation al = cli.createInstance();
+                    try {
+
+                        // We cache the file in that API and store the cached file local path instead of its URL.
+                        // Pros: 1) we avoid storing the API associated to the instance to cache it later
+                        //       2) we can directly store the local file path instead to the URL
+                        // cons: 1) The files are not cached close to when they are opened.
+                        //          In the meantime (worse case scenario: matter of seconds) they could be destroyed.
+                        final String filename = cli.getCachedFile(inputFileUrl).getFilename();
+                        return createSession(al.getUrl(), al.getPacketTracerHostname(), al.getPacketTracerPort(), filename, maximumLength);
+                    } catch (UnresolvableFileUrlException ufue) {
+                        // The init file could not be cached, so let's unallocate the instance as it won't be used.
+                        final AllocationResourceClient arc = new AllocationResourceClient(al.getUrl(), this.httpClient);
+                        arc.delete();
+                        throw ufue;
+                    }
                 } catch (NoPTInstanceAvailableException e) {
                     // Let's try with the next API...
                     LOGGER.error("API not available: " + apiUrl);

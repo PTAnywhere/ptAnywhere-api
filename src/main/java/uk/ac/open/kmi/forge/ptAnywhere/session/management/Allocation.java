@@ -18,7 +18,6 @@ public class Allocation {
         return new Allocation(toClone.id, toClone.url, toClone.packetTracer, toClone.createdAt, toClone.deletedAt);
     }
 
-
     public Allocation(int id, String url, String packetTracer, String createdAt, String deletedAt) {
         this.id = id;
         this.packetTracer = packetTracer;
